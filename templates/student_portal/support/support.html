@@ -1,0 +1,489 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}Support - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<!-- Support Header -->
+<div class="welcome-header mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-2">
+                <i class="fas fa-life-ring me-2"></i>Student Support
+            </h1>
+            <p class="mb-0 opacity-75">
+                Get help, submit tickets, and access support resources
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="text-white">
+                <i class="fas fa-clock me-2"></i>Support Hours: 9 AM - 6 PM
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Support Content -->
+<div class="row">
+    <!-- Left Column - Contact and Tickets -->
+    <div class="col-lg-8">
+        <!-- Quick Contact -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-phone me-2 text-primary"></i>Quick Contact
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="contact-card text-center p-3 border rounded">
+                            <div class="contact-icon mb-3">
+                                <i class="fas fa-phone fa-2x text-primary"></i>
+                            </div>
+                            <h6>Call Us</h6>
+                            <p class="mb-2">+91 9876543210</p>
+                            <button class="btn btn-outline-primary btn-sm" onclick="callSupport()">
+                                <i class="fas fa-phone me-1"></i>Call Now
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="contact-card text-center p-3 border rounded">
+                            <div class="contact-icon mb-3">
+                                <i class="fas fa-envelope fa-2x text-success"></i>
+                            </div>
+                            <h6>Email Us</h6>
+                            <p class="mb-2">support@globalit.edu</p>
+                            <button class="btn btn-outline-success btn-sm" onclick="emailSupport()">
+                                <i class="fas fa-envelope me-1"></i>Send Email
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="contact-card text-center p-3 border rounded">
+                            <div class="contact-icon mb-3">
+                                <i class="fab fa-whatsapp fa-2x text-success"></i>
+                            </div>
+                            <h6>WhatsApp</h6>
+                            <p class="mb-2">+91 9876543210</p>
+                            <button class="btn btn-outline-success btn-sm" onclick="whatsappSupport()">
+                                <i class="fab fa-whatsapp me-1"></i>Chat Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit New Ticket -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus me-2 text-success"></i>Submit Support Ticket
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="supportTicketForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="ticketSubject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="ticketSubject" 
+                                   placeholder="Brief description of your issue" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="ticketCategory" class="form-label">Category</label>
+                            <select class="form-control" id="ticketCategory" required>
+                                <option value="">Select category</option>
+                                <option value="technical">Technical Issue</option>
+                                <option value="academic">Academic Query</option>
+                                <option value="fees">Fees & Payment</option>
+                                <option value="attendance">Attendance Issue</option>
+                                <option value="general">General Inquiry</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="ticketPriority" class="form-label">Priority</label>
+                            <select class="form-control" id="ticketPriority" required>
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="ticketAttachment" class="form-label">Attachment (Optional)</label>
+                            <input type="file" class="form-control" id="ticketAttachment" 
+                                   accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="ticketDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="ticketDescription" rows="5" 
+                                      placeholder="Provide detailed description of your issue..." required></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i>Submit Ticket
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo me-1"></i>Reset Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- My Support Tickets -->
+        <div class="student-card">
+            <div class="card-header bg-white border-bottom">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">
+                            <i class="fas fa-ticket-alt me-2 text-info"></i>My Support Tickets
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-primary active" onclick="filterTickets('all')">
+                                All
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="filterTickets('open')">
+                                Open
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="filterTickets('closed')">
+                                Closed
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if support_tickets %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Ticket ID</th>
+                                    <th>Subject</th>
+                                    <th>Category</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in support_tickets %}
+                                <tr class="ticket-row" data-status="{{ ticket.status }}">
+                                    <td>
+                                        <code>#{{ ticket.id }}</code>
+                                    </td>
+                                    <td>
+                                        <h6 class="mb-0">{{ ticket.subject }}</h6>
+                                        <small class="text-muted">{{ ticket.description[:50] }}...</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-{{ ticket.category_icon }} me-1"></i>
+                                            {{ ticket.category.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'danger' if ticket.priority == 'urgent' else 'warning' if ticket.priority == 'high' else 'info' if ticket.priority == 'medium' else 'secondary' }}">
+                                            {{ ticket.priority.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if ticket.status == 'resolved' else 'warning' if ticket.status == 'in_progress' else 'secondary' }}">
+                                            {{ ticket.status.replace('_', ' ').title() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ ticket.created_at.strftime('%b %d, %Y') }}</td>
+                                    <td>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="viewTicket('{{ ticket.id }}')">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-ticket-alt text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h6>No Support Tickets</h6>
+                        <p class="text-muted">You haven't submitted any support tickets yet.</p>
+                        <button class="btn btn-primary" onclick="document.getElementById('ticketSubject').focus()">
+                            <i class="fas fa-plus me-1"></i>Create Your First Ticket
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column - FAQ and Resources -->
+    <div class="col-lg-4">
+        <!-- Quick Help -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-warning"></i>Quick Help
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="showGuide('getting-started')">
+                        <i class="fas fa-play me-2"></i>Getting Started Guide
+                    </button>
+                    <button class="btn btn-outline-success" onclick="showGuide('portal-navigation')">
+                        <i class="fas fa-compass me-2"></i>Portal Navigation
+                    </button>
+                    <button class="btn btn-outline-info" onclick="showGuide('technical-requirements')">
+                        <i class="fas fa-laptop me-2"></i>Technical Requirements
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="showGuide('payment-help')">
+                        <i class="fas fa-credit-card me-2"></i>Payment Help
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-question-circle me-2 text-info"></i>Frequently Asked Questions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                How do I reset my password?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <small>Click on "Forgot Password" on the login page or contact your branch office for assistance.</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                How can I view my attendance?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <small>Go to "My Attendance" section in the student portal to view your attendance records and percentage.</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                How do I make fee payments?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <small>Visit the "Fees & Payments" section for online payment options or contact the accounts department.</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                Where can I download course materials?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <small>Course materials are available in the "My Learning" section under each course module.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="student-card">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2 text-success"></i>Branch Contact Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="contact-info">
+                    <div class="info-item mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-map-marker-alt text-primary me-3"></i>
+                            <div>
+                                <h6 class="mb-0">Address</h6>
+                                <small class="text-muted">{{ branch_address or "123 Education Street, City, State" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-phone text-success me-3"></i>
+                            <div>
+                                <h6 class="mb-0">Phone</h6>
+                                <small class="text-muted">{{ branch_phone or "+91 9876543210" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-envelope text-info me-3"></i>
+                            <div>
+                                <h6 class="mb-0">Email</h6>
+                                <small class="text-muted">{{ branch_email or "branch@globalit.edu" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-clock text-warning me-3"></i>
+                            <div>
+                                <h6 class="mb-0">Office Hours</h6>
+                                <small class="text-muted">Monday - Saturday: 9:00 AM - 6:00 PM</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .contact-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .contact-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .contact-icon {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .ticket-row {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    
+    .ticket-row:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .info-item {
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .accordion-button {
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .accordion-body {
+        padding: 0.75rem 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Support ticket form submission
+    document.getElementById('supportTicketForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Get form data
+        const formData = new FormData(this);
+        const ticketData = {
+            subject: document.getElementById('ticketSubject').value,
+            category: document.getElementById('ticketCategory').value,
+            priority: document.getElementById('ticketPriority').value,
+            description: document.getElementById('ticketDescription').value
+        };
+        
+        // In real implementation, send to server
+        alert('Support ticket will be submitted in Phase 3. Thank you for your patience!');
+        
+        // Reset form
+        this.reset();
+    });
+    
+    // Filter tickets
+    function filterTickets(status) {
+        const buttons = document.querySelectorAll('.btn-group button');
+        const rows = document.querySelectorAll('.ticket-row');
+        
+        // Update active button
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        // Filter rows
+        rows.forEach(row => {
+            if (status === 'all' || row.dataset.status === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+    
+    // View ticket details
+    function viewTicket(ticketId) {
+        alert(`Viewing ticket #${ticketId}. Detailed ticket view will be implemented in Phase 3.`);
+    }
+    
+    // Contact functions
+    function callSupport() {
+        window.location.href = 'tel:+919876543210';
+    }
+    
+    function emailSupport() {
+        window.location.href = 'mailto:support@globalit.edu?subject=Student Support Request';
+    }
+    
+    function whatsappSupport() {
+        window.open('https://wa.me/919876543210?text=Hello, I need help with my student portal.', '_blank');
+    }
+    
+    // Quick help guides
+    function showGuide(guide) {
+        const guides = {
+            'getting-started': 'Getting Started Guide will be available in Phase 3',
+            'portal-navigation': 'Portal Navigation Guide will be available in Phase 3',
+            'technical-requirements': 'Technical Requirements Guide will be available in Phase 3',
+            'payment-help': 'Payment Help Guide will be available in Phase 3'
+        };
+        
+        alert(guides[guide] || 'Guide coming soon!');
+    }
+</script>
+{% endblock %}

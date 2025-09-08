@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ video.video_title }} - Secure Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            /* Security: Disable text selection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+        }
+        
+        .video-player {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+        }
+        
+        .security-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .watermark {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 15;
+            pointer-events: none;
+            font-weight: 500;
+        }
+        
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 20;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-align: center;
+            z-index: 25;
+            display: none;
+        }
+        
+        /* Security: Disable context menu styles */
+        .no-context {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="no-context">
+    <div class="video-container">
+        <!-- Loading Screen -->
+        <div class="loading-screen" id="loading">
+            <div>
+                <div class="spinner"></div>
+                <p style="margin-top: 20px;">Loading secure video...</p>
+            </div>
+        </div>
+        
+        <!-- Error Message -->
+        <div class="error-message" id="error">
+            <h3>⚠️ Video Unavailable</h3>
+            <p>This video cannot be loaded at this time.</p>
+        </div>
+        
+        <!-- Video Player -->
+        {% if video.video_type == 'youtube' and secure_url %}
+            <iframe 
+                id="videoPlayer"
+                class="video-player"
+                src="{{ secure_url }}"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                frameborder="0"
+                scrolling="no"
+                style="display: none;">
+            </iframe>
+        {% elif video.video_type == 'streaming' %}
+            <video 
+                id="videoPlayer"
+                class="video-player"
+                controls
+                controlsList="nodownload nofullscreen noremoteplayback"
+                disablePictureInPicture
+                style="display: none;">
+                <source src="{{ secure_url }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        {% endif %}
+        
+        <!-- Security Overlay -->
+        {% if security_config.copy_protection %}
+        <div class="security-overlay"></div>
+        {% endif %}
+        
+        <!-- Watermark -->
+        {% if security_config.watermark %}
+        <div class="watermark">
+            {{ student.student_id }} | {{ moment().format('DD/MM/YYYY HH:mm') }} | Global IT Education
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Security Configuration
+        const securityConfig = {{ security_config|tojson }};
+        const studentId = '{{ student.student_id }}';
+        const videoId = {{ video.id }};
+        
+        // Security measures
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSecurity();
+            loadVideo();
+        });
+        
+        function initializeSecurity() {
+            // Disable right-click
+            if (securityConfig.right_click_disabled) {
+                document.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    reportViolation('right_click_attempt');
+                });
+            }
+            
+            // Disable keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // F12, Ctrl+Shift+I, Ctrl+U, Ctrl+S, etc.
+                if (e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                    (e.ctrlKey && e.key === 'u') ||
+                    (e.ctrlKey && e.key === 's') ||
+                    (e.ctrlKey && e.key === 'a') ||
+                    (e.ctrlKey && e.key === 'c') ||
+                    e.key === 'PrintScreen') {
+                    e.preventDefault();
+                    reportViolation('keyboard_shortcut_attempt');
+                }
+            });
+            
+            // Disable text selection
+            document.addEventListener('selectstart', function(e) {
+                e.preventDefault();
+                reportViolation('text_selection_attempt');
+            });
+            
+            // Monitor for developer tools
+            if (securityConfig.developer_tools_blocked) {
+                monitorDevTools();
+            }
+            
+            // Detect screenshot attempts
+            if (securityConfig.screenshot_blocked) {
+                detectScreenshots();
+            }
+            
+            // Monitor page visibility
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    pauseVideo();
+                } else {
+                    resumeVideo();
+                }
+            });
+        }
+        
+        function loadVideo() {
+            const videoPlayer = document.getElementById('videoPlayer');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            
+            if (videoPlayer) {
+                videoPlayer.onload = function() {
+                    loading.style.display = 'none';
+                    videoPlayer.style.display = 'block';
+                    startProgressTracking();
+                };
+                
+                videoPlayer.onerror = function() {
+                    loading.style.display = 'none';
+                    error.style.display = 'block';
+                };
+                
+                // For video elements
+                if (videoPlayer.tagName === 'VIDEO') {
+                    videoPlayer.addEventListener('loadeddata', function() {
+                        loading.style.display = 'none';
+                        videoPlayer.style.display = 'block';
+                        startProgressTracking();
+                    });
+                    
+                    videoPlayer.addEventListener('error', function() {
+                        loading.style.display = 'none';
+                        error.style.display = 'block';
+                    });
+                }
+            }
+            
+            // Hide loading after timeout
+            setTimeout(function() {
+                if (loading.style.display !== 'none') {
+                    loading.style.display = 'none';
+                    if (videoPlayer) {
+                        videoPlayer.style.display = 'block';
+                    }
+                }
+            }, 5000);
+        }
+        
+        function startProgressTracking() {
+            setInterval(function() {
+                updateProgress();
+            }, 10000); // Update every 10 seconds
+        }
+        
+        function updateProgress() {
+            const videoPlayer = document.getElementById('videoPlayer');
+            if (videoPlayer && videoPlayer.tagName === 'VIDEO') {
+                const currentTime = videoPlayer.currentTime;
+                const duration = videoPlayer.duration;
+                
+                if (duration > 0) {
+                    fetch('/lms/video/' + videoId + '/progress', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            video_id: videoId,
+                            current_position: Math.floor(currentTime),
+                            total_duration: Math.floor(duration)
+                        })
+                    }).catch(function(error) {
+                        console.log('Progress update failed');
+                    });
+                }
+            }
+        }
+        
+        function pauseVideo() {
+            const videoPlayer = document.getElementById('videoPlayer');
+            if (videoPlayer && videoPlayer.tagName === 'VIDEO') {
+                videoPlayer.pause();
+            }
+        }
+        
+        function resumeVideo() {
+            const videoPlayer = document.getElementById('videoPlayer');
+            if (videoPlayer && videoPlayer.tagName === 'VIDEO') {
+                // Don't auto-resume for security
+            }
+        }
+        
+        function monitorDevTools() {
+            let devtools = {open: false, orientation: null};
+            setInterval(function() {
+                if (window.outerHeight - window.innerHeight > 200 || 
+                    window.outerWidth - window.innerWidth > 200) {
+                    if (!devtools.open) {
+                        devtools.open = true;
+                        reportViolation('developer_tools_detected');
+                        // Optionally pause or hide video
+                        pauseVideo();
+                    }
+                } else {
+                    devtools.open = false;
+                }
+            }, 1000);
+        }
+        
+        function detectScreenshots() {
+            // Limited effectiveness, but can detect some screenshot attempts
+            document.addEventListener('keyup', function(e) {
+                if (e.key === 'PrintScreen') {
+                    reportViolation('screenshot_attempt');
+                }
+            });
+        }
+        
+        function reportViolation(violationType) {
+            fetch('/lms/api/security/report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    violation_type: violationType,
+                    resource_type: 'video',
+                    resource_id: videoId,
+                    details: 'Video player security violation'
+                })
+            }).catch(function(error) {
+                // Silent fail for security reporting
+            });
+        }
+        
+        // Prevent common manipulation attempts
+        window.addEventListener('beforeunload', function() {
+            updateProgress(); // Final progress update
+        });
+        
+        // Disable drag and drop
+        document.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+        });
+        
+        // Disable print
+        window.addEventListener('beforeprint', function(e) {
+            e.preventDefault();
+            reportViolation('print_attempt');
+        });
+        
+        // Monitor for multiple tabs/windows
+        window.addEventListener('blur', function() {
+            reportViolation('window_blur');
+        });
+    </script>
+</body>
+</html>

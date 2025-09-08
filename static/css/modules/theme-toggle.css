@@ -1,0 +1,234 @@
+/* ==========================================================================
+   Theme Toggle Module - Dark/Light Mode Functionality
+   ========================================================================== */
+
+/* Dark mode variables - Using higher specificity */
+html[data-theme="dark"] {
+  --bg-primary: #1a1a1a !important;
+  --bg-secondary: #2d2d2d !important;
+  --text-primary: #ffffff !important;
+  --text-secondary: #b3b3b3 !important;
+  --text-muted: #888888 !important;
+  --gray-50: #2d2d2d !important;
+  --gray-100: #404040 !important;
+  --gray-200: #525252 !important;
+  --gray-300: #737373 !important;
+  --gray-400: #a3a3a3 !important;
+  --gray-500: #d4d4d4 !important;
+  --gray-600: #e5e5e5 !important;
+  --gray-700: #f5f5f5 !important;
+  --gray-800: #fafafa !important;
+  --gray-900: #ffffff !important;
+  
+  /* Dark mode gradients */
+  --gradient-primary: linear-gradient(135deg, #3a3a3a, #2d2d2d) !important;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--gray-300);
+  color: var(--text-primary);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 1rem;
+}
+
+.theme-toggle:hover {
+  background-color: var(--gray-100);
+}
+
+.theme-toggle i {
+  font-size: 1rem;
+}
+
+/* Dark mode body */
+html[data-theme="dark"] body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode main content */
+html[data-theme="dark"] .main-content {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Dark mode content area */
+html[data-theme="dark"] .content-area {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Dark mode cards */
+html[data-theme="dark"] .card {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--gray-600) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode sidebar - Override the gradient */
+html[data-theme="dark"] .sidebar {
+  background: var(--gradient-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode top nav */
+html[data-theme="dark"] .top-nav {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--gray-600) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode dropdowns */
+html[data-theme="dark"] .dropdown-menu {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--gray-600) !important;
+}
+
+html[data-theme="dark"] .dropdown-item {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .dropdown-item:hover {
+  background-color: var(--gray-100) !important;
+}
+
+/* Dark mode mobile overlay */
+html[data-theme="dark"] .sidebar-overlay {
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Dark mode buttons */
+html[data-theme="dark"] .btn-link {
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode alerts */
+html[data-theme="dark"] .alert {
+  background-color: var(--bg-secondary);
+  border-color: var(--gray-600);
+  color: var(--text-primary);
+}
+
+/* Dark mode forms */
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .form-select {
+  background-color: var(--bg-secondary);
+  border-color: var(--gray-600);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .form-control:focus,
+html[data-theme="dark"] .form-select:focus {
+  background-color: var(--bg-secondary);
+  border-color: var(--brand-primary);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 0.2rem rgba(44, 56, 146, 0.25);
+}
+
+/* Dark mode tables */
+html[data-theme="dark"] .table {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .table th,
+html[data-theme="dark"] .table td {
+  border-color: var(--gray-600);
+}
+
+html[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td,
+html[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > th {
+  background-color: var(--gray-100);
+}
+
+/* Dark mode modals */
+html[data-theme="dark"] .modal-content {
+  background-color: var(--bg-secondary);
+  border-color: var(--gray-600);
+}
+
+html[data-theme="dark"] .modal-header {
+  border-color: var(--gray-600);
+}
+
+html[data-theme="dark"] .modal-footer {
+  border-color: var(--gray-600);
+}
+
+/* Dark mode toasts */
+html[data-theme="dark"] .toast {
+  background-color: var(--bg-secondary);
+  border-color: var(--gray-600);
+  color: var(--text-primary);
+}
+
+/* Dark mode badges */
+html[data-theme="dark"] .badge {
+  color: var(--text-white);
+}
+
+/* Dark mode navigation pills */
+html[data-theme="dark"] .nav-pills .nav-link {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .nav-pills .nav-link.active {
+  background-color: var(--brand-primary);
+  color: var(--text-white);
+}
+
+/* Dark mode pagination */
+html[data-theme="dark"] .page-link {
+  background-color: var(--bg-secondary);
+  border-color: var(--gray-600);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .page-link:hover {
+  background-color: var(--gray-100);
+  border-color: var(--gray-500);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .page-item.active .page-link {
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--text-white);
+}
+
+/* Dark mode breadcrumbs */
+html[data-theme="dark"] .breadcrumb {
+  background-color: var(--bg-secondary);
+}
+
+html[data-theme="dark"] .breadcrumb-item + .breadcrumb-item::before {
+  color: var(--text-muted);
+}
+
+/* Dark mode list groups */
+html[data-theme="dark"] .list-group-item {
+  background-color: var(--bg-secondary);
+  border-color: var(--gray-600);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .list-group-item:hover {
+  background-color: var(--gray-100);
+}
+
+/* Dark mode accordion */
+html[data-theme="dark"] .accordion-item {
+  background-color: var(--bg-secondary);
+  border-color: var(--gray-600);
+}
+
+html[data-theme="dark"] .accordion-button {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .accordion-button:not(.collapsed) {
+  background-color: var(--gray-100);
+  color: var(--text-primary);
+}

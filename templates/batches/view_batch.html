@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+
+{% block title %}{{ batch.name }} - Batch Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-layer-group text-primary me-2"></i>{{ batch.name }}
+                
+                <!-- Status Badge -->
+                {% if batch.status == 'Active' %}
+                    <span class="badge bg-success ms-2">
+                        <i class="fas fa-play me-1"></i>Active
+                    </span>
+                {% elif batch.status == 'Completed' %}
+                    <span class="badge bg-primary ms-2">
+                        <i class="fas fa-check me-1"></i>Completed
+                    </span>
+                {% elif batch.status == 'Suspended' %}
+                    <span class="badge bg-warning ms-2">
+                        <i class="fas fa-pause me-1"></i>Suspended
+                    </span>
+                {% elif batch.status == 'Archived' %}
+                    <span class="badge bg-secondary ms-2">
+                        <i class="fas fa-archive me-1"></i>Archived
+                    </span>
+                {% elif batch.status == 'Cancelled' %}
+                    <span class="badge bg-danger ms-2">
+                        <i class="fas fa-times me-1"></i>Cancelled
+                    </span>
+                {% endif %}
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-book me-1"></i>{{ batch.course.course_name if batch.course else batch.course_name or 'Course not specified' }} • 
+                <i class="fas fa-building me-1"></i>{{ batch.branch.branch_name if batch.branch else 'Unknown Branch' }}
+                {% if batch.checkin_time and batch.checkout_time %}
+                • <i class="fas fa-clock me-1"></i>{{ batch.get_formatted_checkin_time() }} - {{ batch.get_formatted_checkout_time() }}
+                {% elif batch.timing %}
+                • <i class="fas fa-clock me-1"></i>{{ batch.timing }}
+                {% endif %}
+            </p>
+        </div>
+        <!-- Back button at top for easy navigation -->
+        <a href="{{ url_for('batches.list_batches') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Batches
+        </a>
+    </div>
+
+    <!-- Batch Management Actions Bar -->
+    <div class="card mb-4" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);">
+        <div class="card-body py-3">
+            <div class="d-flex align-items-center text-white">
+                <i class="fas fa-cogs me-2"></i>
+                <strong>Batch Management Actions</strong>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-toolbar" role="toolbar">
+                <!-- Student Management -->
+                {% if batch.status not in ['Archived', 'Cancelled'] %}
+                    <div class="btn-group me-2" role="group">
+                        <a href="{{ url_for('batches.batch_students', batch_id=batch.id) }}" class="btn btn-primary">
+                            <i class="fas fa-users me-1"></i>Manage Students
+                        </a>
+                    </div>
+                {% endif %}
+                
+                <!-- Attendance Management -->
+                {% if batch.status in ['Active', 'Suspended'] %}
+                    <div class="btn-group me-2" role="group">
+                        <a href="{{ url_for('attendance.mark_attendance', batch_id=batch.id) }}" class="btn btn-info">
+                            <i class="fas fa-check-square me-1"></i>Mark Attendance
+                        </a>
+                        <a href="{{ url_for('attendance.batch_attendance', batch_id=batch.id) }}" class="btn btn-success">
+                            <i class="fas fa-calendar-check me-1"></i>View Attendance
+                        </a>
+                    </div>
+                {% endif %}
+                
+                <!-- Batch Management -->
+                {% if batch.status == 'Active' %}
+                    <div class="btn-group me-2" role="group">
+                        <a href="{{ url_for('batches.edit_batch_form', batch_id=batch.id) }}" class="btn btn-warning">
+                            <i class="fas fa-edit me-1"></i>Edit Batch
+                        </a>
+                        <button type="button" class="btn btn-success" onclick="completeBatch({{ batch.id }}, '{{ batch.name }}')">
+                            <i class="fas fa-check me-1"></i>Mark Complete
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="suspendBatch({{ batch.id }}, '{{ batch.name }}')">
+                            <i class="fas fa-pause me-1"></i>Suspend Batch
+                        </button>
+                    </div>
+                {% elif batch.status == 'Completed' %}
+                    <div class="btn-group me-2" role="group">
+                        <button type="button" class="btn btn-secondary" onclick="archiveBatch({{ batch.id }}, '{{ batch.name }}')">
+                            <i class="fas fa-archive me-1"></i>Archive Batch
+                        </button>
+                    </div>
+                {% elif batch.status == 'Suspended' %}
+                    <div class="btn-group me-2" role="group">
+                        <button type="button" class="btn btn-success" onclick="reactivateBatch({{ batch.id }}, '{{ batch.name }}')">
+                            <i class="fas fa-play me-1"></i>Reactivate Batch
+                        </button>
+                    </div>
+                {% endif %}
+                
+                <!-- Cancel Action (available for non-completed/archived batches) -->
+                {% if batch.status not in ['Completed', 'Archived', 'Cancelled'] %}
+                    <div class="btn-group me-2" role="group">
+                        <button type="button" class="btn btn-danger" onclick="cancelBatch({{ batch.id }}, '{{ batch.name }}')">
+                            <i class="fas fa-times me-1"></i>Cancel Batch
+                        </button>
+                    </div>
+                {% endif %}
+                
+                <!-- Back Button -->
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('batches.list_batches') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Batches
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Students</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="studentCount">{{ students|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Attendance Rate</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">0%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Assigned Trainers</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="trainerCount">{{ trainers|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Course Progress</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">0%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-pie fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- Left Column - Batch Information -->
+        <div class="col-lg-8">
+            <!-- Batch Details Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-info-circle me-2"></i>Batch Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Batch Name:</strong> {{ batch.name }}</p>
+                            <p><strong>Course:</strong> {{ batch.course.course_name if batch.course else batch.course_name or 'Not specified' }}</p>
+                            <p><strong>Branch:</strong> {{ batch.branch.branch_name if batch.branch else 'Unknown Branch' }}</p>
+                            <p><strong>Check-in Time:</strong> {{ batch.get_formatted_checkin_time() }}</p>
+                            <p><strong>Check-out Time:</strong> {{ batch.get_formatted_checkout_time() }}</p>
+                            {% if batch.timing %}
+                            <p><strong>Additional Notes:</strong> {{ batch.timing }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Start Date:</strong> {{ batch.start_date|format_date_indian if batch.start_date else 'Not set' }}</p>
+                            <p><strong>End Date:</strong> {{ batch.end_date|format_date_indian if batch.end_date else 'Not set' }}</p>
+                            <p><strong>Status:</strong> 
+                                <span class="badge bg-{{ 'success' if batch.status == 'Active' else 'secondary' }}">
+                                    {{ batch.status }}
+                                </span>
+                            </p>
+                            <p><strong>Description:</strong> {{ batch.description or 'No description provided' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-users me-2"></i>Students in this Batch ({{ students|length }})
+                    </h6>
+                    {% if batch.status not in ['Archived', 'Cancelled'] %}
+                        <a href="{{ url_for('batches.batch_students', batch_id=batch.id) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-users me-1"></i>{% if session.get('role') == 'trainer' %}View Students{% else %}Manage Students{% endif %}
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if students %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="studentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
+                                        <th>Mobile</th>
+                                        <th>Email</th>
+                                        <th>Admission Date</th>
+                                        {% if batch.status == 'Completed' %}
+                                            <th>Attendance Rate</th>
+                                            <th>Course Progress</th>
+                                            <th>Final Status</th>
+                                        {% elif batch.status in ['Active', 'Suspended'] %}
+                                            <th>Current Attendance</th>
+                                            <th>Progress</th>
+                                            <th>Actions</th>
+                                        {% elif batch.status not in ['Archived', 'Cancelled'] %}
+                                            <th>Actions</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    <tr>
+                                        <td>{{ student.student_id }}</td>
+                                        <td>{{ student.full_name }}</td>
+                                        <td>{{ student.mobile or 'N/A' }}</td>
+                                        <td>{{ student.email or 'N/A' }}</td>
+                                        <td>{{ student.admission_date|format_date_indian if student.admission_date else 'N/A' }}</td>
+                                        {% if batch.status == 'Completed' %}
+                                            <td>
+                                                <span class="badge bg-success">85%</span>
+                                                <small class="text-muted d-block">Good attendance</small>
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: 100%">100%</div>
+                                                </div>
+                                                <small class="text-muted">Course Completed</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-graduation-cap me-1"></i>Completed
+                                                </span>
+                                            </td>
+                                        {% elif batch.status in ['Active', 'Suspended'] %}
+                                            <td>
+                                                <span class="badge bg-info">75%</span>
+                                                <small class="text-muted d-block">Regular</small>
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar bg-info" role="progressbar" style="width: 60%">60%</div>
+                                                </div>
+                                                <small class="text-muted">In Progress</small>
+                                            </td>
+                                            <td>
+                                                {% if session.get('role') != 'trainer' %}
+                                                    <button class="btn btn-sm btn-outline-danger" 
+                                                            onclick="removeStudent('{{ student.id }}', '{{ student.full_name }}')">
+                                                        <i class="fas fa-user-minus"></i>
+                                                    </button>
+                                                {% else %}
+                                                    <span class="text-muted">View Only</span>
+                                                {% endif %}
+                                            </td>
+                                        {% elif batch.status not in ['Archived', 'Cancelled'] %}
+                                            <td>
+                                                {% if session.get('role') != 'trainer' %}
+                                                    <button class="btn btn-sm btn-outline-danger" 
+                                                            onclick="removeStudent('{{ student.id }}', '{{ student.full_name }}')">
+                                                        <i class="fas fa-user-minus"></i>
+                                                    </button>
+                                                {% else %}
+                                                    <span class="text-muted">View Only</span>
+                                                {% endif %}
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                            <h5 class="text-gray-500">No Students Enrolled</h5>
+                            <p class="text-muted">This batch doesn't have any students yet.</p>
+                            {% if batch.status not in ['Archived', 'Cancelled'] %}
+                                <a href="{{ url_for('batches.batch_students', batch_id=batch.id) }}" class="btn btn-primary">
+                                    <i class="fas fa-users me-1"></i>View Students
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Trainers and Actions -->
+        <div class="col-lg-4">
+            <!-- Assigned Trainers Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>Assigned Trainers
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if trainers %}
+                        {% for trainer in trainers %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar avatar-sm me-3">
+                                    <div class="avatar-initial bg-info rounded-circle">
+                                        {{ trainer.trainer.full_name[0].upper() }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <strong>{{ trainer.trainer.full_name }}</strong>
+                                    <br><small class="text-muted">{{ trainer.trainer.role.title() if trainer.trainer.role else 'Trainer' }} • Assigned {{ trainer.assigned_date|format_date_indian if trainer.assigned_date else 'Recently' }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chalkboard-teacher fa-3x text-gray-300 mb-3"></i>
+                            <h5 class="text-gray-500">No Trainers Assigned</h5>
+                            <p class="text-muted">Use the "Edit Batch" option to assign trainers to this batch.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Suspend Batch Modal -->
+<div class="modal fade" id="suspendBatchModal" tabindex="-1" aria-labelledby="suspendBatchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="suspendBatchModalLabel">
+                    <i class="fas fa-pause me-2 text-warning"></i>Suspend Batch
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="suspendBatchForm" method="POST" action="/batches/{{ batch.id }}/suspend">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> Suspending this batch will temporarily halt all activities. Students will not be able to attend classes until the batch is reactivated.
+                    </div>
+                    <div class="mb-3">
+                        <label for="suspend_reason" class="form-label">Reason for Suspension <span class="text-danger">*</span></label>
+                        <select class="form-select" id="suspend_reason" name="reason" required>
+                            <option value="">Select a reason...</option>
+                            <option value="trainer_unavailable">Trainer Unavailable</option>
+                            <option value="facility_issues">Facility Issues</option>
+                            <option value="low_attendance">Low Attendance</option>
+                            <option value="student_request">Student Request</option>
+                            <option value="technical_issues">Technical Issues</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="suspend_notes" class="form-label">Additional Notes</label>
+                        <textarea class="form-control" id="suspend_notes" name="notes" rows="3" placeholder="Provide additional details about why this batch is being suspended..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expected_resume_date" class="form-label">Expected Resume Date (Optional)</label>
+                        <input type="date" class="form-control" id="expected_resume_date" name="expected_resume_date">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-pause me-1"></i>Suspend Batch
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Batch Modal -->
+<div class="modal fade" id="cancelBatchModal" tabindex="-1" aria-labelledby="cancelBatchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="cancelBatchModalLabel">
+                    <i class="fas fa-times me-2"></i>Cancel Batch - Permanent Action
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="cancelBatchForm" method="POST" action="/batches/{{ batch.id }}/cancel">
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Danger:</strong> This action cannot be undone. Cancelling this batch will permanently mark it as cancelled and affect student records.
+                    </div>
+                    <div class="mb-3">
+                        <label for="cancel_reason" class="form-label">Reason for Cancellation <span class="text-danger">*</span></label>
+                        <select class="form-select" id="cancel_reason" name="reason" required>
+                            <option value="">Select a reason...</option>
+                            <option value="insufficient_enrollment">Insufficient Enrollment</option>
+                            <option value="trainer_resigned">Trainer Resigned</option>
+                            <option value="facility_closed">Facility Closed</option>
+                            <option value="course_discontinued">Course Discontinued</option>
+                            <option value="business_decision">Business Decision</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cancel_notes" class="form-label">Detailed Explanation <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="cancel_notes" name="notes" rows="4" placeholder="Provide a detailed explanation for cancelling this batch. This will be recorded for audit purposes." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirm_cancel" name="confirm_cancel" required>
+                            <label class="form-check-label text-danger" for="confirm_cancel">
+                                I understand this action cannot be undone and will permanently cancel the batch
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-1"></i>Permanently Cancel Batch
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View All Students Button -->
+<div class="text-center my-4">
+    <a href="{{ url_for('batches.batch_students', batch_id=batch.id) }}" class="btn btn-primary btn-lg">
+        <i class="fas fa-users me-2"></i>{% if session.get('role') == 'trainer' %}View All Students{% else %}Manage All Students{% endif %}
+    </a>
+    <p class="mt-2 text-muted">
+        {% if session.get('role') == 'trainer' %}
+            View detailed information about students in this batch.
+        {% else %}
+            From the students page, you can add new students to this batch.
+        {% endif %}
+    </p>
+</div>
+
+
+<script>
+// Batch action functions
+function completeBatch(batchId, batchName) {
+    if (confirm(`Are you sure you want to mark "${batchName}" as completed? This will finalize the batch status.`)) {
+        // Create and submit form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/batches/${batchId}/complete`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function suspendBatch(batchId, batchName) {
+    $('#suspendBatchModal').modal('show');
+}
+
+function reactivateBatch(batchId, batchName) {
+    if (confirm(`Are you sure you want to reactivate "${batchName}"?`)) {
+        // Create and submit form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/batches/${batchId}/reactivate`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function archiveBatch(batchId, batchName) {
+    if (confirm(`Are you sure you want to archive "${batchName}"? This action cannot be undone.`)) {
+        // Create and submit form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/batches/${batchId}/archive`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function cancelBatch(batchId, batchName) {
+    $('#cancelBatchModal').modal('show');
+}
+
+function removeStudent(studentId, studentName) {
+    if (confirm(`Are you sure you want to remove "${studentName}" from this batch?`)) {
+        // Show loading state
+        showAlert('Removing student from batch...', 'info');
+        
+        $.post(`/batches/{{ batch.id }}/remove-student/${studentId}`)
+            .done(() => {
+                showAlert('Student removed successfully', 'success');
+                setTimeout(() => location.reload(), 1500);
+            })
+            .fail(() => showAlert('Error removing student', 'danger'));
+    }
+}
+
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Remove existing alerts
+    $('.alert').remove();
+    
+    // Add new alert at top of container
+    $('.container-fluid').prepend(alertHtml);
+    
+    // Auto-dismiss info alerts after 3 seconds
+    if (type === 'info') {
+        setTimeout(() => $('.alert-info').alert('close'), 3000);
+    }
+}
+
+// Initialize DataTable for students table
+$(document).ready(function() {
+    if ($('#studentsTable').length) {
+        // Dynamic column configuration based on batch status
+        var columnConfig = [
+            { "orderable": true, "targets": [0, 1, 2, 3, 4] }, // Basic columns always sortable
+        ];
+        
+        // For completed batches, disable sorting on analytics columns
+        {% if batch.status == 'Completed' %}
+            columnConfig.push({ "orderable": false, "targets": [5, 6, 7] }); // Analytics columns
+        {% elif batch.status in ['Active', 'Suspended'] %}
+            columnConfig.push({ "orderable": false, "targets": [5, 6, 7] }); // Progress & Actions columns
+        {% else %}
+            columnConfig.push({ "orderable": false, "targets": [5] }); // Actions column only
+        {% endif %}
+
+        $('#studentsTable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[1, 'asc']], // Sort by student name
+            columnDefs: columnConfig,
+            language: {
+                emptyTable: "No students enrolled in this batch yet",
+                info: "Showing _START_ to _END_ of _TOTAL_ students",
+                search: "Search students:"
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

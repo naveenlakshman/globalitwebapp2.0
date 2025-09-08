@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+    <h1>Debug Test Page</h1>
+    <p>Current time: {{ moment().format('YYYY-MM-DD HH:mm:ss') if moment else 'No moment' }}</p>
+    <p>Staff members count: {{ staff_members|length if staff_members else 0 }}</p>
+    <p>Template version: 2025-08-19-18:35</p>
+    
+    <script>
+        console.log('jQuery loaded:', typeof $ !== 'undefined');
+        console.log('Current URL:', window.location.href);
+        console.log('Template test loaded at:', new Date().toISOString());
+    </script>
+</body>
+</html>

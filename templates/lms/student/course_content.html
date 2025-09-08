@@ -1,0 +1,308 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}{{ course.course_name }} - Learning{% endblock %}
+
+{% block extra_css %}
+<style>
+.course-nav {
+    background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 1rem 0;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.module-accordion {
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.accordion-header {
+    border: none;
+}
+
+.accordion-button {
+    background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+    border: none;
+    padding: 1.5rem;
+    font-weight: 600;
+    position: relative;
+}
+
+.accordion-button:not(.collapsed) {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: none;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border: none;
+}
+
+.module-progress-badge {
+    position: absolute;
+    right: 60px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.section-item {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.section-item:last-child {
+    border-bottom: none;
+}
+
+.section-item:hover {
+    background-color: #f8f9fa;
+}
+
+.section-status {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.8rem;
+}
+
+.section-completed {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.section-in-progress {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+}
+
+.section-pending {
+    background: #6c757d;
+}
+
+.content-type-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+}
+
+.progress-overview {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.overall-progress {
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.overall-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 10px;
+    transition: width 1s ease;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Course Navigation -->
+<div class="course-nav">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-0">
+                    <i class="fas fa-book me-2"></i>{{ course.course_name }}
+                </h2>
+                <p class="mb-0 opacity-75">Complete course structure and progress</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{{ url_for('lms.student_dashboard') }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Overview -->
+<div class="progress-overview">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h4><i class="fas fa-chart-line me-2"></i>Course Progress</h4>
+            <div class="overall-progress">
+                <div class="overall-progress-fill" style="width: {{ (completed_modules / total_modules * 100) if total_modules > 0 else 0 }}%"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <strong>{{ modules_data|length }}</strong> Total Modules
+                </div>
+                <div class="col-md-4">
+                    <strong class="text-success">{{ completed_modules }}</strong> Completed
+                </div>
+                <div class="col-md-4">
+                    <strong class="text-warning">{{ modules_data|length - completed_modules }}</strong> Remaining
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <h2 class="text-primary mb-0">{{ (completed_modules / modules_data|length * 100)|round if modules_data|length > 0 else 0 }}%</h2>
+            <p class="text-muted mb-0">Overall Progress</p>
+        </div>
+    </div>
+</div>
+
+<!-- Course Modules -->
+<div class="row">
+    <div class="col-12">
+        {% if modules_data %}
+            {% for module_data in modules_data %}
+            <div class="accordion module-accordion" id="module-{{ module_data.module.id }}">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button {{ 'collapsed' if not loop.first else '' }}" 
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#collapse-{{ module_data.module.id }}"
+                                aria-expanded="{{ 'true' if loop.first else 'false' }}" 
+                                aria-controls="collapse-{{ module_data.module.id }}">
+                            
+                            <div class="d-flex align-items-center w-100">
+                                <div class="me-3">
+                                    {% if module_data.completed %}
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    {% elif module_data.progress > 0 %}
+                                        <i class="fas fa-play-circle text-warning"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-muted"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1">{{ module_data.module.module_name }}</h5>
+                                    {% if module_data.module.module_description %}
+                                    <p class="mb-0 opacity-75">{{ module_data.module.module_description }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <span class="module-progress-badge">
+                                <span class="badge bg-primary">{{ module_data.progress }}%</span>
+                                <span class="badge bg-info ms-1">{{ module_data.sections|length }} sections</span>
+                            </span>
+                        </button>
+                    </h2>
+                    <div id="collapse-{{ module_data.module.id }}" 
+                         class="accordion-collapse collapse {{ 'show' if loop.first else '' }}" 
+                         data-bs-parent="#module-{{ module_data.module.id }}">
+                        <div class="accordion-body p-0">
+                            {% if module_data.sections %}
+                                {% for section_data in module_data.sections %}
+                                <div class="section-item">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="d-flex align-items-center">
+                                                <div class="section-status {{ 'section-completed' if section_data.completed else ('section-in-progress' if section_data.progress > 0 else 'section-pending') }}">
+                                                    {% if section_data.completed %}
+                                                        <i class="fas fa-check"></i>
+                                                    {% elif section_data.progress > 0 %}
+                                                        {{ section_data.progress }}%
+                                                    {% else %}
+                                                        <i class="fas fa-lock"></i>
+                                                    {% endif %}
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1">{{ section_data.section.section_name }}</h6>
+                                                    {% if section_data.section.section_description %}
+                                                    <p class="mb-0 text-muted small">{{ section_data.section.section_description[:80] }}...</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="d-flex gap-1">
+                                                {% if section_data.has_video %}
+                                                <span class="badge bg-danger content-type-badge">
+                                                    <i class="fas fa-video me-1"></i>Video
+                                                </span>
+                                                {% endif %}
+                                                {% if section_data.has_material %}
+                                                <span class="badge bg-success content-type-badge">
+                                                    <i class="fas fa-file-pdf me-1"></i>PDF
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <a href="{{ url_for('lms.section_content', section_id=section_data.section.id) }}" 
+                                               class="btn btn-sm {{ 'btn-success' if section_data.completed else ('btn-warning' if section_data.progress > 0 else 'btn-primary') }}">
+                                                {% if section_data.completed %}
+                                                    <i class="fas fa-eye me-1"></i>Review
+                                                {% elif section_data.progress > 0 %}
+                                                    <i class="fas fa-play me-1"></i>Continue
+                                                {% else %}
+                                                    <i class="fas fa-play me-1"></i>Start
+                                                {% endif %}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="p-3 text-center text-muted">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    No sections available in this module yet.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">
+                <h4><i class="fas fa-info-circle me-2"></i>No Modules Available</h4>
+                <p>This course doesn't have any modules published yet. Please check back later or contact your instructor.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate progress bars
+    const progressBars = document.querySelectorAll('.overall-progress-fill');
+    progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 500);
+    });
+
+    // Track section clicks for analytics
+    document.querySelectorAll('.section-item a').forEach(link => {
+        link.addEventListener('click', function() {
+            const sectionName = this.closest('.section-item').querySelector('h6').textContent;
+            console.log('Section clicked:', sectionName);
+            // Add analytics tracking here
+        });
+    });
+});
+</script>
+{% endblock %}

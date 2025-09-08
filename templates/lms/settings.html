@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}LMS Settings - Global IT{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-cogs text-primary me-2"></i>LMS Settings & Configuration
+        </h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('lms.admin_dashboard') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+            <a href="{{ url_for('lms_content_management.dashboard') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-graduation-cap me-1"></i>LMS Content Management
+            </a>
+        </div>
+    </div>
+
+    <!-- Settings Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info d-flex align-items-center">
+                <i class="fas fa-info-circle me-2"></i>
+                <div>
+                    <strong>Administrator Settings:</strong>
+                    Configure internal LMS features, content management, and system preferences.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Internal LMS Configuration -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-graduation-cap me-2"></i>Internal LMS Configuration
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Internal LMS Active</strong> - Your learning management system is fully operational with integrated quiz, assignment, and content management features.
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Status</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Quiz Management</strong></td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>Create, edit, and manage quizzes with auto-grading</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Assignment System</strong></td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>Assignment creation and submission management</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Content Management</strong></td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>Video, document, and course content management</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Student Progress</strong></td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>Track student progress and completion</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-tools me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('lms.course_management') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-cogs me-2"></i>Course Management
+                        </a>
+                        <button class="btn btn-outline-success" onclick="exportData()">
+                            <i class="fas fa-download me-2"></i>Export LMS Data
+                        </button>
+                        <button class="btn btn-outline-info" onclick="viewLogs()">
+                            <i class="fas fa-list me-2"></i>View Sync Logs
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="clearCache()">
+                            <i class="fas fa-trash me-2"></i>Clear Cache
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-heartbeat me-2"></i>System Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Internal LMS</span>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Database</span>
+                            <span class="badge bg-success">Connected</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Sync Service</span>
+                            <span class="badge bg-success">Running</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Last Sync</span>
+                            <span class="text-muted small">Just now</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportData() {
+    alert('📊 Data export feature coming soon!');
+}
+
+function viewLogs() {
+    alert('📋 System logs feature coming soon!');
+}
+
+function clearCache() {
+    if (confirm('Clear system cache?')) {
+        alert('🗑️ Cache cleared successfully!');
+    }
+}
+</script>
+{% endblock %}

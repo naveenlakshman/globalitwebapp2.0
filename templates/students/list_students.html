@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+
+{% block title %}View Students{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-users text-primary me-2"></i>View Students
+        </h1>
+        <div class="d-flex gap-2">
+            {% if session.role in ['admin', 'franchise', 'regional_manager', 'branch_manager', 'staff'] %}
+                <a href="{{ url_for('students.register_student') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-user-plus me-1"></i>Add New Student
+                </a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+                <a href="{{ url_for('dashboard_bp.admin_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% elif session.role == 'franchise' %}
+                <a href="{{ url_for('dashboard_bp.franchise_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% elif session.role == 'regional_manager' %}
+                <a href="{{ url_for('dashboard_bp.regional_manager_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% elif session.role in ['branch_manager', 'staff'] %}
+                <a href="{{ url_for('dashboard_bp.branch_manager_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% elif session.role == 'trainer' %}
+                <a href="{{ url_for('dashboard_bp.trainer_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% else %}
+                <a href="{{ url_for('dashboard_bp.admin_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Student Statistics -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card student-stats-card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Students
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ students|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card student-stats-card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Active Students
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ students|selectattr('is_deleted', 'equalto', 0)|list|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card student-stats-card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                This Month
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ students|selectattr('admission_date')|list|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card student-stats-card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Branches
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ students|map(attribute='branch_id')|unique|list|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-building fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students Table -->
+    <div class="card student-list-table shadow mb-4">
+        <div class="card-header student-list-header py-3">
+            <h6 class="m-0 font-weight-bold">
+                <i class="fas fa-list me-2"></i>Student List
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if students %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="studentsTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Mobile</th>
+                                <th>Email</th>
+                                <th>Branch</th>
+                                <th>Course/Batch</th>
+                                <th>Admission Date</th>
+                                <th>Status</th>
+                                <th>Fee Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>
+                                    <strong class="text-primary">{{ student.student_id }}</strong>
+                                </td>
+                                <td>
+                                    <div class="student-name-cell">
+                                        {% if student.photo %}
+                                            <img src="{{ url_for('static', filename='uploads/' + student.photo) }}" 
+                                                 class="rounded-circle student-avatar-placeholder" 
+                                                 alt="Student Photo">
+                                        {% else %}
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center student-avatar-placeholder">
+                                                {{ student.full_name[:1].upper() }}
+                                            </div>
+                                        {% endif %}
+                                        <div class="student-name-info">
+                                            <strong>{{ student.full_name }}</strong>
+                                            {% if student.guardian_name %}
+                                                <br><small class="text-muted">S/O {{ student.guardian_name }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="tel:{{ student.mobile }}" class="student-contact-link">
+                                        <i class="fas fa-phone me-1"></i>{{ student.mobile }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if student.email %}
+                                        <a href="mailto:{{ student.email }}" class="student-contact-link">
+                                            <i class="fas fa-envelope me-1"></i>{{ student.email }}
+                                        </a>
+                                    {% else %}
+                                        <small class="text-muted">Not provided</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if branches and student.branch_id in branches %}
+                                        <span class="badge badge-info">{{ branches[student.branch_id] }}</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">Branch {{ student.branch_id }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if student.course %}
+                                        <span class="badge badge-success">{{ student.course_name }}</span>
+                                    {% else %}
+                                        <small class="text-muted">Not assigned</small>
+                                    {% endif %}
+                                    {% if student.batch_id %}
+                                        <br><small class="text-muted">Batch: {{ student.batch_id }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if student.admission_date %}
+                                        {{ student.admission_date | format_datetime_indian }}
+                                        <br><small class="text-muted">Recent admission</small>
+                                    {% else %}
+                                        <small class="text-muted">Not set</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if student.status %}
+                                        {% if student.status == 'Active' %}
+                                            <span class="badge badge-success">{{ student.status }}</span>
+                                        {% elif student.status == 'Hold' %}
+                                            <span class="badge badge-warning">{{ student.status }}</span>
+                                        {% elif student.status == 'Inactive' %}
+                                            <span class="badge badge-secondary">{{ student.status }}</span>
+                                        {% elif student.status == 'Dropout' %}
+                                            <span class="badge badge-danger">{{ student.status }}</span>
+                                        {% elif student.status == 'Completed' %}
+                                            <span class="badge badge-primary">{{ student.status }}</span>
+                                        {% else %}
+                                            <span class="badge badge-light">{{ student.status }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge badge-secondary">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set fee_status = student.get_fee_status() %}
+                                    <span class="badge badge-{{ fee_status.color }}" title="{{ fee_status.description }}">
+                                        {{ fee_status.status }}
+                                    </span>
+                                    {% if fee_status.details %}
+                                        <br><small class="text-muted">{{ fee_status.details }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="student-actions">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('students.view_student', student_id=student.student_id) }}" 
+                                               class="btn btn-sm btn-info" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('students.edit_student', student_id=student.student_id) }}" 
+                                               class="btn btn-sm btn-warning" title="Edit Student">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="#" onclick="viewPayments('{{ student.student_id }}')" 
+                                               class="btn btn-sm btn-success" title="View Payments">
+                                                <i class="fas fa-rupee-sign"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="student-empty-state">
+                    <i class="fas fa-users fa-3x mb-3"></i>
+                    <h5>No Students Found</h5>
+                    <p class="mb-4">Start by registering your first student.</p>
+                    <a href="{{ url_for('students.register_student') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Register First Student
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Student Details Modal -->
+<div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="studentModalLabel">Student Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="studentDetails">
+                <!-- Student details will be loaded here -->
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    console.log('Students page loaded');
+    
+    // Check if we have students data
+    var studentCount = $('#studentsTable tbody tr').length;
+    console.log('Student rows found:', studentCount);
+    
+    // Initialize DataTable only if we have data
+    if (studentCount > 0) {
+        try {
+            $('#studentsTable').DataTable({
+                "pageLength": 25,
+                "order": [[ 6, "desc" ]], // Order by admission date descending
+                "columnDefs": [
+                    { "orderable": false, "targets": [8] } // Disable sorting for Actions column
+                ],
+                "responsive": true
+            });
+            console.log('DataTable initialized successfully');
+        } catch (e) {
+            console.error('DataTable initialization error:', e);
+        }
+    } else {
+        console.log('No student data found for DataTable initialization');
+    }
+});
+
+function viewStudent(studentId) {
+    console.log('Viewing student:', studentId);
+    
+    // Load student details via AJAX
+    $.get('/students/api/student/' + studentId)
+        .done(function(data) {
+            console.log('API response:', data);
+            if (data.success && data.student) {
+                const student = data.student;
+                const html = '<div class="row">' +
+                    '<div class="col-md-6">' +
+                        '<strong>Student ID:</strong>' +
+                        '<p>' + student.student_id + '</p>' +
+                        '<strong>Full Name:</strong>' +
+                        '<p>' + student.full_name + '</p>' +
+                        '<strong>Guardian Name:</strong>' +
+                        '<p>' + (student.guardian_name || 'Not provided') + '</p>' +
+                        '<strong>Mobile:</strong>' +
+                        '<p>' + student.mobile + '</p>' +
+                        '<strong>Email:</strong>' +
+                        '<p>' + (student.email || 'Not provided') + '</p>' +
+                    '</div>' +
+                    '<div class="col-md-6">' +
+                        '<strong>Course:</strong>' +
+                        '<p>' + (student.course_name || 'Not assigned') + '</p>' +
+                        '<strong>Admission Date:</strong>' +
+                        '<p>' + (student.admission_date || 'Not set') + '</p>' +
+                        '<strong>Address:</strong>' +
+                        '<p>' + (student.address || 'Not provided') + '</p>' +
+                        '<strong>Date of Birth:</strong>' +
+                        '<p>' + (student.dob || 'Not provided') + '</p>' +
+                    '</div>' +
+                '</div>';
+                
+                $('#studentDetails').html(html);
+                
+                // Show modal using Bootstrap 5 syntax
+                var modal = new bootstrap.Modal(document.getElementById('studentModal'));
+                modal.show();
+            } else {
+                console.error('API error:', data.error || 'Unknown error');
+                alert('Error loading student details: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .fail(function(xhr, status, error) {
+            console.error('AJAX failed:', status, error);
+            alert('Error loading student details: ' + error);
+        });
+}
+
+function viewPayments(studentId) {
+    // Redirect to payments page (when implemented)
+    window.location.href = '/finance/student/' + studentId + '/payments';
+}
+</script>
+{% endblock %}

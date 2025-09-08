@@ -1,0 +1,531 @@
+{% extends "base.html" %}
+{% block title %}Franchise Owner Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Welcome Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="text-primary">
+            <i class="fas fa-building me-2"></i>Franchise Owner Dashboard
+          </h2>
+          <p class="text-muted mb-0">
+            <i class="fas fa-map-marker-alt me-1"></i>
+            {% if branch %}
+              {{ branch.branch_name }} - {{ branch.address }}
+            {% else %}
+              {{ branch_name }}
+            {% endif %}
+          </p>
+        </div>
+        <div class="text-end">
+          <small class="text-muted">Dashboard Overview</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-uppercase fw-semibold text-brand-primary-500 small mb-1">Total Students</div>
+              <div class="h5 mb-0 fw-bold text-primary">{{ total_students }}</div>
+            </div>
+            <i class="fas fa-graduation-cap fa-2x text-muted"></i>
+          </div>
+        </div>
+        <div class="card-footer bg-brand-primary text-white">
+          <i class="fas fa-users me-1"></i> Enrolled Students
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-uppercase fw-semibold text-brand-success-500 small mb-1">Total Revenue</div>
+              <div class="h5 mb-0 fw-bold text-primary">₹{{ "{:,}".format(branch_revenue) }}</div>
+            </div>
+            <i class="fas fa-rupee-sign fa-2x text-muted"></i>
+          </div>
+        </div>
+        <div class="card-footer bg-brand-success text-white">
+          <i class="fas fa-chart-line me-1"></i> Total Revenue
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-uppercase fw-semibold text-brand-secondary-500 small mb-1">Active Batches</div>
+              <div class="h5 mb-0 fw-bold text-primary">{{ total_batches }}</div>
+            </div>
+            <i class="fas fa-users fa-2x text-muted"></i>
+          </div>
+        </div>
+        <div class="card-footer bg-brand-secondary text-white">
+          <i class="fas fa-layer-group me-1"></i> Running Batches
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-uppercase fw-semibold text-brand-warning-500 small mb-1">Course Offerings</div>
+              <div class="h5 mb-0 fw-bold text-primary">{{ total_courses }}</div>
+            </div>
+            <i class="fas fa-book fa-2x text-muted"></i>
+          </div>
+        </div>
+        <div class="card-footer bg-brand-warning text-white">
+          <i class="fas fa-book me-1"></i> Available Courses
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Branch Attendance Overview -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow">
+        <div class="card-header bg-tertiary d-flex justify-content-between align-items-center">
+          <h6 class="m-0 fw-bold text-primary">
+            <i class="fas fa-calendar-check me-2"></i>Branch Attendance Overview
+          </h6>
+          <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" id="attendanceDateRange" onchange="updateAttendanceView()">
+              <option value="today">Today</option>
+              <option value="week" selected>This Week</option>
+              <option value="month">This Month</option>
+            </select>
+            {% if branch %}
+              <a href="{{ url_for('batches.list_batches') }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-eye me-1"></i>View All Batches
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="row mb-3">
+            <!-- Today's Attendance -->
+            <div class="col-lg-3 col-md-6 mb-3">
+              <div class="card h-100 attendance-overview-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="me-3">
+                      <div class="kpi-icon bg-brand-success d-flex align-items-center justify-content-center">
+                        <i class="fas fa-user-check fa-lg text-white"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-uppercase fw-semibold text-brand-success-500 small mb-1">Today's Attendance</div>
+                      <div class="h6 mb-0 fw-bold text-primary">{{ attendance_stats.today_rate|default(0)|round(1) }}%</div>
+                      <div class="small text-muted">
+                        {{ attendance_stats.today_present|default(0) }}/{{ attendance_stats.today_total|default(0) }} students
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer bg-brand-success text-white">
+                  <i class="fas fa-calendar-check me-1"></i> Today's Status
+                </div>
+              </div>
+            </div>
+
+            <!-- Weekly Average -->
+            <div class="col-lg-3 col-md-6 mb-3">
+              <div class="card h-100 attendance-overview-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="me-3">
+                      <div class="kpi-icon bg-brand-secondary d-flex align-items-center justify-content-center">
+                        <i class="fas fa-chart-line fa-lg text-white"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-uppercase fw-semibold text-brand-secondary-500 small mb-1">Weekly Average</div>
+                      <div class="h6 mb-0 fw-bold text-primary">{{ attendance_stats.weekly_rate|default(0)|round(1) }}%</div>
+                      <div class="small text-muted">Last 7 days average</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer bg-brand-secondary text-white">
+                  <i class="fas fa-chart-line me-1"></i> Weekly Trend
+                </div>
+              </div>
+            </div>
+
+            <!-- Students At Risk -->
+            <div class="col-lg-3 col-md-6 mb-3">
+              <div class="card h-100 attendance-overview-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="me-3">
+                      <div class="kpi-icon bg-brand-warning d-flex align-items-center justify-content-center">
+                        <i class="fas fa-exclamation-triangle fa-lg text-white"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-uppercase fw-semibold text-brand-warning-500 small mb-1">At Risk Students</div>
+                      <div class="h6 mb-0 fw-bold text-primary">{{ attendance_stats.at_risk_count|default(0) }}</div>
+                      <div class="small text-muted">Below 65% attendance</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer bg-brand-warning text-white">
+                  <i class="fas fa-exclamation-triangle me-1"></i> Needs Attention
+                </div>
+              </div>
+            </div>
+
+            <!-- Late Arrivals -->
+            <div class="col-lg-3 col-md-6 mb-3">
+              <div class="card h-100 attendance-overview-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="me-3">
+                      <div class="kpi-icon bg-brand-danger d-flex align-items-center justify-content-center">
+                        <i class="fas fa-clock fa-lg text-white"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-uppercase fw-semibold text-brand-danger-500 small mb-1">Late Today</div>
+                      <div class="h6 mb-0 fw-bold text-primary">{{ attendance_stats.today_late|default(0) }}</div>
+                      <div class="small text-muted">Students late today</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer bg-brand-danger text-white">
+                  <i class="fas fa-clock me-1"></i> Late Arrivals
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Batches Attendance -->
+          {% if active_batches_attendance %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Batch</th>
+                  <th>Course</th>
+                  <th>Trainer</th>
+                  <th class="text-center">Total Students</th>
+                  <th class="text-center">Today's Attendance</th>
+                  <th class="text-center">Weekly Avg</th>
+                  <th class="text-center">Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for batch_info in active_batches_attendance %}
+                <tr class="batch-attendance-row">
+                  <td>
+                    <strong>{{ batch_info.batch.name }}</strong><br>
+                    <small class="text-muted">{{ batch_info.batch.timing or 'Time TBD' }}</small>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary">{{ batch_info.batch.course.course_name if batch_info.batch.course else 'No Course' }}</span>
+                  </td>
+                  <td>
+                    {% if batch_info.batch.trainer %}
+                      {{ batch_info.batch.trainer.full_name }}
+                    {% else %}
+                      <span class="text-muted">No Trainer</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-info">{{ batch_info.total_students }}</span>
+                  </td>
+                  <td class="text-center">
+                    {% set today_rate = batch_info.today_attendance_rate|default(0) %}
+                    <div class="d-flex align-items-center justify-content-center">
+                      <span class="badge bg-{{ 'success' if today_rate >= 80 else 'warning' if today_rate >= 60 else 'danger' }} me-2">
+                        {{ today_rate|round(1) }}%
+                      </span>
+                      <small class="text-muted">{{ batch_info.today_present|default(0) }}/{{ batch_info.total_students }}</small>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    {% set weekly_rate = batch_info.weekly_avg_rate|default(0) %}
+                    <span class="badge bg-{{ 'success' if weekly_rate >= 75 else 'warning' if weekly_rate >= 60 else 'danger' }}">
+                      {{ weekly_rate|round(1) }}%
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-{{ 'success' if batch_info.batch.status == 'Active' else 'secondary' }}">
+                      {{ batch_info.batch.status }}
+                    </span>
+                  </td>
+                  <td class="actions-stacked">
+                    <div class="d-flex gap-1">
+                      <a href="{{ url_for('attendance.batch_attendance', batch_id=batch_info.batch.id) }}" class="btn btn-sm btn-primary" title="Manage Attendance">
+                        <i class="fas fa-calendar-check"></i>
+                      </a>
+                      <a href="{{ url_for('batches.view_batch', batch_id=batch_info.batch.id) }}" class="btn btn-sm btn-info" title="View Batch">
+                        <i class="fas fa-eye"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No active batches with attendance data</p>
+            <a href="{{ url_for('batches.list_batches') }}" class="btn btn-primary">
+              <i class="fas fa-plus me-1"></i>Manage Batches
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow">
+        <div class="card-header bg-tertiary">
+          <h6 class="m-0 fw-bold text-primary">
+            <i class="fas fa-rocket me-2"></i>Quick Actions
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3 col-sm-6 mb-3">
+              {% if branch %}
+                <a href="{{ url_for('branch.view_branch', branch_id=branch.id) }}" class="btn btn-primary w-100">
+                  <i class="fas fa-building me-2"></i>My Branch Details
+                </a>
+              {% else %}
+                <a href="#" class="btn btn-primary w-100" onclick="showComingSoon('Branch Assignment')">
+                  <i class="fas fa-building me-2"></i>Branch Assignment
+                </a>
+              {% endif %}
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+              <a href="{{ url_for('students.register_student') }}" class="btn btn-success w-100">
+                <i class="fas fa-user-plus me-2"></i>Add New Student
+              </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+              <a href="{{ url_for('finance.financial_reports') }}" class="btn btn-info w-100">
+                <i class="fas fa-chart-bar me-2"></i>Financial Reports
+              </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+              <a href="{{ url_for('students.list_students') }}" class="btn btn-warning w-100">
+                <i class="fas fa-users me-2"></i>View Students
+              </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+              <a href="{{ url_for('batches.list_batches') }}" class="btn btn-secondary w-100">
+                <i class="fas fa-layer-group me-2"></i>Manage Batches
+              </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+              {% if session.role in ['admin', 'franchise', 'franchise_owner', 'regional_manager'] %}
+                <a href="{{ url_for('staff.list_staff') }}" class="btn btn-purple w-100">
+                  <i class="fas fa-users-cog me-2"></i>Staff Management
+                </a>
+              {% else %}
+                <a href="#" class="btn btn-purple w-100" onclick="showComingSoon('Staff Management')">
+                  <i class="fas fa-users-cog me-2"></i>Staff Management
+                </a>
+              {% endif %}
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+              {% if branch %}
+                <a href="{{ url_for('batches.list_batches') }}" class="btn btn-info w-100">
+                  <i class="fas fa-calendar-check me-2"></i>Attendance Overview
+                </a>
+              {% else %}
+                <a href="#" class="btn btn-info w-100" onclick="showComingSoon('Branch Attendance Overview')">
+                  <i class="fas fa-calendar-check me-2"></i>Attendance Overview
+                </a>
+              {% endif %}
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+              <a href="#" class="btn btn-dark w-100" onclick="markTodayAttendance()">
+                <i class="fas fa-clock me-2"></i>Mark Today's Attendance
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card shadow mb-4">
+        <div class="card-header bg-tertiary">
+          <h6 class="m-0 fw-bold text-primary">
+            <i class="fas fa-clock me-2"></i>Recent Student Enrollments
+          </h6>
+        </div>
+        <div class="card-body">
+          {% if recent_students %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Contact</th>
+                    <th>Enrolled</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for student in recent_students %}
+                    <tr>
+                      <td>
+                        <strong>{{ student.full_name }}</strong><br>
+                        <small class="text-muted">ID: {{ student.student_id }}</small>
+                      </td>
+                      <td>
+                        <i class="fas fa-phone me-1"></i>{{ student.mobile }}<br>
+                        <i class="fas fa-envelope me-1"></i>{{ student.email }}
+                      </td>
+                      <td>
+                        <small class="text-muted">
+                          {{ student.admission_date|format_date_indian if student.admission_date else 'N/A' }}
+                        </small>
+                      </td>
+                      <td><span class="badge bg-success">Active</span></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="fas fa-users fa-3x text-muted mb-3"></i>
+              <p class="text-muted">No recent enrollments to display</p>
+              <a href="{{ url_for('students.register_student') }}" class="btn btn-primary">Add First Student</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow mb-4">
+        <div class="card-header bg-tertiary">
+          <h6 class="m-0 fw-bold text-primary">
+            <i class="fas fa-chart-pie me-2"></i>Branch Performance
+          </h6>
+        </div>
+        <div class="card-body">
+          {% if branch %}
+            <div class="mb-3">
+              <h6 class="text-primary">{{ branch.branch_name }}</h6>
+              <p class="text-muted mb-2">{{ branch.address }}</p>
+
+              <div class="d-flex justify-content-between mb-2">
+                <span>Students:</span><strong>{{ total_students }}</strong>
+              </div>
+              <div class="d-flex justify-content-between mb-2">
+                <span>Active Batches:</span><strong>{{ total_batches }}</strong>
+              </div>
+              <div class="d-flex justify-content-between mb-2">
+                <span>Revenue:</span><strong class="text-success">₹{{ "{:,}".format(branch_revenue) }}</strong>
+              </div>
+
+              <div class="mt-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="text-muted">Capacity Utilization</span>
+                  <span class="text-muted">75%</span>
+                </div>
+                <div class="progress progress-thin">
+                  <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="text-center">
+              <i class="fas fa-building fa-2x text-muted mb-3"></i>
+              <p class="text-muted">Multi-branch overview</p>
+              <p class="small text-muted">View detailed branch analytics in the branch management section</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showComingSoon(feature) {
+  alert(`🚧 ${feature} feature is coming soon!\n\nThis will include comprehensive ${feature.toLowerCase()} functionality for franchise owners.`);
+}
+function updateAttendanceView() {
+  const range = document.getElementById('attendanceDateRange').value;
+  const url = new URL(window.location);
+  url.searchParams.set('attendance_range', range);
+  window.location.href = url.toString();
+}
+function markTodayAttendance() {
+  const batches = document.querySelectorAll('table tbody tr');
+  if (batches.length === 0) return alert('No active batches found. Please create a batch first.');
+  let msg = 'Select a batch to mark attendance:' + String.fromCharCode(10) + String.fromCharCode(10);
+  batches.forEach((row, i) => { 
+    msg += (i + 1) + '. ' + row.querySelector('td:first-child strong').textContent + String.fromCharCode(10); 
+  });
+  const selection = prompt(msg + String.fromCharCode(10) + 'Enter batch number:');
+  if (selection && !isNaN(selection)) {
+    const idx = parseInt(selection) - 1;
+    const link = batches[idx] && batches[idx].querySelector('a[title="Manage Attendance"]');
+    if (link) {
+      // Extract batch_id from the original link and redirect to mark attendance page
+      const urlParts = link.href.split('batch_id=');
+      if (urlParts.length > 1) {
+        const batchId = urlParts[1].split('&')[0];
+        if (batchId) {
+          window.location.href = '/attendance/mark/' + batchId;
+        } else {
+          window.location.href = link.href;
+        }
+      } else {
+        window.location.href = link.href;
+      }
+    }
+  }
+}
+function viewAttendanceAnalytics() {
+  {% if branch %}
+    window.location.href = "{{ url_for('batches.list_batches') }}";
+  {% else %}
+    alert('Please select a branch to view attendance analytics.');
+  {% endif %}
+}
+setInterval(function () {
+  document.querySelectorAll('.attendance-overview-card').forEach(c => {
+    c.classList.add('updating');
+    setTimeout(() => c.classList.remove('updating'), 1000);
+  });
+}, 300000);
+</script>
+{% endblock %}

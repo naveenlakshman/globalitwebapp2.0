@@ -1,0 +1,693 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Upload Document{% endblock %}
+{% block page_icon %}fas fa-file-upload{% endblock %}
+{% block page_title %}Upload Document{% endblock %}
+{% block page_description %}Upload and configure a new document for the LMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-zone {
+        border: 3px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 60px 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+        border-color: #28a745;
+        background: #e8f5e8;
+    }
+    .upload-preview {
+        display: none;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .file-info {
+        display: flex;
+        align-items-center;
+        gap: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-upload me-2"></i>Upload New Document
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="documentUploadForm" enctype="multipart/form-data">
+                    <!-- Course Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label for="course_id" class="form-label">Course *</label>
+                            <select id="course_id" name="course_id" class="form-select" required>
+                                <option value="">Select Course</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.course_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="module_id" class="form-label">Module *</label>
+                            <select id="module_id" name="module_id" class="form-select" required disabled>
+                                <option value="">Select Module</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="section_id" class="form-label">Section *</label>
+                            <select id="section_id" name="section_id" class="form-select" required disabled>
+                                <option value="">Select Section</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Document Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <label for="document_title" class="form-label">Document Title *</label>
+                            <input type="text" id="document_title" name="document_title" class="form-control" 
+                                   placeholder="Enter document title" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">File Limits</label>
+                            <div class="alert alert-success py-2">
+                                <small>
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Max: {{ max_file_size }}MB<br>
+                                    Formats: {{ allowed_formats|join(', ') }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="document_description" class="form-label">Description</label>
+                        <textarea id="document_description" name="document_description" class="form-control" 
+                                  rows="3" placeholder="Optional document description"></textarea>
+                    </div>
+
+                    <!-- Document Source Selection -->
+                    <div class="mb-4">
+                        <label class="form-label">Document Source *</label>
+                        <ul class="nav nav-tabs" id="documentSourceTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="file-tab" data-bs-toggle="tab" data-bs-target="#file-upload" 
+                                        type="button" role="tab" aria-controls="file-upload" aria-selected="true">
+                                    <i class="fas fa-upload me-2"></i>File Upload
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="cloud-tab" data-bs-toggle="tab" data-bs-target="#cloud-link" 
+                                        type="button" role="tab" aria-controls="cloud-link" aria-selected="false">
+                                    <i class="fas fa-cloud me-2"></i>Cloud Link
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content border border-top-0 p-3" id="documentSourceContent">
+                            <!-- File Upload Tab -->
+                            <div class="tab-pane fade show active" id="file-upload" role="tabpanel" aria-labelledby="file-tab">
+                                <div class="upload-zone" id="uploadZone">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">Drag & Drop Document File Here</h5>
+                                    <p class="text-muted mb-3">or click to browse files</p>
+                                    <input type="file" id="document_file" name="document_file" class="d-none" 
+                                           accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
+                                    <button type="button" class="btn btn-outline-success" onclick="document.getElementById('document_file').click()">
+                                        <i class="fas fa-folder-open me-2"></i>Browse Files
+                                    </button>
+                                    <div class="mt-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Max: {{ max_file_size }}MB | Formats: {{ allowed_formats|join(', ') }}
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Upload Preview -->
+                                <div class="upload-preview" id="uploadPreview">
+                                    <div class="file-info">
+                                        <i class="fas fa-file-alt fa-2x text-success"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1" id="fileName"></h6>
+                                            <div class="d-flex justify-content-between">
+                                                <small class="text-muted" id="fileSize"></small>
+                                                <small class="text-muted" id="fileType"></small>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Cloud Link Tab -->
+                            <div class="tab-pane fade" id="cloud-link" role="tabpanel" aria-labelledby="cloud-tab">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="cloud_type" class="form-label">Cloud Service</label>
+                                        <select id="cloud_type" name="cloud_type" class="form-select">
+                                            <option value="">Select Cloud Service</option>
+                                            <option value="google_drive">Google Drive</option>
+                                            <option value="onedrive">OneDrive</option>
+                                            <option value="dropbox">Dropbox</option>
+                                            <option value="external_link">External Link</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="cloud_url" class="form-label">Document URL</label>
+                                        <input type="url" id="cloud_url" name="cloud_url" class="form-control" 
+                                               placeholder="https://drive.google.com/file/d/...">
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        <strong>Instructions:</strong>
+                                        <ul class="mt-2 mb-0">
+                                            <li><strong>Google Drive:</strong> Right-click file → Share → Copy link (ensure "Anyone with the link" can view)</li>
+                                            <li><strong>OneDrive:</strong> Right-click file → Share → Copy link</li>
+                                            <li><strong>Dropbox:</strong> Right-click file → Copy Dropbox link</li>
+                                            <li><strong>External Link:</strong> Any direct URL to a document file</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Cloud Preview -->
+                                <div id="cloudPreview" style="display: none;" class="mt-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6>Cloud Document Preview</h6>
+                                            <div class="d-flex align-items-center">
+                                                <i id="cloudIcon" class="fas fa-cloud fa-2x text-primary me-3"></i>
+                                                <div class="flex-grow-1">
+                                                    <div id="cloudTitle">Cloud Document</div>
+                                                    <small id="cloudService" class="text-muted"></small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Document Settings -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Document Settings</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_downloadable" name="is_downloadable" checked>
+                                        <label class="form-check-label" for="is_downloadable">
+                                            Allow Download
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="watermark_enabled" checked>
+                                        <label class="form-check-label" for="watermark_enabled">
+                                            Apply Watermark
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="copy_protection" checked>
+                                        <label class="form-check-label" for="copy_protection">
+                                            Copy Protection
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="print_protection">
+                                        <label class="form-check-label" for="print_protection">
+                                            Print Protection
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="view_only_mode">
+                                        <label class="form-check-label" for="view_only_mode">
+                                            View Only Mode
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="requires_video_completion">
+                                        <label class="form-check-label" for="requires_video_completion">
+                                            Requires Video Completion
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Access Level -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="access_level" class="form-label">Access Level</label>
+                            <select id="access_level" name="access_level" class="form-select">
+                                <option value="student">Student Level</option>
+                                <option value="trainer">Trainer Level</option>
+                                <option value="admin">Admin Level</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="upload_notes" class="form-label">Upload Notes</label>
+                            <textarea id="upload_notes" name="upload_notes" class="form-control" 
+                                      rows="2" placeholder="Any special notes about this document"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('lms_content_management.document_list') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Documents
+                        </a>
+                        <button type="submit" class="btn btn-success" id="uploadButton">
+                            <i class="fas fa-upload me-2"></i>Upload Document
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedFile = null;
+
+    // Initialize upload zone
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('document_file');
+    const uploadPreview = document.getElementById('uploadPreview');
+
+    // Drag and drop handlers
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+
+    // File input change handler
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+
+    // Utility functions
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function showToast(message, type = 'info') {
+        // Simple toast implementation - you can replace with your preferred toast library
+        const toastContainer = document.getElementById('toast-container') || createToastContainer();
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible fade show`;
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        toastContainer.appendChild(toast);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 5000);
+    }
+
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 350px;';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    // Handle file selection
+    function handleFileSelect(file) {
+        // Validate file type
+        const allowedTypes = {{ allowed_formats|tojson }};
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedTypes.includes(fileExtension)) {
+            showToast(`Invalid file type. Allowed: ${allowedTypes.join(', ')}`, 'error');
+            return;
+        }
+
+        // Validate file size
+        const maxSize = {{ max_file_size }} * 1024 * 1024; // Convert MB to bytes
+        if (file.size > maxSize) {
+            showToast(`File too large. Maximum size: {{ max_file_size }}MB`, 'error');
+            return;
+        }
+
+        selectedFile = file;
+        
+        // Update preview
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        document.getElementById('fileType').textContent = fileExtension.toUpperCase();
+        
+        // Auto-fill document title if empty
+        const titleInput = document.getElementById('document_title');
+        if (!titleInput.value) {
+            titleInput.value = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+        }
+        
+        uploadZone.style.display = 'none';
+        uploadPreview.style.display = 'block';
+    }
+
+    // Remove selected file
+    function removeFile() {
+        selectedFile = null;
+        fileInput.value = '';
+        uploadZone.style.display = 'block';
+        uploadPreview.style.display = 'none';
+    }
+
+    // Cloud link handling
+    const cloudUrlInput = document.getElementById('cloud_url');
+    const cloudTypeSelect = document.getElementById('cloud_type');
+    const cloudPreview = document.getElementById('cloudPreview');
+    let cloudDocumentData = null;
+
+    // Cloud URL handling
+    cloudUrlInput.addEventListener('input', function() {
+        const url = this.value.trim();
+        const cloudType = cloudTypeSelect.value;
+        
+        if (url && cloudType && isValidCloudUrl(url, cloudType)) {
+            processCloudUrl(url, cloudType);
+        } else {
+            cloudPreview.style.display = 'none';
+            cloudDocumentData = null;
+        }
+    });
+
+    cloudTypeSelect.addEventListener('change', function() {
+        const url = cloudUrlInput.value.trim();
+        const cloudType = this.value;
+        
+        if (url && cloudType) {
+            processCloudUrl(url, cloudType);
+        } else {
+            cloudPreview.style.display = 'none';
+            cloudDocumentData = null;
+        }
+    });
+
+    function isValidCloudUrl(url, cloudType) {
+        const patterns = {
+            'google_drive': /^https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+            'onedrive': /^https:\/\/[a-zA-Z0-9_-]+\.sharepoint\.com|^https:\/\/1drv\.ms/,
+            'dropbox': /^https:\/\/www\.dropbox\.com\/s\/|^https:\/\/dropbox\.com\/s\//,
+            'external_link': /^https?:\/\/.+/
+        };
+        
+        return patterns[cloudType] ? patterns[cloudType].test(url) : false;
+    }
+
+    function processCloudUrl(url, cloudType) {
+        const serviceNames = {
+            'google_drive': 'Google Drive',
+            'onedrive': 'OneDrive', 
+            'dropbox': 'Dropbox',
+            'external_link': 'External Link'
+        };
+
+        const serviceIcons = {
+            'google_drive': 'fab fa-google-drive',
+            'onedrive': 'fab fa-microsoft',
+            'dropbox': 'fab fa-dropbox',
+            'external_link': 'fas fa-external-link-alt'
+        };
+
+        cloudDocumentData = {
+            url: url,
+            type: cloudType,
+            service: serviceNames[cloudType]
+        };
+
+        // Extract document name from URL
+        let documentName = 'Cloud Document';
+        try {
+            const urlParts = url.split('/');
+            const filename = urlParts[urlParts.length - 1];
+            if (filename && filename.includes('.')) {
+                documentName = decodeURIComponent(filename);
+            } else if (cloudType === 'google_drive') {
+                documentName = 'Google Drive Document';
+            } else if (cloudType === 'onedrive') {
+                documentName = 'OneDrive Document';
+            } else if (cloudType === 'dropbox') {
+                documentName = 'Dropbox Document';
+            }
+        } catch (e) {
+            console.log('Could not extract document name from URL');
+        }
+
+        document.getElementById('cloudIcon').className = serviceIcons[cloudType] + ' fa-2x text-primary me-3';
+        document.getElementById('cloudTitle').textContent = documentName;
+        document.getElementById('cloudService').textContent = serviceNames[cloudType];
+        
+        cloudPreview.style.display = 'block';
+
+        // Auto-fill document title if empty
+        const titleInput = document.getElementById('document_title');
+        if (!titleInput.value) {
+            titleInput.value = documentName.replace(/\.[^/.]+$/, ""); // Remove extension
+        }
+    }
+
+    // Load modules when course is selected
+    document.getElementById('course_id').addEventListener('change', function() {
+        const courseId = this.value;
+        const moduleSelect = document.getElementById('module_id');
+        const sectionSelect = document.getElementById('section_id');
+        
+        // Reset dependent selects
+        moduleSelect.innerHTML = '<option value="">Select Module</option>';
+        sectionSelect.innerHTML = '<option value="">Select Section</option>';
+        moduleSelect.disabled = !courseId;
+        sectionSelect.disabled = true;
+        
+        if (courseId) {
+            fetch(`/courses/api/modules/${courseId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.modules && data.modules.length > 0) {
+                            data.modules.forEach(module => {
+                                const option = document.createElement('option');
+                                option.value = module.id;
+                                option.textContent = module.name;
+                                moduleSelect.appendChild(option);
+                            });
+                            moduleSelect.disabled = false;
+                        } else {
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = 'No modules available';
+                            option.disabled = true;
+                            moduleSelect.appendChild(option);
+                        }
+                    } else {
+                        console.error('API returned error:', data.error);
+                        showToast(data.error || 'Error loading modules', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading modules:', error);
+                    showToast('Error loading modules', 'error');
+                });
+        }
+    });
+
+    // Load sections when module is selected
+    document.getElementById('module_id').addEventListener('change', function() {
+        const moduleId = this.value;
+        const sectionSelect = document.getElementById('section_id');
+        
+        sectionSelect.innerHTML = '<option value="">Select Section</option>';
+        sectionSelect.disabled = !moduleId;
+        
+        if (moduleId) {
+            fetch(`/courses/api/sections/${moduleId}?type=document`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.sections && data.sections.length > 0) {
+                            data.sections.forEach(section => {
+                                const option = document.createElement('option');
+                                option.value = section.id;
+                                option.textContent = section.name;
+                                sectionSelect.appendChild(option);
+                            });
+                            sectionSelect.disabled = false;
+                        } else {
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = 'No document sections available';
+                            option.disabled = true;
+                            sectionSelect.appendChild(option);
+                        }
+                    } else {
+                        console.error('Sections API returned error:', data.error);
+                        showToast(data.error || 'Error loading sections', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading sections:', error);
+                    showToast('Error loading sections', 'error');
+                });
+        }
+    });
+
+    // Form submission
+    document.getElementById('documentUploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Check which tab is active
+        const activeTab = document.querySelector('#documentSourceTabs .nav-link.active').id;
+        
+        if (activeTab === 'file-tab') {
+            // File upload
+            if (!selectedFile) {
+                showToast('Please select a document file', 'error');
+                return;
+            }
+            uploadDocumentFile();
+        } else if (activeTab === 'cloud-tab') {
+            // Cloud link
+            const cloudUrl = document.getElementById('cloud_url').value.trim();
+            const cloudType = document.getElementById('cloud_type').value;
+            if (!cloudUrl || !cloudType) {
+                showToast('Please enter a valid cloud document URL and select service type', 'error');
+                return;
+            }
+            uploadCloudDocument();
+        }
+    });
+
+    function uploadDocumentFile() {
+        const formData = new FormData();
+        formData.append('document_file', selectedFile);
+        formData.append('course_id', document.getElementById('course_id').value);
+        formData.append('module_id', document.getElementById('module_id').value);
+        formData.append('section_id', document.getElementById('section_id').value);
+        formData.append('document_title', document.getElementById('document_title').value);
+        formData.append('document_description', document.getElementById('document_description').value);
+        formData.append('is_downloadable', document.getElementById('is_downloadable').checked ? 'on' : '');
+        formData.append('access_level', document.getElementById('access_level').value);
+        formData.append('upload_notes', document.getElementById('upload_notes').value);
+        formData.append('upload_type', 'file');
+
+        // Disable upload button
+        document.getElementById('uploadButton').disabled = true;
+        document.getElementById('uploadButton').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+
+        // Upload document
+        fetch('{{ url_for("lms_content_management.document_upload_process") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Document uploaded successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = '{{ url_for("lms_content_management.document_list") }}';
+                }, 2000);
+            } else {
+                showToast(data.error || 'Upload failed', 'error');
+                document.getElementById('uploadButton').disabled = false;
+                document.getElementById('uploadButton').innerHTML = '<i class="fas fa-upload me-2"></i>Upload Document';
+            }
+        })
+        .catch(error => {
+            showToast('Upload failed. Please try again.', 'error');
+            document.getElementById('uploadButton').disabled = false;
+            document.getElementById('uploadButton').innerHTML = '<i class="fas fa-upload me-2"></i>Upload Document';
+        });
+    }
+
+    function uploadCloudDocument() {
+        const formData = new FormData();
+        formData.append('cloud_url', document.getElementById('cloud_url').value);
+        formData.append('cloud_type', document.getElementById('cloud_type').value);
+        formData.append('course_id', document.getElementById('course_id').value);
+        formData.append('module_id', document.getElementById('module_id').value);
+        formData.append('section_id', document.getElementById('section_id').value);
+        formData.append('document_title', document.getElementById('document_title').value);
+        formData.append('document_description', document.getElementById('document_description').value);
+        formData.append('is_downloadable', document.getElementById('is_downloadable').checked ? 'on' : '');
+        formData.append('access_level', document.getElementById('access_level').value);
+        formData.append('upload_notes', document.getElementById('upload_notes').value);
+        formData.append('upload_type', 'cloud');
+
+        // Disable upload button
+        document.getElementById('uploadButton').disabled = true;
+        document.getElementById('uploadButton').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+
+        // Upload cloud document
+        fetch('{{ url_for("lms_content_management.document_upload_process") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Cloud document added successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = '{{ url_for("lms_content_management.document_list") }}';
+                }, 2000);
+            } else {
+                showToast(data.error || 'Failed to add cloud document', 'error');
+                document.getElementById('uploadButton').disabled = false;
+                document.getElementById('uploadButton').innerHTML = '<i class="fas fa-upload me-2"></i>Upload Document';
+            }
+        })
+        .catch(error => {
+            showToast('Error processing cloud document', 'error');
+            document.getElementById('uploadButton').disabled = false;
+            document.getElementById('uploadButton').innerHTML = '<i class="fas fa-upload me-2"></i>Upload Document';
+        });
+    }
+</script>
+{% endblock %}

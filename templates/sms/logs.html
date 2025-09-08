@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block title %}SMS Logs - Global IT Education{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">SMS Logs</h1>
+                    <p class="text-muted">View and filter SMS message history</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('sms.sms_dashboard') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+                        <i class="fas fa-filter me-2"></i>Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="collapse{% if request.args %} show{% endif %}" id="filterCollapse">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="GET" id="filterForm">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="dateFrom" class="form-label">Date From</label>
+                                    <input type="date" class="form-control" id="dateFrom" name="date_from" 
+                                           value="{{ filters.date_from or '' }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="dateTo" class="form-label">Date To</label>
+                                    <input type="date" class="form-control" id="dateTo" name="date_to" 
+                                           value="{{ filters.date_to or '' }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="statusFilter" class="form-label">Status</label>
+                                    <select class="form-select" id="statusFilter" name="status">
+                                        <option value="">All Status</option>
+                                        <option value="sent" {% if filters.status == 'sent' %}selected{% endif %}>Sent</option>
+                                        <option value="failed" {% if filters.status == 'failed' %}selected{% endif %}>Failed</option>
+                                        <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="typeFilter" class="form-label">Type</label>
+                                    <select class="form-select" id="typeFilter" name="message_type">
+                                        <option value="">All Types</option>
+                                        {% for msg_type in message_types %}
+                                        <option value="{{ msg_type }}" {% if filters.type == msg_type %}selected{% endif %}>
+                                            {{ msg_type.title() }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="phoneSearch" class="form-label">Phone Number</label>
+                                    <input type="text" class="form-control" id="phoneSearch" name="phone_search" 
+                                           placeholder="Search phone..." value="{{ request.args.get('phone_search', '') }}">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-2"></i>Apply Filters
+                                    </button>
+                                    <a href="{{ url_for('sms.sms_logs') }}" class="btn btn-outline-secondary ms-2">
+                                        <i class="fas fa-times me-2"></i>Clear Filters
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SMS Logs Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>SMS History
+                        {% if logs.total %}
+                            <span class="badge bg-primary ms-2">{{ logs.total }} total</span>
+                        {% endif %}
+                    </h5>
+                    {% if logs.total > 0 %}
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="exportLogs()">
+                        <i class="fas fa-download me-2"></i>Export
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if logs.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date/Time</th>
+                                    <th>Phone Number</th>
+                                    <th>Message</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Sent By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs.items %}
+                                <tr>
+                                    <td>
+                                        <div class="small">
+                                            <div>{{ log.sent_at|format_datetime('%m/%d/%Y') }}</div>
+                                            <div class="text-muted">{{ log.sent_at|format_datetime('%H:%M:%S') }}</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="font-monospace">+91{{ log.phone_number }}</span>
+                                        {% if log.student_id %}
+                                            <br><small class="text-muted">Student ID: {{ log.student_id }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 250px;" 
+                                             title="{{ log.message }}" data-bs-toggle="tooltip">
+                                            {{ log.message }}
+                                        </div>
+                                        {% if log.template_id %}
+                                            <small class="badge bg-secondary">Template: {{ log.template_id }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ log.message_type.title() }}</span>
+                                    </td>
+                                    <td>
+                                        {% if log.status == 'sent' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Sent
+                                            </span>
+                                        {% elif log.status == 'failed' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>Failed
+                                            </span>
+                                        {% elif log.status == 'pending' %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock me-1"></i>Pending
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ log.status.title() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.sent_by_user %}
+                                            <small>{{ log.sent_by_user.first_name }} {{ log.sent_by_user.last_name }}</small>
+                                        {% else %}
+                                            <small class="text-muted">System</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary view-details-btn" 
+                                                    data-log-id="{{ log.id }}" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            {% if log.status == 'sent' and log.session_id %}
+                                            <button type="button" class="btn btn-outline-info check-status-btn" 
+                                                    data-session-id="{{ log.session_id }}" title="Check Status">
+                                                <i class="fas fa-sync"></i>
+                                            </button>
+                                            {% endif %}
+                                            {% if log.status == 'failed' %}
+                                            <button type="button" class="btn btn-outline-warning resend-sms-btn" 
+                                                    data-log-id="{{ log.id }}" title="Resend">
+                                                <i class="fas fa-redo"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if logs.pages > 1 %}
+                    <div class="card-footer">
+                        <nav aria-label="SMS logs pagination">
+                            <ul class="pagination justify-content-center mb-0">
+                                {% if logs.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('sms.sms_logs', page=logs.prev_num, **request.args) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for page_num in logs.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != logs.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('sms.sms_logs', page=page_num, **request.args) }}">
+                                                {{ page_num }}
+                                            </a>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                        {% endif %}
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if logs.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('sms.sms_logs', page=logs.next_num, **request.args) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        
+                        <div class="text-center mt-2">
+                            <small class="text-muted">
+                                Showing {{ logs.items|length }} of {{ logs.total }} entries
+                                (Page {{ logs.page }} of {{ logs.pages }})
+                            </small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No SMS logs found</h5>
+                        {% if request.args %}
+                        <p class="text-muted">Try adjusting your filters or 
+                            <a href="{{ url_for('sms.sms_logs') }}">clear all filters</a>
+                        </p>
+                        {% else %}
+                        <p class="text-muted">No SMS messages have been sent yet</p>
+                        <a href="{{ url_for('sms.send_sms_page') }}" class="btn btn-primary">Send Your First SMS</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SMS Details Modal -->
+<div class="modal fade" id="smsDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">SMS Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="smsDetailsContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize tooltips and event handlers
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Event delegation for action buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.view-details-btn')) {
+            const logId = e.target.closest('.view-details-btn').dataset.logId;
+            viewDetails(logId);
+        } else if (e.target.closest('.check-status-btn')) {
+            const sessionId = e.target.closest('.check-status-btn').dataset.sessionId;
+            checkStatus(sessionId);
+        } else if (e.target.closest('.resend-sms-btn')) {
+            const logId = e.target.closest('.resend-sms-btn').dataset.logId;
+            resendSMS(logId);
+        }
+    });
+});
+
+function viewDetails(logId) {
+    // Show loading
+    document.getElementById('smsDetailsContent').innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('smsDetailsModal')).show();
+    
+    // Load details (placeholder for future implementation)
+    setTimeout(() => {
+        document.getElementById('smsDetailsContent').innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                SMS details feature coming soon!
+            </div>
+        `;
+    }, 1000);
+}
+
+function checkStatus(sessionId) {
+    // Placeholder for status checking
+    alert('Status check feature coming soon!');
+}
+
+function resendSMS(logId) {
+    if (confirm('Are you sure you want to resend this SMS?')) {
+        // Placeholder for resend functionality
+        alert('Resend feature coming soon!');
+    }
+}
+
+function exportLogs() {
+    // Get current filter parameters
+    const form = document.getElementById('filterForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData);
+    
+    // Add export parameter
+    params.append('export', 'csv');
+    
+    // Create download link
+    const downloadUrl = '{{ url_for("sms.sms_logs") }}?' + params.toString();
+    
+    // Placeholder for export functionality
+    alert('Export feature coming soon!');
+}
+</script>
+{% endblock %}

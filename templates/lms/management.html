@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Course Management - LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-cogs text-primary me-2"></i>LMS Course Management
+        </h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('lms.admin_dashboard') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+            <a href="{{ url_for('lms_content_management.dashboard') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-graduation-cap me-1"></i>Content Management
+            </a>
+        </div>
+    </div>
+
+    <!-- LMS Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success d-flex align-items-center">
+                <i class="fas fa-check-circle me-2"></i>
+                <div>
+                    <strong>Internal LMS Status:</strong>
+                    Active and fully operational
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Courses Management -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Courses Sync Status</h6>
+                    <button onclick="syncAllCourses()" class="btn btn-success btn-sm">
+                        <i class="fas fa-sync me-1"></i>Sync All Courses
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="coursesTable">
+                            <thead>
+                                <tr>
+                                    <th>Course Name</th>
+                                    <th>Category</th>
+                                    <th>Duration</th>
+                                    <th>Fee</th>
+                                    <th>LMS Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in courses %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ course.course_name }}</strong>
+                                        {% if course.course_code %}
+                                        <br><small class="text-muted">{{ course.course_code }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ course.category }}</span>
+                                    </td>
+                                    <td>{{ course.duration }}</td>
+                                    <td>₹{{ course.fee }}</td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Active
+                                        </span>
+                                        <br><small class="text-muted">Internal LMS</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('courses.view_course', course_id=course.id) }}" 
+                                               class="btn btn-secondary" title="View Course">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('lms_content_management.dashboard') }}" 
+                                               class="btn btn-primary" title="Manage Content">
+                                                <i class="fas fa-graduation-cap"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Students Management -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Students Sync</h6>
+                    <button onclick="syncAllStudents()" class="btn btn-success btn-sm">
+                        <i class="fas fa-sync me-1"></i>Sync All
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students[:10] %}
+                                <tr>
+                                    <td>
+                                        <small>{{ student.full_name }}</small>
+                                        <br><small class="text-muted">ID: {{ student.student_id }}</small>
+                                    </td>
+                                    <td>
+                                        <!-- Note: Students are automatically synced when created -->
+                                        <span class="badge bg-success">Auto-Synced</span>
+                                    </td>
+                                    <td>
+                                        <!-- Manual sync button for troubleshooting -->
+                                        <button onclick="syncStudent('{{ student.student_id }}')" 
+                                                class="btn btn-primary btn-sm" title="Re-sync Student">
+                                            <i class="fas fa-sync"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if students|length > 10 %}
+                    <div class="text-center">
+                        <small class="text-muted">Showing first 10 students</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Sync Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="text-primary">
+                                <i class="fas fa-book fa-2x"></i>
+                            </div>
+                            <h5>{{ courses|selectattr('moodle_synced')|list|length }}</h5>
+                            <small class="text-muted">Synced Courses</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-success">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                            <h5>{{ students|selectattr('moodle_synced')|list|length if students else 0 }}</h5>
+                            <small class="text-muted">Synced Students</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mb-0">Syncing...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function syncCourse(courseId) {
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    
+    fetch(`{{ url_for("lms.sync_course_to_moodle", course_id=0) }}`.replace('0', courseId))
+    .then(response => response.json())
+    .then(data => {
+        modal.hide();
+        if (data.success) {
+            alert(`Course synced successfully! Moodle Course ID: ${data.moodle_course_id}`);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        modal.hide();
+        console.error('Error:', error);
+        alert('An error occurred while syncing the course.');
+    });
+}
+
+function syncStudent(studentId) {
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    
+    fetch(`{{ url_for("lms.sync_student_to_moodle", student_id=0) }}`.replace('0', studentId))
+    .then(response => response.json())
+    .then(data => {
+        modal.hide();
+        if (data.success) {
+            alert(`Student synced successfully! Username: ${data.username}`);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        modal.hide();
+        console.error('Error:', error);
+        alert('An error occurred while syncing the student.');
+    });
+}
+
+function syncAllStudents() {
+    if (!confirm('This will sync all students to the LMS. Continue?')) {
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    
+    fetch('{{ url_for("lms.sync_all_students") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        modal.hide();
+        if (data.success) {
+            alert(`Successfully synced ${data.synced_count} students to LMS.`);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        modal.hide();
+        console.error('Error:', error);
+        alert('An error occurred while syncing students.');
+    });
+}
+
+function syncAllCourses() {
+    if (!confirm('This will sync all courses to the LMS. Continue?')) {
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    
+    fetch('{{ url_for("lms.sync_all_courses") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        modal.hide();
+        if (data.success) {
+            alert(`Successfully synced ${data.synced_count} courses to LMS.`);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        modal.hide();
+        console.error('Error:', error);
+        alert('An error occurred while syncing courses.');
+    });
+}
+
+// Initialize DataTable
+$(document).ready(function() {
+    // Check if DataTable is available
+    if (typeof $.fn.DataTable !== 'undefined') {
+        $('#coursesTable').DataTable({
+            "pageLength": 10,
+            "order": [[ 0, "asc" ]],
+            "columnDefs": [
+                { "orderable": false, "targets": [4, 5] }
+            ]
+        });
+    } else {
+        console.error('DataTables not available');
+    }
+});
+</script>
+{% endblock %}

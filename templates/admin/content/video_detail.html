@@ -1,0 +1,444 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}{{ video.video_title }}{% endblock %}
+{% block page_icon %}fas fa-video{% endblock %}
+{% block page_title %}{{ video.video_title }}{% endblock %}
+{% block page_description %}Video upload details and management{% endblock %}
+
+{% block header_actions %}
+<div class="btn-group">
+    {% if video.workflow_stage == 'draft' and video.upload_status == 'completed' %}
+    <button class="btn btn-outline-primary" onclick="submitForReview()">
+        <i class="fas fa-paper-plane me-2"></i>Submit for Review
+    </button>
+    {% endif %}
+    {% if video.workflow_stage == 'review' %}
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">
+        <i class="fas fa-check me-2"></i>Approve
+    </button>
+    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+        <i class="fas fa-times me-2"></i>Reject
+    </button>
+    {% endif %}
+    <a href="{{ url_for('lms_content_management.video_list') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Videos
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Video Information -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Video Information</h5>
+                <span class="workflow-stage stage-{{ video.workflow_stage }}">
+                    {% if video.workflow_stage == 'draft' %}
+                        <i class="fas fa-edit me-1"></i>Draft
+                    {% elif video.workflow_stage == 'review' %}
+                        <i class="fas fa-eye me-1"></i>Under Review
+                    {% elif video.workflow_stage == 'approved' %}
+                        <i class="fas fa-check me-1"></i>Approved
+                    {% elif video.workflow_stage == 'published' %}
+                        <i class="fas fa-globe me-1"></i>Published
+                    {% elif video.workflow_stage == 'rejected' %}
+                        <i class="fas fa-times me-1"></i>Rejected
+                    {% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Title:</strong></td>
+                                <td>{{ video.video_title }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Course:</strong></td>
+                                <td>{{ video.course.course_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Module:</strong></td>
+                                <td>{{ video.module.module_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Section:</strong></td>
+                                <td>{{ video.section.section_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Original Filename:</strong></td>
+                                <td>{{ video.original_filename }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>File Size:</strong></td>
+                                <td>{{ video.get_upload_size_formatted() }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Format:</strong></td>
+                                <td>{{ video.file_format.upper() }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Duration:</strong></td>
+                                <td>{{ video.get_duration_formatted() if video.duration_seconds else 'Not processed' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Resolution:</strong></td>
+                                <td>{{ video.resolution or 'Not processed' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Uploaded By:</strong></td>
+                                <td>{{ video.uploader.full_name if video.uploader else 'Unknown' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if video.video_description %}
+                <div class="mt-3">
+                    <strong>Description:</strong>
+                    <p class="mt-2">{{ video.video_description }}</p>
+                </div>
+                {% endif %}
+                
+                {% if video.upload_notes %}
+                <div class="mt-3">
+                    <strong>Upload Notes:</strong>
+                    <p class="mt-2">{{ video.upload_notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Upload Progress -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Upload Progress</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">Upload Progress</label>
+                        <div class="progress mb-2">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ video.upload_progress }}%" 
+                                 aria-valuenow="{{ video.upload_progress }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ video.upload_progress }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Status: {{ video.upload_status.title() }}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Encoding Progress</label>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ video.encoding_progress }}%" 
+                                 aria-valuenow="{{ video.encoding_progress }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ video.encoding_progress }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Status: {{ video.encoding_status.title() }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Features -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Security Features</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-shield-alt fa-2x mb-2 {{ 'text-success' if video.watermark_applied else 'text-muted' }}"></i>
+                            <br><small>Watermark</small>
+                            <br><strong>{{ 'Applied' if video.watermark_applied else 'Not Applied' }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-lock fa-2x mb-2 {{ 'text-success' if video.drm_protection_applied else 'text-muted' }}"></i>
+                            <br><small>DRM Protection</small>
+                            <br><strong>{{ 'Enabled' if video.drm_protection_applied else 'Disabled' }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-virus fa-2x mb-2 {{ 'text-success' if video.security_scan_status == 'passed' else 'text-warning' if video.security_scan_status == 'pending' else 'text-danger' }}"></i>
+                            <br><small>Security Scan</small>
+                            <br><strong>{{ video.security_scan_status.title() }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-check-circle fa-2x mb-2 {{ 'text-success' if video.quality_check_status == 'passed' else 'text-warning' if video.quality_check_status == 'pending' else 'text-danger' }}"></i>
+                            <br><small>Quality Check</small>
+                            <br><strong>{{ video.quality_check_status.title() }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments & Feedback -->
+        {% if video.reviewer_comments or video.rejection_reason %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Comments & Feedback</h5>
+            </div>
+            <div class="card-body">
+                {% if video.reviewer_comments %}
+                <div class="alert alert-info">
+                    <strong>Reviewer Comments:</strong>
+                    <p class="mb-0 mt-2">{{ video.reviewer_comments }}</p>
+                </div>
+                {% endif %}
+                
+                {% if video.rejection_reason %}
+                <div class="alert alert-danger">
+                    <strong>Rejection Reason:</strong>
+                    <p class="mb-0 mt-2">{{ video.rejection_reason }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Timeline & Actions -->
+    <div class="col-lg-4">
+        <!-- Timeline -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Timeline</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Upload Started</h6>
+                            <small class="text-muted">{{ video.upload_started_at | format_datetime_indian if video.upload_started_at else 'N/A' }}</small>
+                        </div>
+                    </div>
+                    
+                    {% if video.upload_completed_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Upload Completed</h6>
+                            <small class="text-muted">{{ video.upload_completed_at | format_datetime_indian if video.upload_completed_at else 'N/A' }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if video.processing_completed_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Processing Completed</h6>
+                            <small class="text-muted">{{ video.processing_completed_at | format_datetime_indian if video.processing_completed_at else 'N/A' }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if video.reviewed_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-warning"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Reviewed</h6>
+                            <small class="text-muted">{{ video.reviewed_at | format_datetime_indian if video.reviewed_at else 'N/A' }}</small>
+                            {% if video.reviewer %}
+                            <br><small class="text-muted">by {{ video.reviewer.full_name }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if video.approved_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Approved</h6>
+                            <small class="text-muted">{{ video.approved_at | format_datetime_indian if video.approved_at else 'N/A' }}</small>
+                            {% if video.approver %}
+                            <br><small class="text-muted">by {{ video.approver.full_name }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if video.published_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Published</h6>
+                            <small class="text-muted">{{ video.format_datetime_indian(video.published_at) }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Technical Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td>File Hash:</td>
+                        <td><small>{{ video.file_hash[:16] }}...</small></td>
+                    </tr>
+                    <tr>
+                        <td>FPS:</td>
+                        <td>{{ video.fps or 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Bitrate:</td>
+                        <td>{{ video.bitrate or 'N/A' }} kbps</td>
+                    </tr>
+                    <tr>
+                        <td>Retry Count:</td>
+                        <td>{{ video.retry_count }}/{{ video.max_retries }}</td>
+                    </tr>
+                </table>
+                
+                {% if video.error_message %}
+                <div class="alert alert-danger alert-sm">
+                    <strong>Error:</strong>
+                    <small>{{ video.error_message }}</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Approve Video</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('lms_content_management.approve_video', video_id=video.id) }}" method="POST">
+                <div class="modal-body">
+                    <p>Are you sure you want to approve this video for publishing?</p>
+                    <div class="mb-3">
+                        <label class="form-label">Comments (Optional)</label>
+                        <textarea name="comments" class="form-control" rows="3" 
+                                  placeholder="Add any approval comments..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Approve Video</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Video</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('lms_content_management.reject_video', video_id=video.id) }}" method="POST">
+                <div class="modal-body">
+                    <p>Please provide a reason for rejecting this video:</p>
+                    <div class="mb-3">
+                        <label class="form-label">Rejection Reason *</label>
+                        <textarea name="reason" class="form-control" rows="4" 
+                                  placeholder="Explain why this video is being rejected..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Video</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 20px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    .timeline-marker {
+        position: absolute;
+        left: -16px;
+        top: 5px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid white;
+        z-index: 1;
+    }
+    .timeline-content {
+        margin-left: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function submitForReview() {
+        if (confirm('Submit this video for review?')) {
+            fetch(`{{ url_for('lms_content_management.video_detail', video_id=video.id) }}/submit-review`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then(response => {
+                if (response.ok) {
+                    showToast('Video submitted for review!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Failed to submit video', 'error');
+                }
+            });
+        }
+    }
+
+    // Auto-refresh if upload/processing is in progress
+    {% if video.upload_progress < 100 or video.encoding_progress < 100 %}
+    setInterval(() => {
+        location.reload();
+    }, 5000);
+    {% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,889 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}Dashboard - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<!-- Welcome Header -->
+<div class="welcome-header mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-2">
+                <i class="fas fa-sun me-2"></i>
+                Good {% if current_time.hour < 12 %}Morning{% elif current_time.hour < 17 %}Afternoon{% else %}Evening{% endif %}, 
+                {{ student.full_name }}!
+            </h1>
+            <p class="mb-0 opacity-75">
+                <i class="fas fa-graduation-cap me-2"></i>{{ student.course_name }}
+                {% if student.batch %} - {{ student.batch.batch_name }}{% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="text-white">
+                <i class="fas fa-calendar me-2"></i>{{ current_date.strftime('%B %d, %Y') }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats Row -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon attendance-icon text-white">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <h3 class="mb-1">{{ attendance_percentage }}%</h3>
+            <p class="text-muted mb-0">Attendance</p>
+            <small class="text-success">
+                <i class="fas fa-arrow-up me-1"></i>Good standing
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon progress-icon text-white">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3 class="mb-1">{{ course_progress }}%</h3>
+            <p class="text-muted mb-0">Course Progress</p>
+            <small class="text-info">
+                <i class="fas fa-clock me-1"></i>On track
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon fees-icon text-white">
+                <i class="fas fa-rupee-sign"></i>
+            </div>
+            <h3 class="mb-1">₹{{ fee_balance if fee_balance > 0 else 0 }}</h3>
+            <p class="text-muted mb-0">Fee Balance</p>
+            <small class="{% if fee_balance > 0 %}text-warning{% else %}text-success{% endif %}">
+                <i class="fas fa-{% if fee_balance > 0 %}exclamation-triangle{% else %}check-circle{% endif %} me-1"></i>
+                {% if fee_balance > 0 %}Payment due{% else %}Paid{% endif %}
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon courses-icon text-white">
+                <i class="fas fa-book"></i>
+            </div>
+            <h3 class="mb-1">{{ enrolled_courses_count }}</h3>
+            <p class="text-muted mb-0">Active Courses</p>
+            <small class="text-primary">
+                <i class="fas fa-play me-1"></i>In progress
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Row -->
+<div class="row">
+    <!-- Left Column -->
+    <div class="col-lg-8">
+        <!-- Today's Schedule -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-day me-2 text-primary"></i>Today's Schedule
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if today_schedule %}
+                    {% for class in today_schedule %}
+                    <div class="schedule-item d-flex align-items-center mb-3 p-3 border rounded">
+                        <div class="schedule-time me-3">
+                            <div class="time-badge bg-primary text-white px-3 py-2 rounded">
+                                {{ class.start_time.strftime('%I:%M %p') }}
+                            </div>
+                        </div>
+                        <div class="schedule-details flex-grow-1">
+                            <h6 class="mb-1">{{ class.subject_name }}</h6>
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-user me-1"></i>{{ class.trainer_name }}
+                            </p>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ class.room_number }}
+                            </p>
+                        </div>
+                        <div class="schedule-status">
+                            <span class="badge bg-{% if class.status == 'completed' %}success{% elif class.status == 'ongoing' %}warning{% else %}secondary{% endif %}">
+                                {{ class.status.title() }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar text-muted mb-3" style="font-size: 3rem;"></i>
+                        <p class="text-muted">No classes scheduled for today</p>
+                        <small class="text-muted">Enjoy your free day! 🎉</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Learning Activity -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2 text-success"></i>Recent Learning Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_activities %}
+                    {% for activity in recent_activities %}
+                    <div class="activity-item d-flex align-items-start mb-3 pb-3 border-bottom">
+                        <div class="activity-icon me-3">
+                            <div class="icon-circle bg-{{ activity.type_color }} text-white">
+                                <i class="fas fa-{{ activity.icon }}"></i>
+                            </div>
+                        </div>
+                        <div class="activity-details flex-grow-1">
+                            <h6 class="mb-1">{{ activity.title }}</h6>
+                            <p class="text-muted mb-1">{{ activity.description }}</p>
+                            <small class="text-muted">{{ activity.timestamp.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                        </div>
+                        {% if activity.progress %}
+                        <div class="activity-progress">
+                            <small class="text-success">{{ activity.progress }}% completed</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-book-open text-muted mb-3" style="font-size: 3rem;"></i>
+                        <p class="text-muted">No recent learning activity</p>
+                        <a href="{{ url_for('lms.student_dashboard') }}" class="btn btn-primary">
+                            Start Learning <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-warning"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('lms.student_dashboard') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-play me-2"></i>Continue Learning
+                    </a>
+                    <a href="{{ url_for('student_portal.my_attendance') }}" class="btn btn-outline-success">
+                        <i class="fas fa-calendar-check me-2"></i>Mark Attendance
+                    </a>
+                    <a href="{{ url_for('student_portal.my_fees') }}" class="btn btn-outline-warning">
+                        <i class="fas fa-credit-card me-2"></i>Pay Fees
+                    </a>
+                    <a href="{{ url_for('student_portal.support') }}" class="btn btn-outline-info">
+                        <i class="fas fa-life-ring me-2"></i>Get Support
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Overview -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2 text-info"></i>Progress Overview
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="progress-ring mb-3" data-percentage="{{ course_progress }}">
+                    <svg width="120" height="120">
+                        <circle cx="60" cy="60" r="50" stroke="#e9ecef" stroke-width="8" fill="none"/>
+                        <circle cx="60" cy="60" r="50" stroke="#667eea" stroke-width="8" fill="none" 
+                                class="progress-ring-circle" stroke-dasharray="314 314" stroke-dashoffset="314"
+                                style="transform: rotate(-90deg); transform-origin: 60px 60px;"/>
+                        <text x="60" y="65" text-anchor="middle" class="progress-text">{{ course_progress }}%</text>
+                    </svg>
+                </div>
+                <h6>Course Completion</h6>
+                <p class="text-muted small">Keep up the great work!</p>
+            </div>
+        </div>
+
+        <!-- Announcements -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-bullhorn me-2 text-danger"></i>Announcements
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if announcements %}
+                    {% for announcement in announcements %}
+                    <div class="announcement-item mb-3 p-3 bg-light rounded">
+                        <h6 class="mb-1">{{ announcement.title }}</h6>
+                        <p class="text-muted small mb-1">{{ announcement.content }}</p>
+                        <small class="text-muted">{{ announcement.created_at.strftime('%B %d, %Y') }}</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-bell-slash text-muted mb-2" style="font-size: 2rem;"></i>
+                        <p class="text-muted mb-0">No new announcements</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Upcoming Deadlines -->
+        <div class="student-card">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2 text-warning"></i>Upcoming Deadlines
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_deadlines %}
+                    {% for deadline in upcoming_deadlines %}
+                    <div class="deadline-item d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                        <div>
+                            <h6 class="mb-0">{{ deadline.title }}</h6>
+                            <small class="text-muted">{{ deadline.subject }}</small>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-warning">{{ deadline.due_date.strftime('%b %d') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-check-circle text-success mb-2" style="font-size: 2rem;"></i>
+                        <p class="text-muted mb-0">No upcoming deadlines</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .icon-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .schedule-item {
+        transition: transform 0.2s ease;
+    }
+    
+    .schedule-item:hover {
+        transform: translateX(5px);
+    }
+    
+    .time-badge {
+        font-weight: bold;
+        white-space: nowrap;
+    }
+    
+    .progress-ring circle {
+        transition: stroke-dashoffset 2s ease;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animate progress ring on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const progressRings = document.querySelectorAll('.progress-ring');
+        
+        progressRings.forEach(ring => {
+            const percentage = parseInt(ring.dataset.percentage);
+            const circle = ring.querySelector('.progress-ring-circle');
+            const radius = 50;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (percentage / 100) * circumference;
+            
+            // Set initial state
+            circle.style.strokeDasharray = circumference;
+            circle.style.strokeDashoffset = circumference;
+            
+            // Animate after a short delay
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+            }, 500);
+        });
+    });
+    
+    // Add real-time updates
+    setInterval(function() {
+        // Update current time display
+        const now = new Date();
+        const timeElements = document.querySelectorAll('.current-time');
+        timeElements.forEach(el => {
+            el.textContent = now.toLocaleTimeString();
+        });
+    }, 1000);
+</script>
+{% endblock %}
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: #e3f2fd;
+            color: #1e3c72;
+            border-left: 4px solid #1e3c72;
+        }
+        
+        .sidebar .nav-link i {
+            width: 20px;
+            margin-right: 10px;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        
+        .welcome-section {
+            background: linear-gradient(45deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            animation: float 20s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .progress-custom {
+            height: 8px;
+            border-radius: 10px;
+            background-color: #e9ecef;
+        }
+        
+        .progress-custom .progress-bar {
+            border-radius: 10px;
+        }
+        
+        .quick-action-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            text-decoration: none;
+            color: #495057;
+            display: block;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+        
+        .quick-action-btn:hover {
+            border-color: #1e3c72;
+            color: #1e3c72;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .activity-item {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px 15px;
+            }
+            
+            .navbar-toggler {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <button class="navbar-toggler d-lg-none" type="button" onclick="toggleSidebar()">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <a class="navbar-brand" href="{{ url_for('student_portal.dashboard') }}">
+                <i class="fas fa-graduation-cap me-2"></i>GlobalIT Student Portal
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-2"></i>
+                        {{ student.full_name if student else 'Student' }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('student_portal.my_profile') }}">
+                            <i class="fas fa-user-edit me-2"></i>My Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('student_portal.support') }}">
+                            <i class="fas fa-life-ring me-2"></i>Help & Support
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('student_portal.student_logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="position-sticky pt-3">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('student_portal.dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('lms.student_dashboard') }}">
+                        <i class="fas fa-book"></i>My Learning
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('student_portal.my_attendance') }}">
+                        <i class="fas fa-calendar-check"></i>My Attendance
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('student_portal.my_fees') }}">
+                        <i class="fas fa-credit-card"></i>Fees & Payments
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('student_portal.my_profile') }}">
+                        <i class="fas fa-user"></i>My Profile
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('student_portal.support') }}">
+                        <i class="fas fa-life-ring"></i>Support
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                        <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' if category == 'info' else 'check-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="mb-2">Welcome back, {{ student.full_name if student else 'Student' }}! 👋</h1>
+                    <p class="mb-0 opacity-75">
+                        {% if course %}
+                            You're enrolled in {{ course.course_name }}
+                            {% if batch %} - {{ batch.batch_name }}{% endif %}
+                        {% else %}
+                            Ready to continue your learning journey?
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-lg-4 text-end">
+                    <div class="text-white-50">
+                        <i class="fas fa-calendar me-2"></i>{{ moment().format('MMMM Do, YYYY') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background-color: #e3f2fd; color: #1976d2;">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="stat-number text-primary">{{ learning_progress }}%</div>
+                    <div class="stat-label">Learning Progress</div>
+                    <div class="progress-custom mt-2">
+                        <div class="progress-bar bg-primary" style="width: {{ learning_progress }}%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background-color: #e8f5e8; color: #2e7d32;">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-number text-success">{{ attendance_percentage }}%</div>
+                    <div class="stat-label">Attendance Rate</div>
+                    <div class="progress-custom mt-2">
+                        <div class="progress-bar bg-success" style="width: {{ attendance_percentage }}%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background-color: #fff3e0; color: #f57c00;">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <div class="stat-number text-warning">₹{{ pending_fees }}</div>
+                    <div class="stat-label">Pending Fees</div>
+                    {% if pending_fees > 0 %}
+                        <small class="text-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Payment due
+                        </small>
+                    {% else %}
+                        <small class="text-success">
+                            <i class="fas fa-check-circle me-1"></i>All paid
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background-color: #fce4ec; color: #c2185b;">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <div class="stat-number text-danger">0</div>
+                    <div class="stat-label">Certificates Earned</div>
+                    <small class="text-muted">Complete courses to earn</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Row -->
+        <div class="row">
+            <!-- Quick Actions -->
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="{{ url_for('lms.student_dashboard') }}" class="quick-action-btn">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3" style="background-color: #e3f2fd; color: #1976d2; width: 45px; height: 45px;">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">Continue Learning</div>
+                                    <small class="text-muted">Resume your courses</small>
+                                </div>
+                            </div>
+                        </a>
+                        
+                        <a href="{{ url_for('student_portal.my_attendance') }}" class="quick-action-btn">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3" style="background-color: #e8f5e8; color: #2e7d32; width: 45px; height: 45px;">
+                                    <i class="fas fa-calendar"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">View Attendance</div>
+                                    <small class="text-muted">Check your attendance record</small>
+                                </div>
+                            </div>
+                        </a>
+                        
+                        <a href="{{ url_for('student_portal.my_fees') }}" class="quick-action-btn">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3" style="background-color: #fff3e0; color: #f57c00; width: 45px; height: 45px;">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">Pay Fees</div>
+                                    <small class="text-muted">Make fee payments online</small>
+                                </div>
+                            </div>
+                        </a>
+                        
+                        <a href="{{ url_for('student_portal.support') }}" class="quick-action-btn mb-0">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3" style="background-color: #fce4ec; color: #c2185b; width: 45px; height: 45px;">
+                                    <i class="fas fa-headset"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">Get Support</div>
+                                    <small class="text-muted">Contact support team</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="col-lg-8 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clock text-info me-2"></i>Recent Activity
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_activities %}
+                            {% for activity in recent_activities %}
+                                <div class="activity-item">
+                                    <div class="activity-icon" style="background-color: #e3f2fd; color: #1976d2;">
+                                        <i class="fas fa-{{ activity.icon }}"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold">{{ activity.title }}</div>
+                                        <small class="text-muted">{{ activity.description }}</small>
+                                    </div>
+                                    <div class="text-muted small">
+                                        {{ activity.time }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No recent activity</h5>
+                                <p class="text-muted">Start learning to see your activity here!</p>
+                                <a href="{{ url_for('lms.student_dashboard') }}" class="btn btn-primary">
+                                    <i class="fas fa-play me-2"></i>Start Learning
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Progress Section (if enrolled) -->
+        {% if course %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line text-success me-2"></i>{{ course.course_name }} Progress
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="text-muted mb-3">Track your progress through the course modules</p>
+                                <!-- This will be enhanced in Phase 3 with real progress data -->
+                                <div class="progress-custom mb-3">
+                                    <div class="progress-bar bg-gradient" style="width: {{ learning_progress }}%; background: linear-gradient(45deg, #1e3c72 0%, #2a5298 100%);"></div>
+                                </div>
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <div class="fw-bold text-primary">0</div>
+                                        <small class="text-muted">Modules Completed</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="fw-bold text-warning">0</div>
+                                        <small class="text-muted">Assignments Due</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="fw-bold text-success">0</div>
+                                        <small class="text-muted">Quizzes Passed</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="mb-3">
+                                    <canvas id="progressChart" width="150" height="150"></canvas>
+                                </div>
+                                <a href="{{ url_for('lms.student_dashboard') }}" class="btn btn-primary">
+                                    <i class="fas fa-arrow-right me-2"></i>Continue Learning
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Sidebar toggle for mobile
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const navToggler = document.querySelector('.navbar-toggler');
+            
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(event.target) && !navToggler.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                }
+            }
+        });
+        
+        // Progress chart
+        {% if course %}
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        const progressChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [{{ learning_progress }}, {{ 100 - learning_progress }}],
+                    backgroundColor: ['#1e3c72', '#e9ecef'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            },
+            plugins: [{
+                beforeDraw: function(chart) {
+                    const width = chart.width,
+                          height = chart.height,
+                          ctx = chart.ctx;
+                    
+                    ctx.restore();
+                    const fontSize = (height / 114).toFixed(2);
+                    ctx.font = fontSize + "em sans-serif";
+                    ctx.textBaseline = "middle";
+                    ctx.fillStyle = "#495057";
+                    
+                    const text = "{{ learning_progress }}%",
+                          textX = Math.round((width - ctx.measureText(text).width) / 2),
+                          textY = height / 2;
+                    
+                    ctx.fillText(text, textX, textY);
+                    ctx.save();
+                }
+            }]
+        });
+        {% endif %}
+        
+        // Load dashboard stats via AJAX
+        fetch('{{ url_for("student_portal.dashboard_stats") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.error) {
+                    // Update stats if needed
+                    console.log('Dashboard stats loaded:', data);
+                }
+            })
+            .catch(error => console.log('Error loading stats:', error));
+    </script>
+</body>
+</html>

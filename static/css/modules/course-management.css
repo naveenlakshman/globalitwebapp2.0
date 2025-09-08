@@ -1,0 +1,446 @@
+/* Course Management - Clean & Minimal Design */
+
+/* CSS Variables for Light/Dark Mode */
+:root {
+    --course-bg: #ffffff;
+    --course-card-bg: #ffffff;
+    --course-text-primary: #1a202c;
+    --course-text-secondary: #4a5568;
+    --course-text-muted: #718096;
+    --course-border: #e2e8f0;
+    --course-shadow: rgba(0, 0, 0, 0.08);
+    --course-hover-shadow: rgba(0, 0, 0, 0.12);
+    --course-accent: #3182ce;
+    --course-success: #38a169;
+    --course-warning: #d69e2e;
+    --course-info: #3182ce;
+    --course-danger: #e53e3e;
+    
+    /* High contrast colors for better accessibility */
+    --course-stats-primary: #2b6cb0;
+    --course-stats-success: #2f855a;
+    --course-stats-warning: #b7791f;
+    --course-stats-info: #2c5282;
+}
+
+/* Dark Mode Variables - High contrast for accessibility */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --course-bg: #1a202c;
+        --course-card-bg: #2d3748;
+        --course-text-primary: #ffffff;
+        --course-text-secondary: #e2e8f0;
+        --course-text-muted: #cbd5e0;
+        --course-border: #4a5568;
+        --course-shadow: rgba(0, 0, 0, 0.25);
+        --course-hover-shadow: rgba(0, 0, 0, 0.35);
+        --course-accent: #63b3ed;
+        --course-success: #68d391;
+        --course-warning: #fbd38d;
+        --course-info: #63b3ed;
+        --course-danger: #fc8181;
+        
+        /* High contrast stats colors for dark mode */
+        --course-stats-primary: #90cdf4;
+        --course-stats-success: #9ae6b4;
+        --course-stats-warning: #fbd38d;
+        --course-stats-info: #90cdf4;
+    }
+}
+
+/* Base Styles */
+.course-view-container {
+    background-color: var(--course-bg);
+    color: var(--course-text-primary);
+    min-height: 100vh;
+}
+
+/* Card Styling */
+.course-card {
+    background-color: var(--course-card-bg);
+    border: 1px solid var(--course-border);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--course-shadow);
+    transition: box-shadow 0.2s ease;
+}
+
+.course-card:hover {
+    box-shadow: 0 4px 8px var(--course-hover-shadow);
+}
+
+.course-card .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--course-border);
+    padding: 1rem 1.25rem;
+}
+
+.course-card .card-body {
+    padding: 1.25rem;
+}
+
+/* Typography - Enhanced readability */
+.course-title {
+    color: var(--course-text-primary);
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+}
+
+.course-subtitle {
+    color: var(--course-text-secondary);
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+.course-description {
+    color: var(--course-text-primary);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+/* Stats Cards - High Contrast & Accessible */
+.stats-card {
+    background-color: var(--course-card-bg);
+    border: 2px solid var(--course-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px var(--course-shadow);
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px var(--course-hover-shadow);
+}
+
+.stats-card .stats-number {
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    line-height: 1;
+}
+
+.stats-card .stats-label {
+    font-size: 0.875rem;
+    color: var(--course-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* High contrast stats colors */
+.stats-card.primary .stats-number { 
+    color: var(--course-stats-primary);
+}
+.stats-card.success .stats-number { 
+    color: var(--course-stats-success);
+}
+.stats-card.warning .stats-number { 
+    color: var(--course-stats-warning);
+}
+.stats-card.info .stats-number { 
+    color: var(--course-stats-info);
+}
+
+/* Content Sections - Better contrast */
+.content-section {
+    margin-bottom: 2rem;
+}
+
+.content-section h5 {
+    color: var(--course-text-primary);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.content-section .section-content {
+    color: var(--course-text-primary);
+    line-height: 1.7;
+    font-size: 1rem;
+}
+
+/* Definition Lists - Enhanced readability */
+.course-details dt {
+    color: var(--course-text-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.course-details dd {
+    color: var(--course-text-secondary);
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* Feature Items */
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    color: var(--course-text-primary);
+}
+
+.feature-item i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Tables - High contrast for accessibility */
+.course-table {
+    background-color: var(--course-card-bg);
+    color: var(--course-text-primary);
+    border: 1px solid var(--course-border);
+}
+
+.course-table th {
+    background-color: var(--course-card-bg);
+    color: var(--course-text-primary);
+    font-weight: 700;
+    border-bottom: 2px solid var(--course-border);
+    padding: 1rem;
+    font-size: 0.95rem;
+}
+
+.course-table td {
+    border-bottom: 1px solid var(--course-border);
+    vertical-align: middle;
+    padding: 1rem;
+    color: var(--course-text-primary);
+    font-size: 0.95rem;
+}
+
+.course-table tbody tr:hover {
+    background-color: var(--course-accent);
+    color: white;
+}
+
+.course-table tbody tr:hover a {
+    color: white !important;
+    text-decoration: underline;
+}
+
+/* Feature Items - Better spacing and contrast */
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    color: var(--course-text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.feature-item i {
+    width: 24px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+/* Badges - High contrast */
+.course-badge {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: 8px;
+    font-weight: 600;
+    border: 2px solid transparent;
+}
+
+.bg-success {
+    background-color: var(--course-success) !important;
+    color: white !important;
+}
+
+.bg-secondary {
+    background-color: var(--course-text-muted) !important;
+    color: white !important;
+}
+
+.bg-info {
+    background-color: var(--course-info) !important;
+    color: white !important;
+}
+
+/* Buttons */
+.btn-course {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.btn-course:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px var(--course-shadow);
+}
+
+.btn-course:focus {
+    outline: 3px solid var(--course-accent);
+    outline-offset: 2px;
+}
+
+/* Breadcrumb - Enhanced accessibility */
+.course-breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.course-breadcrumb .breadcrumb-item a {
+    color: var(--course-accent);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.course-breadcrumb .breadcrumb-item a:hover,
+.course-breadcrumb .breadcrumb-item a:focus {
+    background-color: var(--course-accent);
+    color: white;
+    outline: 2px solid var(--course-accent);
+    outline-offset: 2px;
+}
+
+.course-breadcrumb .breadcrumb-item.active {
+    color: var(--course-text-primary);
+    font-weight: 600;
+}
+
+/* Links - Better contrast and focus states */
+a {
+    color: var(--course-accent);
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--course-accent);
+    text-decoration: underline;
+}
+
+a:focus {
+    outline: 2px solid var(--course-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .course-title {
+        font-size: 1.5rem;
+    }
+    
+    .stats-card {
+        margin-bottom: 1rem;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem;
+    }
+    
+    .course-card .card-body {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .course-title {
+        font-size: 1.25rem;
+    }
+    
+    .stats-card .stats-number {
+        font-size: 1.5rem;
+    }
+    
+    .content-section h5 {
+        font-size: 1rem;
+    }
+}
+
+/* Accessibility Enhancements */
+
+/* Focus indicators for keyboard navigation */
+*:focus {
+    outline: 2px solid var(--course-accent);
+    outline-offset: 2px;
+}
+
+/* Skip to content link for screen readers */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--course-accent);
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 1000;
+}
+
+.skip-link:focus {
+    top: 6px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --course-border: #000000;
+        --course-text-primary: #000000;
+        --course-text-secondary: #000000;
+        --course-shadow: rgba(0, 0, 0, 0.5);
+    }
+    
+    .stats-card {
+        border-width: 3px;
+    }
+    
+    .course-card {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .stats-card:hover,
+    .btn-course:hover {
+        transform: none;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .course-view-container {
+        background: white !important;
+        color: black !important;
+    }
+    
+    .course-card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+    }
+    
+    .btn, .btn-group {
+        display: none !important;
+    }
+}

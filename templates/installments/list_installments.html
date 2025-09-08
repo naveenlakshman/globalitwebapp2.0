@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Installment Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-calendar-check"></i> Installment Management</h2>
+                <div>
+                    <a href="{{ url_for('installments.due_today') }}" class="btn btn-warning">
+                        <i class="bi bi-calendar-event"></i> Due Today
+                    </a>
+                    <a href="{{ url_for('installments.overdue') }}" class="btn btn-outline-danger me-2">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Overdue
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" name="status" onchange="this.form.submit()">
+                                <option value="all">All Status</option>
+                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="partial" {% if status_filter == 'partial' %}selected{% endif %}>Partial</option>
+                                <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>Paid</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date" class="form-label">Due Date</label>
+                            <select class="form-select" name="date" onchange="this.form.submit()">
+                                <option value="all">All Dates</option>
+                                <option value="due_today" {% if date_filter == 'due_today' %}selected{% endif %}>Due Today</option>
+                                <option value="overdue" {% if date_filter == 'overdue' %}selected{% endif %}>Overdue</option>
+                                <option value="upcoming" {% if date_filter == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search Student</label>
+                            <input type="text" class="form-control" name="search" placeholder="Student name" value="{{ request.args.get('search', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label>&nbsp;</label>
+                            <button type="submit" class="btn btn-outline-primary d-block">
+                                <i class="bi bi-search"></i> Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Installments Table -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul"></i> Installments 
+                        <span class="badge bg-primary">{{ installments|length }}</span>
+                    </h5>
+                    <!-- Summary Cards -->
+                    <div class="d-flex gap-3">
+                        {% set pending_count = installments | selectattr('installment.status', 'equalto', 'pending') | list | length %}
+                        {% set overdue_count = installments | selectattr('days_overdue', 'gt', 0) | list | length %}
+                        
+                        <div class="text-center">
+                            <div class="fw-bold text-warning">{{ pending_count }}</div>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="fw-bold text-danger">{{ overdue_count }}</div>
+                            <small class="text-muted">Overdue</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if installments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Installment</th>
+                                    <th>Student</th>
+                                    <th>Due Date</th>
+                                    <th>Amount</th>
+                                    <th>Paid</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in installments %}
+                                <tr class="{% if item.days_overdue > 0 %}table-danger{% elif item.installment.due_date == today %}table-warning{% endif %}">
+                                    <td>
+                                        <div>
+                                            <strong>INV-{{ item.invoice.id }} #{{ item.installment.installment_number }}</strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ item.student.full_name }}</strong><br>
+                                            <small class="text-muted">ID: {{ item.student.student_id }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            {{ item.installment.due_date|format_date_indian if item.installment.due_date else 'N/A' }}
+                                            {% if item.days_overdue > 0 %}
+                                            <br><small class="text-danger fw-bold">{{ item.days_overdue }} days overdue</small>
+                                            {% elif item.installment.due_date == today %}
+                                            <br><small class="text-warning fw-bold">Due Today</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-primary">₹{{ "{:,.2f}".format(item.installment.amount) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-success">₹{{ "{:,.2f}".format(item.installment.paid_amount) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold {% if item.installment.balance_amount > 0 %}text-danger{% else %}text-success{% endif %}">
+                                            ₹{{ "{:,.2f}".format(item.installment.balance_amount) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if item.installment.status == 'paid' %}
+                                        <span class="badge bg-success">Paid</span>
+                                        {% elif item.installment.status == 'partial' %}
+                                        <span class="badge bg-warning">Partial</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('installments.view_installment', installment_id=item.installment.id) }}" 
+                                               class="btn btn-outline-primary" title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if item.installment.status != 'paid' %}
+                                            <a href="{{ url_for('installments.payment_form', installment_id=item.installment.id) }}" 
+                                               class="btn btn-outline-success" title="Record Payment">
+                                                <i class="bi bi-credit-card"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-warning" 
+                                                    onclick="sendReminder({{ item.installment.id }})" title="Send Reminder">
+                                                <i class="bi bi-bell"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-calendar-x" style="font-size: 3rem; color: #6c757d;"></i>
+                        <p class="text-muted mt-3">No installments found matching your criteria.</p>
+                        <a href="{{ url_for('invoices.create_invoice_form') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Create New Invoice
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function sendReminder(installmentId) {
+    if (confirm('Send payment reminder for this installment?')) {
+        fetch(`/installments/${installmentId}/remind`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Reminder sent successfully!');
+                location.reload();
+            } else {
+                alert('Error sending reminder. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error sending reminder. Please try again.');
+        });
+    }
+}
+</script>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.table-danger {
+    --bs-table-bg: #f8d7da;
+}
+
+.table-warning {
+    --bs-table-bg: #fff3cd;
+}
+</style>
+{% endblock %}

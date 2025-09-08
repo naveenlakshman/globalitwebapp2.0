@@ -1,0 +1,262 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Document Uploads{% endblock %}
+{% block page_icon %}fas fa-file-alt{% endblock %}
+{% block page_title %}Document Management{% endblock %}
+{% block page_description %}Manage document uploads, processing, and approvals{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('lms_content_management.document_upload_form') }}" class="btn btn-success">
+    <i class="fas fa-upload me-2"></i>Upload Document
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="draft" {% if current_status == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="review" {% if current_status == 'review' %}selected{% endif %}>Under Review</option>
+                    <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="published" {% if current_status == 'published' %}selected{% endif %}>Published</option>
+                    <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Course</label>
+                <select name="course_id" class="form-select">
+                    <option value="">All Courses</option>
+                    {% for course in courses %}
+                    <option value="{{ course.id }}" {% if current_course_id == course.id %}selected{% endif %}>
+                        {{ course.course_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-outline-success d-block">
+                    <i class="fas fa-filter me-2"></i>Filter
+                </button>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <a href="{{ url_for('lms_content_management.document_list') }}" class="btn btn-outline-secondary d-block">
+                    <i class="fas fa-times me-2"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Documents List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Document Uploads</h5>
+        <span class="badge bg-success">{{ documents.total }} Total</span>
+    </div>
+    <div class="card-body">
+        {% if documents.items %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Document</th>
+                            <th>Course</th>
+                            <th>Size</th>
+                            <th>Settings</th>
+                            <th>Status</th>
+                            <th>Uploaded</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for document in documents.items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-file-{{ 'pdf' if document.file_format == 'pdf' else 'word' if document.file_format in ['doc', 'docx'] else 'powerpoint' if document.file_format in ['ppt', 'pptx'] else 'alt' }} fa-2x text-success"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-0">{{ document.document_title }}</h6>
+                                        <small class="text-muted">{{ document.original_filename }}</small>
+                                        {% if document.document_description %}
+                                        <br><small class="text-muted">{{ document.document_description[:50] }}...</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <strong>{{ document.course.course_name }}</strong>
+                                <br><small class="text-muted">{{ document.module.module_name }}</small>
+                                <br><small class="text-muted">{{ document.section.section_name }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ document.get_upload_size_formatted() }}</span>
+                                <br><small class="text-muted">{{ document.file_format.upper() }}</small>
+                                {% if document.page_count %}
+                                <br><small class="text-muted">{{ document.page_count }} pages</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if document.is_downloadable %}
+                                <span class="badge bg-primary mb-1">Downloadable</span><br>
+                                {% endif %}
+                                {% if document.watermark_applied %}
+                                <span class="badge bg-warning mb-1">Watermarked</span><br>
+                                {% endif %}
+                                {% if document.copy_protection_applied %}
+                                <span class="badge bg-danger mb-1">Copy Protected</span><br>
+                                {% endif %}
+                                {% if document.view_only_mode %}
+                                <span class="badge bg-secondary">View Only</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="workflow-stage stage-{{ document.workflow_stage }}">
+                                    {% if document.workflow_stage == 'draft' %}
+                                        <i class="fas fa-edit me-1"></i>Draft
+                                    {% elif document.workflow_stage == 'review' %}
+                                        <i class="fas fa-eye me-1"></i>Review
+                                    {% elif document.workflow_stage == 'approved' %}
+                                        <i class="fas fa-check me-1"></i>Approved
+                                    {% elif document.workflow_stage == 'published' %}
+                                        <i class="fas fa-globe me-1"></i>Published
+                                    {% elif document.workflow_stage == 'rejected' %}
+                                        <i class="fas fa-times me-1"></i>Rejected
+                                    {% endif %}
+                                </span>
+                                <br><small class="text-muted">{{ document.upload_status.title() }}</small>
+                            </td>
+                            <td>
+                                {{ document.upload_started_at | format_datetime_indian if document.upload_started_at else 'N/A' }}
+                                <br><small class="text-muted">by {{ document.uploader.full_name if document.uploader else 'Unknown' }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('lms_content_management.document_detail', document_id=document.id) }}" 
+                                       class="btn btn-outline-success" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if document.workflow_stage in ['draft', 'rejected'] %}
+                                    <a href="{{ url_for('lms_content_management.document_edit', document_id=document.id) }}" 
+                                       class="btn btn-outline-primary" title="Edit Document">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if document.workflow_stage == 'review' %}
+                                    <button class="btn btn-outline-success" 
+                                            onclick="approveDocument({{ document.id }})" title="Approve">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" 
+                                            onclick="rejectDocument({{ document.id }})" title="Reject">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if documents.pages > 1 %}
+            <nav aria-label="Document pagination">
+                <ul class="pagination justify-content-center">
+                    {% if documents.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('lms_content_management.document_list', page=documents.prev_num, status=current_status, course_id=current_course_id) }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in documents.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != documents.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('lms_content_management.document_list', page=page_num, status=current_status, course_id=current_course_id) }}">{{ page_num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if documents.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('lms_content_management.document_list', page=documents.next_num, status=current_status, course_id=current_course_id) }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No documents found</h5>
+                <p class="text-muted">Start by uploading your first document</p>
+                <a href="{{ url_for('lms_content_management.document_upload_form') }}" class="btn btn-success">
+                    <i class="fas fa-upload me-2"></i>Upload Document
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function approveDocument(documentId) {
+        const comments = prompt('Optional approval comments:') || '';
+        
+        fetch(`/admin/content/documents/${documentId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `comments=${encodeURIComponent(comments)}`
+        }).then(response => {
+            if (response.ok) {
+                showToast('Document approved successfully!', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('Failed to approve document', 'error');
+            }
+        });
+    }
+
+    function rejectDocument(documentId) {
+        const reason = prompt('Please provide a reason for rejection:');
+        if (reason) {
+            fetch(`/admin/content/documents/${documentId}/reject`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `reason=${encodeURIComponent(reason)}`
+            }).then(response => {
+                if (response.ok) {
+                    showToast('Document rejected', 'info');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Failed to reject document', 'error');
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

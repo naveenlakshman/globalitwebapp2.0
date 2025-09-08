@@ -1,0 +1,716 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Add Questions - {{ quiz.quiz_title }}{% endblock %}
+{% block page_icon %}fas fa-question-circle{% endblock %}
+{% block page_title %}Add Questions to Quiz{% endblock %}
+{% block page_description %}{{ quiz.quiz_title }} - Add questions like Google Forms{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Quiz Info Sidebar -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Quiz Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">{{ quiz.quiz_title }}</h6>
+                <p class="text-muted small">{{ quiz.quiz_description or 'No description' }}</p>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <div class="h5 mb-0 text-primary">{{ quiz.questions|length }}</div>
+                            <small class="text-muted">Questions</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="h5 mb-0 text-success">{{ quiz.max_score }}</div>
+                        <small class="text-muted">Total Points</small>
+                    </div>
+                </div>
+                
+                <hr>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="previewQuiz()">
+                        <i class="fas fa-eye me-1"></i>Preview Quiz
+                    </button>
+                    <a href="{{ url_for('lms_content_management.quiz_list') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Quizzes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Existing Questions -->
+        {% if quiz.questions %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Existing Questions
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for question in quiz.questions %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">Question {{ loop.index }}</h6>
+                                <p class="mb-1 small">{{ question.question_text[:50] }}{% if question.question_text|length > 50 %}...{% endif %}</p>
+                                <small class="text-muted">{{ question.question_type|title }} • {{ question.points }} points</small>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="editQuestion({{ question.id }})">
+                                        <i class="fas fa-edit me-2"></i>Edit
+                                    </a></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteQuestion({{ question.id }})">
+                                        <i class="fas fa-trash me-2"></i>Delete
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Question Creation Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>Add New Question
+                </h5>
+                <small class="text-muted">Create questions like Google Forms</small>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('lms_content_management.quiz_add_question_process', quiz_id=quiz.id) }}">
+                    <!-- Question Text -->
+                    <div class="mb-4">
+                        <label for="question_text" class="form-label">Question Text *</label>
+                        <textarea id="question_text" name="question_text" class="form-control" rows="3" 
+                                  placeholder="Enter your question here..." required></textarea>
+                    </div>
+
+                    <!-- Question Type and Points -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <label for="question_type" class="form-label">Question Type *</label>
+                            <select id="question_type" name="question_type" class="form-select" required onchange="toggleQuestionOptions()">
+                                <option value="multiple_choice">Multiple Choice (Single Answer)</option>
+                                <option value="multiple_select">Multiple Choice (Multiple Answers)</option>
+                                <option value="true_false">True/False</option>
+                                <option value="short_answer">Short Answer</option>
+                                <option value="essay">Essay/Long Answer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="points" class="form-label">Points</label>
+                            <input type="number" id="points" name="points" class="form-control" value="1" min="1" max="10">
+                        </div>
+                    </div>
+
+                    <!-- Multiple Choice Options -->
+                    <div id="options_section" class="mb-4">
+                        <label class="form-label">Answer Options</label>
+                        <div class="alert alert-info alert-sm">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Mark Correct Answer:</strong> Click the radio button (●) next to the correct answer option
+                        </div>
+                        <div id="options_container">
+                            <!-- Option 1 -->
+                            <div class="option-item mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text correct-answer-selector" title="Click to mark as correct answer">
+                                        <input type="radio" name="correct_option" value="0" class="form-check-input me-1">
+                                        <small class="text-muted">Correct?</small>
+                                    </span>
+                                    <input type="text" name="options[]" class="form-control" placeholder="Option 1" required spellcheck="false">
+                                    <button type="button" class="btn btn-outline-danger" onclick="removeOption(this)" disabled>
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Option 2 -->
+                            <div class="option-item mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text correct-answer-selector" title="Click to mark as correct answer">
+                                        <input type="radio" name="correct_option" value="1" class="form-check-input me-1">
+                                        <small class="text-muted">Correct?</small>
+                                    </span>
+                                    <input type="text" name="options[]" class="form-control" placeholder="Option 2" required spellcheck="false">
+                                    <button type="button" class="btn btn-outline-danger" onclick="removeOption(this)" disabled>
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addOption()">
+                            <i class="fas fa-plus me-1"></i>Add Option
+                        </button>
+                        <small class="form-text text-muted d-block mt-2">
+                            <i class="fas fa-lightbulb text-warning me-1"></i>
+                            <strong>Tip:</strong> Click the radio button (●) to mark which option is the correct answer for auto-grading
+                        </small>
+                    </div>
+
+                    <!-- Multiple Select Options -->
+                    <div id="options_section_multi" class="mb-4" style="display: none;">
+                        <label class="form-label">Answer Options (Multiple Correct)</label>
+                        <div class="alert alert-warning alert-sm">
+                            <i class="fas fa-check-square me-2"></i>
+                            <strong>Mark Correct Answers:</strong> Check all boxes (☑) next to the correct answer options
+                        </div>
+                        <div id="options_container_multi">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                        
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addMultiOption()">
+                            <i class="fas fa-plus me-1"></i>Add Option
+                        </button>
+                        <small class="form-text text-muted d-block mt-2">
+                            <i class="fas fa-lightbulb text-warning me-1"></i>
+                            <strong>Tip:</strong> Check multiple boxes (☑) for questions with more than one correct answer
+                        </small>
+                    </div>
+
+                    <!-- True/False Options -->
+                    <div id="true_false_section" class="mb-4" style="display: none;">
+                        <label class="form-label">Correct Answer</label>
+                        <div class="alert alert-success alert-sm">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Select Correct Answer:</strong> Choose either True or False as the correct answer
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-check-lg p-3 border rounded">
+                                    <input class="form-check-input" type="radio" name="true_false_answer" value="true" id="answer_true">
+                                    <label class="form-check-label fw-bold text-success" for="answer_true">
+                                        <i class="fas fa-check-circle me-2"></i>True
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-check-lg p-3 border rounded">
+                                    <input class="form-check-input" type="radio" name="true_false_answer" value="false" id="answer_false">
+                                    <label class="form-check-label fw-bold text-danger" for="answer_false">
+                                        <i class="fas fa-times-circle me-2"></i>False
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Short Answer -->
+                    <div id="short_answer_section" class="mb-4" style="display: none;">
+                        <label for="correct_answer" class="form-label">Correct Answer (optional)</label>
+                        <input type="text" id="correct_answer" name="correct_answer" class="form-control" 
+                               placeholder="Expected answer (leave empty for manual grading)">
+                        <small class="form-text text-muted">For auto-grading, provide the expected answer</small>
+                    </div>
+
+                    <!-- Question Settings -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_required" value="1" id="is_required" checked>
+                                <label class="form-check-label" for="is_required">Required Question</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="randomize_options" value="1" id="randomize_options">
+                                <label class="form-check-label" for="randomize_options">Randomize Answer Options</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Explanation (Optional) -->
+                    <div class="mb-4">
+                        <label for="explanation" class="form-label">Explanation (Optional)</label>
+                        <textarea id="explanation" name="explanation" class="form-control" rows="2" 
+                                  placeholder="Explain why this is the correct answer (shown after submission)"></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
+                            <i class="fas fa-eraser me-1"></i>Clear Form
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="previewQuestion()">
+                            <i class="fas fa-eye me-1"></i>Preview Question
+                        </button>
+                        <div>
+                            <button type="submit" name="action" value="add_another" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Add Question & Add Another
+                            </button>
+                            <button type="submit" name="action" value="finish" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i>Add Question & Finish
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let optionCount = 2;
+
+function toggleQuestionOptions() {
+    const questionType = document.getElementById('question_type').value;
+    const optionsSection = document.getElementById('options_section');
+    const optionsSectionMulti = document.getElementById('options_section_multi');
+    const trueFalseSection = document.getElementById('true_false_section');
+    const shortAnswerSection = document.getElementById('short_answer_section');
+    
+    // Hide all sections first
+    optionsSection.style.display = 'none';
+    optionsSectionMulti.style.display = 'none';
+    trueFalseSection.style.display = 'none';
+    shortAnswerSection.style.display = 'none';
+    
+    // Show relevant section
+    if (questionType === 'multiple_choice') {
+        optionsSection.style.display = 'block';
+        updateRadioToCheckbox(false);
+    } else if (questionType === 'multiple_select') {
+        optionsSectionMulti.style.display = 'block';
+        populateMultiSelectOptions();
+    } else if (questionType === 'true_false') {
+        trueFalseSection.style.display = 'block';
+    } else if (questionType === 'short_answer' || questionType === 'essay') {
+        shortAnswerSection.style.display = 'block';
+    }
+    
+    // Update form validation
+    updateFormValidation(questionType);
+}
+
+function populateMultiSelectOptions() {
+    const container = document.getElementById('options_container_multi');
+    container.innerHTML = '';
+    
+    // Create default 2 options
+    for (let i = 0; i < 2; i++) {
+        addMultiOptionInternal(i);
+    }
+}
+
+function addMultiOptionInternal(index) {
+    const container = document.getElementById('options_container_multi');
+    
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'option-item mb-2';
+    optionDiv.innerHTML = `
+        <div class="input-group">
+            <span class="input-group-text correct-answer-selector" title="Check if this is a correct answer">
+                <input type="checkbox" name="correct_options[]" value="${index}" class="form-check-input me-1">
+                <small class="text-muted">Correct?</small>
+            </span>
+            <input type="text" name="options[]" class="form-control" placeholder="Option ${index + 1}" required spellcheck="false">
+            <button type="button" class="btn btn-outline-danger" onclick="removeMultiOption(this)" ${index < 2 ? 'disabled' : ''}>
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(optionDiv);
+}
+
+function addMultiOption() {
+    const container = document.getElementById('options_container_multi');
+    const currentCount = container.children.length;
+    addMultiOptionInternal(currentCount);
+    updateMultiRemoveButtons();
+}
+
+function removeMultiOption(button) {
+    button.closest('.option-item').remove();
+    updateMultiRemoveButtons();
+    updateMultiOptionIndexes();
+}
+
+function updateMultiRemoveButtons() {
+    const removeButtons = document.querySelectorAll('#options_container_multi .btn-outline-danger');
+    removeButtons.forEach((btn, index) => {
+        btn.disabled = index < 2; // Keep first 2 options non-removable
+    });
+}
+
+function updateMultiOptionIndexes() {
+    const checkboxes = document.querySelectorAll('#options_container_multi input[type="checkbox"]');
+    checkboxes.forEach((checkbox, index) => {
+        checkbox.value = index;
+    });
+}
+
+function updateRadioToCheckbox(isMultiSelect) {
+    // This function is kept for backward compatibility but not used with the new dual-section approach
+    return;
+}
+
+function addOption() {
+    const container = document.getElementById('options_container');
+    
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'option-item mb-2';
+    optionDiv.innerHTML = `
+        <div class="input-group">
+            <span class="input-group-text correct-answer-selector" title="Click to mark as correct answer">
+                <input type="radio" name="correct_option" value="${optionCount}" class="form-check-input me-1">
+                <small class="text-muted">Correct?</small>
+            </span>
+            <input type="text" name="options[]" class="form-control" placeholder="Option ${optionCount + 1}" required spellcheck="false">
+            <button type="button" class="btn btn-outline-danger" onclick="removeOption(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(optionDiv);
+    optionCount++;
+    updateRemoveButtons();
+}
+
+function updateFormValidation(questionType) {
+    // Add visual indicators for required fields
+    const requiredIndicators = document.querySelectorAll('.required-indicator');
+    requiredIndicators.forEach(indicator => indicator.remove());
+    
+    if (questionType === 'multiple_choice') {
+        addRequiredIndicator('options_section', 'Please mark one option as correct');
+    } else if (questionType === 'multiple_select') {
+        addRequiredIndicator('options_section_multi', 'Please check at least one correct option');
+    } else if (questionType === 'true_false') {
+        addRequiredIndicator('true_false_section', 'Please select True or False');
+    }
+}
+
+function addRequiredIndicator(sectionId, message) {
+    const section = document.getElementById(sectionId);
+    const indicator = document.createElement('div');
+    indicator.className = 'required-indicator small text-info mt-1';
+    indicator.innerHTML = `<i class="fas fa-info-circle me-1"></i>${message}`;
+    section.appendChild(indicator);
+}
+
+function removeOption(button) {
+    button.closest('.option-item').remove();
+    updateRemoveButtons();
+    updateOptionIndexes();
+}
+
+function updateRemoveButtons() {
+    const removeButtons = document.querySelectorAll('#options_container .btn-outline-danger');
+    removeButtons.forEach((btn, index) => {
+        btn.disabled = index < 2; // Keep first 2 options non-removable
+    });
+}
+
+function updateOptionIndexes() {
+    const correctInputs = document.querySelectorAll('#options_container input[type="radio"], #options_container input[type="checkbox"]');
+    correctInputs.forEach((input, index) => {
+        input.value = index;
+    });
+}
+
+function clearForm() {
+    document.querySelector('form').reset();
+    // Reset to default options
+    const container = document.getElementById('options_container');
+    container.innerHTML = `
+        <div class="option-item mb-2">
+            <div class="input-group">
+                <span class="input-group-text correct-answer-selector" title="Click to mark as correct answer">
+                    <input type="radio" name="correct_option" value="0" class="form-check-input me-1">
+                    <small class="text-muted">Correct?</small>
+                </span>
+                <input type="text" name="options[]" class="form-control" placeholder="Option 1" required spellcheck="false">
+                <button type="button" class="btn btn-outline-danger" onclick="removeOption(this)" disabled>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="option-item mb-2">
+            <div class="input-group">
+                <span class="input-group-text correct-answer-selector" title="Click to mark as correct answer">
+                    <input type="radio" name="correct_option" value="1" class="form-check-input me-1">
+                    <small class="text-muted">Correct?</small>
+                </span>
+                <input type="text" name="options[]" class="form-control" placeholder="Option 2" required spellcheck="false">
+                <button type="button" class="btn btn-outline-danger" onclick="removeOption(this)" disabled>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    optionCount = 2;
+    toggleQuestionOptions();
+}
+
+function previewQuestion() {
+    const questionText = document.getElementById('question_text').value;
+    const questionType = document.getElementById('question_type').value;
+    
+    if (!questionText.trim()) {
+        alert('Please enter a question text first');
+        return;
+    }
+    
+    let previewHTML = `<h6>Preview:</h6><div class="border p-3 bg-light rounded">`;
+    previewHTML += `<p><strong>Q: ${questionText}</strong></p>`;
+    
+    if (questionType === 'multiple_choice') {
+        const options = document.querySelectorAll('#options_container input[name="options[]"]');
+        const correctOption = document.querySelector('#options_container input[name="correct_option"]:checked');
+        
+        previewHTML += '<div>';
+        options.forEach((option, index) => {
+            const isCorrect = correctOption && correctOption.value == index;
+            previewHTML += `<div class="form-check">
+                <input class="form-check-input" type="radio" disabled ${isCorrect ? 'checked' : ''}>
+                <label class="form-check-label ${isCorrect ? 'text-success fw-bold' : ''}">
+                    ${option.value || `Option ${index + 1}`}
+                    ${isCorrect ? ' ✓' : ''}
+                </label>
+            </div>`;
+        });
+        previewHTML += '</div>';
+    } else if (questionType === 'true_false') {
+        const correctAnswer = document.querySelector('input[name="true_false_answer"]:checked');
+        previewHTML += '<div>';
+        previewHTML += `<div class="form-check">
+            <input class="form-check-input" type="radio" disabled ${correctAnswer && correctAnswer.value === 'true' ? 'checked' : ''}>
+            <label class="form-check-label ${correctAnswer && correctAnswer.value === 'true' ? 'text-success fw-bold' : ''}">
+                True ${correctAnswer && correctAnswer.value === 'true' ? '✓' : ''}
+            </label>
+        </div>`;
+        previewHTML += `<div class="form-check">
+            <input class="form-check-input" type="radio" disabled ${correctAnswer && correctAnswer.value === 'false' ? 'checked' : ''}>
+            <label class="form-check-label ${correctAnswer && correctAnswer.value === 'false' ? 'text-success fw-bold' : ''}">
+                False ${correctAnswer && correctAnswer.value === 'false' ? '✓' : ''}
+            </label>
+        </div>`;
+        previewHTML += '</div>';
+    } else if (questionType === 'short_answer') {
+        previewHTML += '<input type="text" class="form-control" placeholder="Student answer here..." disabled>';
+    } else if (questionType === 'essay') {
+        previewHTML += '<textarea class="form-control" rows="4" placeholder="Student essay answer here..." disabled></textarea>';
+    }
+    
+    previewHTML += '</div>';
+    
+    // Show in modal or alert
+    showPreviewModal(previewHTML);
+}
+
+function showPreviewModal(html) {
+    // Create a simple modal-like overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.5); z-index: 1000; display: flex; 
+        justify-content: center; align-items: center;
+    `;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: white; padding: 20px; border-radius: 8px; 
+        max-width: 600px; width: 90%; max-height: 80%; overflow-y: auto;
+    `;
+    
+    modal.innerHTML = `
+        ${html}
+        <hr>
+        <button type="button" class="btn btn-secondary" onclick="this.closest('.preview-overlay').remove()">
+            Close Preview
+        </button>
+    `;
+    
+    overlay.className = 'preview-overlay';
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Close on outside click
+    overlay.onclick = (e) => {
+        if (e.target === overlay) overlay.remove();
+    };
+}
+
+// Add form validation before submission
+function validateForm() {
+    const questionType = document.getElementById('question_type').value;
+    const questionText = document.getElementById('question_text').value;
+    
+    if (!questionText.trim()) {
+        alert('Please enter a question text');
+        return false;
+    }
+    
+    if (questionType === 'multiple_choice') {
+        const options = document.querySelectorAll('#options_container input[name="options[]"]');
+        const correctOption = document.querySelector('#options_container input[name="correct_option"]:checked');
+        
+        let filledOptions = 0;
+        options.forEach(option => {
+            if (option.value.trim()) filledOptions++;
+        });
+        
+        if (filledOptions < 2) {
+            alert('Please provide at least 2 answer options');
+            return false;
+        }
+        
+        if (!correctOption) {
+            alert('Please mark the correct answer by clicking the radio button');
+            return false;
+        }
+    } else if (questionType === 'multiple_select') {
+        const options = document.querySelectorAll('#options_container_multi input[name="options[]"]');
+        const correctOptions = document.querySelectorAll('#options_container_multi input[name="correct_options[]"]:checked');
+        
+        let filledOptions = 0;
+        options.forEach(option => {
+            if (option.value.trim()) filledOptions++;
+        });
+        
+        if (filledOptions < 2) {
+            alert('Please provide at least 2 answer options');
+            return false;
+        }
+        
+        if (correctOptions.length === 0) {
+            alert('Please check at least one correct answer');
+            return false;
+        }
+    } else if (questionType === 'true_false') {
+        const correctAnswer = document.querySelector('input[name="true_false_answer"]:checked');
+        if (!correctAnswer) {
+            alert('Please select either True or False as the correct answer');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// Add validation to form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    toggleQuestionOptions();
+});
+</script>
+
+<style>
+.option-item .input-group-text {
+    width: 80px;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.correct-answer-selector {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.correct-answer-selector:hover {
+    background-color: #e3f2fd !important;
+    border-color: #2196f3 !important;
+}
+
+.correct-answer-selector input[type="radio"]:checked,
+.correct-answer-selector input[type="checkbox"]:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.correct-answer-selector:has(input:checked) {
+    background-color: #d4edda !important;
+    border-color: #28a745 !important;
+    color: #155724;
+}
+
+.form-check-lg {
+    transition: all 0.2s ease;
+}
+
+.form-check-lg:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-check-lg input[type="radio"]:checked + label {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.dropdown-toggle::after {
+    display: none;
+}
+
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.required-indicator {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Visual feedback for correct answers */
+.option-item:has(input[type="radio"]:checked) .form-control,
+.option-item:has(input[type="checkbox"]:checked) .form-control {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Improved button styling */
+.btn-outline-primary, .btn-outline-danger {
+    transition: all 0.2s ease;
+}
+
+.btn-outline-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}

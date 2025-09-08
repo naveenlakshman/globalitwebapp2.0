@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Lead - {{ lead.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/lead-forms.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Lead Header -->
+  <div class="lead-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="m-0"><i class="fas fa-user-edit"></i> Edit Lead</h2>
+        <p class="mb-0">Lead #{{ lead.lead_sl_number }} | {{ lead.name }}</p>
+      </div>
+      <div class="text-end">
+        <a href="{{ url_for('leads.lead_detail', lead_id=lead.id) }}" class="btn btn-outline-light">
+          <i class="fas fa-eye"></i> View Details
+        </a>
+        <a href="{{ url_for('leads.lead_list') }}" class="btn btn-outline-light">
+          <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <form id="editLeadForm" method="POST" action="{{ url_for('leads.lead_edit', lead_id=lead.id) }}" class="needs-validation" novalidate>
+    <div class="row g-3">
+      <div class="col-lg-8">
+        <div class="form-section">
+          <h5><i class="fas fa-user me-1"></i> Basic Information</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label required">Full Name</label>
+              <input type="text" class="form-control" name="name" required
+                     placeholder="Enter full name" value="{{ lead.name or '' }}">
+              <div class="invalid-feedback">Please enter the lead's full name</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required">Mobile Number</label>
+              <input type="tel" class="form-control" name="mobile" required inputmode="numeric"
+                     placeholder="10 digits only" value="{{ lead.mobile or '' }}"
+                     maxlength="10" pattern="^[0-9]{10}$">
+              <div class="hint">Enter exactly 10 digits</div>
+              <div class="invalid-feedback">Enter a valid 10-digit mobile number</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-control" name="email" placeholder="name@example.com"
+                     value="{{ lead.email or '' }}">
+              <div class="invalid-feedback">Enter a valid email</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Education Qualification</label>
+              <select class="form-select" name="qualification">
+                <option value="">Select Education Qualification</option>
+                <option value="10th Pass" {{ 'selected' if lead.qualification == '10th Pass' }}>10th Pass</option>
+                <option value="12th Commerce" {{ 'selected' if lead.qualification == '12th Commerce' }}>12th Commerce</option>
+                <option value="12th Science" {{ 'selected' if lead.qualification == '12th Science' }}>12th Science</option>
+                <option value="12th Arts" {{ 'selected' if lead.qualification == '12th Arts' }}>12th Arts</option>
+                <option value="Diploma" {{ 'selected' if lead.qualification == 'Diploma' }}>Diploma</option>
+                <option value="BBA" {{ 'selected' if lead.qualification == 'BBA' }}>BBA</option>
+                <option value="BCA" {{ 'selected' if lead.qualification == 'BCA' }}>BCA</option>
+                <option value="B.Com" {{ 'selected' if lead.qualification == 'B.Com' }}>B.Com</option>
+                <option value="BA English" {{ 'selected' if lead.qualification == 'BA English' }}>BA English</option>
+                <option value="BSc IT" {{ 'selected' if lead.qualification == 'BSc IT' }}>BSc IT</option>
+                <option value="B.Tech Computer Science" {{ 'selected' if lead.qualification == 'B.Tech Computer Science' }}>B.Tech Computer Science</option>
+                <option value="B.Tech CSE" {{ 'selected' if lead.qualification == 'B.Tech CSE' }}>B.Tech CSE</option>
+                <option value="Graduate" {{ 'selected' if lead.qualification == 'Graduate' }}>Graduate (Other)</option>
+                <option value="MBA" {{ 'selected' if lead.qualification == 'MBA' }}>MBA</option>
+                <option value="MCA" {{ 'selected' if lead.qualification == 'MCA' }}>MCA</option>
+                <option value="M.Com" {{ 'selected' if lead.qualification == 'M.Com' }}>M.Com</option>
+                <option value="Post Graduate" {{ 'selected' if lead.qualification == 'Post Graduate' }}>Post Graduate (Other)</option>
+                <option value="Other" {{ 'selected' if lead.qualification == 'Other' }}>Other</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Employment Status</label>
+              <select class="form-select" name="employment_type">
+                <option value="">Select Employment Status</option>
+                <option value="Student" {{ 'selected' if lead.employment_type == 'Student' }}>Student</option>
+                <option value="Employed" {{ 'selected' if lead.employment_type == 'Employed' }}>Employed</option>
+                <option value="Self-Employed" {{ 'selected' if lead.employment_type == 'Self-Employed' }}>Self-Employed</option>
+                <option value="Unemployed" {{ 'selected' if lead.employment_type == 'Unemployed' }}>Unemployed</option>
+                <option value="Other" {{ 'selected' if lead.employment_type == 'Other' }}>Other</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Address</label>
+              <textarea class="form-control" name="address" rows="2"
+                        placeholder="House no, street, area, city">{{ lead.address or '' }}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h5><i class="fas fa-book me-1"></i> Course Interest</h5>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Course Interest</label>
+              <div class="form-label">Choose one or more courses the lead is interested in</div>
+              
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <small class="text-muted">Available Courses:</small>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="clearAllCourses">Clear All</button>
+              </div>
+
+              <div class="course-grid" id="courseGrid">
+                {% for course in courses %}
+                <div class="course-item">
+                  <input type="checkbox" class="form-check-input course-checkbox"
+                         id="course_{{ course.id }}" name="course_interest"
+                         value="{{ course.course_name }}"
+                         {% if lead.course_interest and course.course_name in lead.course_interest.split(', ') %}checked{% endif %}>
+                  <label class="form-check-label flex-grow-1" for="course_{{ course.id }}">
+                    {{ course.course_name }}
+                    {% if course.duration %}
+                    <small class="text-muted d-block">Duration: {{ course.duration }}</small>
+                    {% endif %}
+                    {% if course.fee %}
+                    <small class="text-muted d-block">Fee: ₹{{ course.fee }}</small>
+                    {% endif %}
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+
+              <div id="selectedCoursesDisplay" class="selected-courses d-none">
+                <strong><i class="fas fa-check-circle me-1"></i>Selected Courses:</strong>
+                <div id="selectedCoursesList"></div>
+              </div>
+              
+              <div class="form-text">Select multiple courses as needed</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Lead Source</label>
+              <select class="form-select" name="lead_source">
+                <option value="">Select Lead Source</option>
+                <option value="Walk-in" {{ 'selected' if lead.lead_source == 'Walk-in' }}>Walk-in</option>
+                <option value="Phone Call" {{ 'selected' if lead.lead_source == 'Phone Call' }}>Phone Call</option>
+                <option value="Website" {{ 'selected' if lead.lead_source == 'Website' }}>Website</option>
+                <option value="Social Media" {{ 'selected' if lead.lead_source == 'Social Media' }}>Social Media</option>
+                <option value="Referral" {{ 'selected' if lead.lead_source == 'Referral' }}>Referral</option>
+                <option value="Advertisement" {{ 'selected' if lead.lead_source == 'Advertisement' }}>Advertisement</option>
+                <option value="Event" {{ 'selected' if lead.lead_source == 'Event' }}>Event</option>
+                <option value="Google Search" {{ 'selected' if lead.lead_source == 'Google Search' }}>Google Search</option>
+                <option value="WhatsApp" {{ 'selected' if lead.lead_source == 'WhatsApp' }}>WhatsApp</option>
+                <option value="Other" {{ 'selected' if lead.lead_source == 'Other' }}>Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="form-section">
+          <h5><i class="fas fa-cogs me-1"></i> Lead Management</h5>
+
+          <div class="mb-3">
+            <label class="form-label required">Branch</label>
+            <select class="form-select" name="branch_id" required id="branchSelect">
+              <option value="">Select Branch</option>
+              {% for branch in branches %}
+              <option value="{{ branch.id }}" {{ 'selected' if branch.id == lead.branch_id }}>
+                {{ branch.branch_name }}
+              </option>
+              {% endfor %}
+            </select>
+            <div class="invalid-feedback">Please select a branch</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Lead Status</label>
+            <select class="form-select" name="lead_status">
+              {% for status in ['Open','In Progress','Follow-up Scheduled','Demo Scheduled','Converted','Not Interested'] %}
+                <option value="{{ status }}" {{ 'selected' if status == lead.lead_status }}>{{ status }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Priority</label>
+            <select class="form-select" name="priority">
+              {% for p in ['Low','Medium','High','Hot'] %}
+                <option value="{{ p }}" {{ 'selected' if p == lead.priority }}>{{ p }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          {% if users %}
+          <div class="mb-3">
+            <label class="form-label">Assigned To</label>
+            <select class="form-select" name="assigned_to_user_id">
+              <option value="">Unassigned</option>
+              {% for user in users %}
+              <option value="{{ user.id }}" {{ 'selected' if user.id == lead.assigned_to_user_id }}>
+                {{ user.username }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="form-section">
+          <div class="d-grid gap-2">
+            <button id="btnSave" type="submit" class="btn btn-success">
+              <i class="fas fa-save"></i> Update Lead
+            </button>
+            <a href="{{ url_for('leads.lead_detail', lead_id=lead.id) }}" class="btn btn-outline-secondary">
+              <i class="fas fa-times"></i> Cancel
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('editLeadForm');
+  const btn = document.getElementById('btnSave');
+  const mobile = form.querySelector('input[name="mobile"]');
+  const email = form.querySelector('input[name="email"]');
+
+  // digits only - exactly 10 digits
+  mobile.addEventListener('input', function(){ 
+    this.value = this.value.replace(/\D/g,'').slice(0,10); 
+  });
+  // trim email
+  email.addEventListener('blur', function(){ this.value = this.value.trim(); });
+
+  form.addEventListener('submit', (e) => {
+    if (!form.checkValidity()) {
+      e.preventDefault();
+      e.stopPropagation();
+    } else {
+      // show minimal spinner feedback
+      btn.disabled = true;
+      btn.insertAdjacentHTML('beforeend','<span class="spinner" aria-hidden="true"></span>');
+    }
+    form.classList.add('was-validated');
+  });
+
+  // Course selection functionality
+  const clearAllBtn = document.getElementById('clearAllCourses');
+  const courseCheckboxes = document.querySelectorAll('.course-checkbox');
+  const selectedDisplay = document.getElementById('selectedCoursesDisplay');
+  const selectedList = document.getElementById('selectedCoursesList');
+
+  // Function to update selected courses display
+  function updateSelectedCourses() {
+    const selectedCourses = Array.from(courseCheckboxes)
+      .filter(checkbox => checkbox.checked)
+      .map(checkbox => checkbox.value);
+    
+    if (selectedCourses.length > 0) {
+      selectedDisplay.classList.remove('d-none');
+      selectedList.innerHTML = selectedCourses
+        .map(course => `<span class="course-badge">${course}</span>`)
+        .join('');
+    } else {
+      selectedDisplay.classList.add('d-none');
+    }
+  }
+
+  // Add event listeners to all course checkboxes
+  courseCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', updateSelectedCourses);
+  });
+
+  // Clear all functionality
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener('click', () => {
+      courseCheckboxes.forEach(checkbox => checkbox.checked = false);
+      updateSelectedCourses();
+    });
+  }
+
+  // Initialize display on page load
+  updateSelectedCourses();
+});
+</script>
+{% endblock %}

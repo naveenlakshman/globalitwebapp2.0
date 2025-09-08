@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+{% block title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-brand-primary">
+                        <i class="fas fa-user-tie me-2"></i>Staff Dashboard
+                    </h2>
+                    <p class="text-secondary mb-0">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        {% if branch %}
+                            {{ branch.branch_name }} - {{ branch.address }}
+                        {% else %}
+                            {{ branch_name }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="text-end">
+                    <small class="text-secondary">Daily Operations Overview</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Performance Indicators -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-brand-primary text-uppercase mb-1">
+                                Total Students
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">{{ total_students }}</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-graduation-cap fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-brand-primary text-white">
+                    <i class="fas fa-users me-1"></i> Enrolled Students
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-brand-success text-uppercase mb-1">
+                                Active Batches
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">{{ total_batches }}</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-layer-group fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-brand-success text-white">
+                    <i class="fas fa-layer-group me-1"></i> Running Batches
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-brand-secondary text-uppercase mb-1">
+                                Revenue Generated
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">₹{{ "{:,}".format(branch_revenue) }}</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-rupee-sign fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-brand-secondary text-white">
+                    <i class="fas fa-chart-line me-1"></i> Total Revenue
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-brand-warning text-uppercase mb-1">
+                                New Inquiries
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">{{ recent_leads|length }}</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-bullseye fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-brand-warning text-white">
+                    <i class="fas fa-phone me-1"></i> Lead Inquiries
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Overview -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-tertiary">
+                    <h6 class="m-0 fw-bold text-brand-primary">
+                        <i class="fas fa-chart-pie me-2"></i>Financial Overview
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="text-center p-3">
+                                <h4 class="text-brand-success">₹{{ "{:,}".format(branch_revenue) }}</h4>
+                                <p class="text-secondary mb-0">Total Revenue</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center p-3">
+                                <h4 class="text-brand-warning">₹{{ "{:,}".format(pending_amount) }}</h4>
+                                <p class="text-secondary mb-0">Pending Amount</p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="text-center p-3">
+                                <h4 class="text-brand-secondary">{{ due_today_count }}</h4>
+                                <p class="text-secondary mb-0">Due Today</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center p-3">
+                                <h4 class="text-brand-danger">{{ overdue_count }}</h4>
+                                <p class="text-secondary mb-0">Overdue Payments</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-tertiary">
+                    <h6 class="m-0 fw-bold text-brand-primary">
+                        <i class="fas fa-tasks me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{{ url_for('students.register_student') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-user-plus me-2"></i>Register Student
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('students.list_students') }}" class="btn btn-info w-100">
+                                <i class="fas fa-users me-2"></i>Manage Students
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('invoices.list_invoices') }}" class="btn btn-success w-100">
+                                <i class="fas fa-file-invoice me-2"></i>View Invoices
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('leads.lead_list') }}" class="btn btn-warning w-100">
+                                <i class="fas fa-bullseye me-2"></i>Manage Leads
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row">
+        <!-- Recent Student Enrollments -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-tertiary d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-brand-primary">
+                        <i class="fas fa-graduation-cap me-2"></i>Recent Student Enrollments
+                    </h6>
+                    <a href="{{ url_for('students.list_students') }}" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_students %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <tbody>
+                                    {% for student in recent_students[:5] %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-3">
+                                                    <div class="rounded-circle bg-brand-primary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                        <i class="fas fa-user text-white"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="small text-secondary">{{ student.student_id }}</div>
+                                                    <strong class="text-primary">{{ student.full_name }}</strong>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="small text-secondary">
+                                                {% if student.admission_date %}
+                                                    {% if student.admission_date.strftime %}
+                                                        {{ student.admission_date|format_date_indian }}
+                                                    {% else %}
+                                                        {{ student.admission_date }}
+                                                    {% endif %}
+                                                {% else %}
+                                                    N/A
+                                                {% endif %}
+                                            </div>
+                                            <span class="badge bg-brand-primary text-white">{{ student.course_name or 'N/A' }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-user-plus fa-3x text-secondary mb-3"></i>
+                            <p class="text-secondary">No recent enrollments</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Batches -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-tertiary d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-brand-primary">
+                        <i class="fas fa-layer-group me-2"></i>Active Batches
+                    </h6>
+                    <a href="{{ url_for('batches.list_batches') }}" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if active_batches %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <tbody>
+                                    {% for batch in active_batches[:5] %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-3">
+                                                    <div class="rounded-circle bg-brand-success d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                        <i class="fas fa-layer-group text-white"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <strong class="text-primary">{{ batch.batch_name }}</strong>
+                                                    <div class="small text-secondary">{{ batch.course_name }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="small text-secondary">
+                                                {% if batch.start_date %}
+                                                    {% if batch.start_date.strftime %}
+                                                        {{ batch.start_date.strftime('%B %d') }}
+                                                    {% else %}
+                                                        {{ batch.start_date }}
+                                                    {% endif %}
+                                                {% else %}
+                                                    N/A
+                                                {% endif %}
+                                            </div>
+                                            <span class="badge bg-brand-success text-white">{{ batch.status or 'Active' }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-layer-group fa-3x text-secondary mb-3"></i>
+                            <p class="text-secondary">No active batches</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Leads -->
+    {% if recent_leads %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-tertiary d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-brand-primary">
+                        <i class="fas fa-bullseye me-2"></i>Recent Inquiries & Leads
+                    </h6>
+                    <a href="{{ url_for('leads.lead_list') }}" class="btn btn-sm btn-outline-primary">
+                        View All Leads
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Contact</th>
+                                    <th>Course Interest</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lead in recent_leads %}
+                                <tr>
+                                    <td class="text-primary fw-medium">{{ lead.full_name }}</td>
+                                    <td class="text-secondary">{{ lead.phone }}</td>
+                                    <td class="text-secondary">{{ lead.course_interest or 'General Inquiry' }}</td>
+                                    <td>
+                                        <span class="badge {% if lead.status == 'Open' %}bg-info{% elif lead.status == 'Contacted' %}bg-warning{% elif lead.status == 'Converted' %}bg-success{% else %}bg-secondary{% endif %} text-white">
+                                            {{ lead.status or 'New' }}
+                                        </span>
+                                    </td>
+                                    <td class="small text-secondary">
+                                        {% if lead.created_at %}
+                                            {% if lead.created_at.strftime %}
+                                                {{ lead.created_at|format_date_indian }}
+                                            {% else %}
+                                                {{ lead.created_at }}
+                                            {% endif %}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

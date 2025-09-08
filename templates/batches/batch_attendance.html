@@ -1,0 +1,636 @@
+{% extends "base.html" %}
+
+{% block title %}Enhanced Attendance - {{ batch.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<style>
+    .attendance-card { border-left: 4px solid #4e73df; }
+    .status-present { background-color: #d4edda; color: #155724; }
+    .status-late { background-color: #fff3cd; color: #856404; }
+    .status-absent { background-color: #f8d7da; color: #721c24; }
+    .status-excused { background-color: #d1ecf1; color: #0c5460; }
+    
+    .time-input { width: 100px; }
+    .session-badge { font-size: 0.75rem; }
+    
+    .analytics-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+    }
+    
+    .certification-warning {
+        border-left: 4px solid #ffc107;
+        background-color: #fff3cd;
+    }
+    
+    .certification-critical {
+        border-left: 4px solid #dc3545;
+        background-color: #f8d7da;
+    }
+    
+    .attendance-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Enhanced Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-calendar-check text-primary me-2"></i>Vocational Attendance Management
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-book me-1"></i><strong>{{ batch.name }}</strong> • 
+                <i class="fas fa-building me-1"></i>{{ batch.branch.branch_name if batch.branch else 'Unknown Branch' }}
+                {% if batch.timing %}
+                • <i class="fas fa-clock me-1"></i>{{ batch.timing }}
+                {% endif %}
+                • <span class="badge bg-{{ 'success' if batch.status == 'Active' else 'secondary' }}">{{ batch.status }}</span>
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#markAttendanceModal">
+                <i class="fas fa-plus me-1"></i>Mark Today's Attendance
+            </button>
+            <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#quickCheckInModal">
+                <i class="fas fa-clock me-1"></i>Quick Check-In
+            </button>
+            <button class="btn btn-warning btn-sm" onclick="generateReport()">
+                <i class="fas fa-chart-bar me-1"></i>Generate Report
+            </button>
+            <a href="{{ url_for('batches.view_batch', batch_id=batch.id) }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Batch
+            </a>
+        </div>
+    </div>
+
+    <!-- Enhanced Statistics Dashboard -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Overall Attendance Rate
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                85.5%
+                            </div>
+                            <div class="small text-success">
+                                <i class="fas fa-check"></i> Above industry standard (75%)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Punctuality Rate
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">78.2%</div>
+                            <div class="small text-muted">
+                                <i class="fas fa-clock"></i> On-time arrivals
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Certification Eligible
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ (students|length - 1) }}/{{ students|length }}
+                            </div>
+                            <div class="small text-warning">
+                                <i class="fas fa-graduation-cap"></i> ≥75% attendance
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Sessions
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_sessions or 45 }}</div>
+                            <div class="small text-muted">
+                                <i class="fas fa-calendar"></i> Theory: 20 | Practical: 25
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Attendance Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-users me-2"></i>Student Attendance Overview
+            </h6>
+            <div class="d-flex gap-2">
+                <select class="form-select form-select-sm" id="sessionFilter" onchange="filterBySession()">
+                    <option value="">All Sessions</option>
+                    <option value="Regular">Regular</option>
+                    <option value="Theory">Theory</option>
+                    <option value="Practical">Practical</option>
+                    <option value="Assessment">Assessment</option>
+                </select>
+                <select class="form-select form-select-sm" id="statusFilter" onchange="filterByStatus()">
+                    <option value="">All Status</option>
+                    <option value="Present">Present</option>
+                    <option value="Late">Late</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Excused">Excused</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="attendanceTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Contact</th>
+                            <th>Total Sessions</th>
+                            <th>Present</th>
+                            <th>Late</th>
+                            <th>Absent</th>
+                            <th>Attendance %</th>
+                            <th>Practical Hours</th>
+                            <th>Theory Hours</th>
+                            <th>Certification Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="ms-3">
+                                        <p class="fw-bold mb-1">{{ student.full_name }}</p>
+                                        <p class="text-muted mb-0">ID: {{ student.student_id }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <div><i class="fas fa-phone text-primary"></i> {{ student.phone or 'N/A' }}</div>
+                                    <div><i class="fas fa-envelope text-secondary"></i> {{ student.email or 'N/A' }}</div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info">{{ student.get_total_sessions(batch.id) or 0 }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success">{{ student.get_present_count(batch.id) or 0 }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-warning">{{ student.get_late_count(batch.id) or 0 }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-danger">{{ student.get_absent_count(batch.id) or 0 }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% set attendance_rate = student.get_attendance_percentage(batch.id) or 0 %}
+                                <span class="badge bg-{{ 'success' if attendance_rate >= 75 else 'warning' if attendance_rate >= 60 else 'danger' }}">
+                                    {{ "%.1f"|format(attendance_rate) }}%
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-primary">{{ student.get_practical_hours(batch.id) or 0 }}h</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">{{ student.get_theory_hours(batch.id) or 0 }}h</span>
+                            </td>
+                            <td class="text-center">
+                                {% if attendance_rate >= 75 %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-graduation-cap"></i> Eligible
+                                    </span>
+                                {% elif attendance_rate >= 65 %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> At Risk
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times"></i> Not Eligible
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="{{ url_for('attendance.student_attendance_history', student_id=student.student_id) }}" 
+                                       class="btn btn-sm btn-info" title="View History">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-warning" 
+                                            onclick="quickMark('{{ student.student_id }}', 'Present')" 
+                                            title="Quick Mark Present">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Attendance Sessions -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-clock me-2"></i>Recent Attendance Sessions
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="recentSessionsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Session Type</th>
+                            <th>Time</th>
+                            <th>Students Present</th>
+                            <th>Students Late</th>
+                            <th>Students Absent</th>
+                            <th>Attendance Rate</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in recent_sessions[:10] %}
+                        <tr>
+                            <td>{{ session.date|format_date_indian if session.date else 'N/A' }}</td>
+                            <td>
+                                <span class="badge session-badge bg-{{ 'primary' if session.session_type == 'Regular' else 'info' if session.session_type == 'Theory' else 'success' if session.session_type == 'Practical' else 'warning' }}">
+                                    {{ session.session_type or 'Regular' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <div>In: {{ session.check_in_time|format_time_indian if session.check_in_time else 'N/A' }}</div>
+                                    <div>Out: {{ session.check_out_time|format_time_indian if session.check_out_time else 'N/A' }}</div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success">{{ session.present_count or 0 }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-warning">{{ session.late_count or 0 }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-danger">{{ session.absent_count or 0 }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% set session_rate = ((session.present_count or 0) / (session.total_count or 1)) * 100 %}
+                                <span class="badge bg-{{ 'success' if session_rate >= 80 else 'warning' if session_rate >= 60 else 'danger' }}">
+                                    {{ "%.1f"|format(session_rate) }}%
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" 
+                                        onclick="viewSessionDetails({{ session.id }})" 
+                                        title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mark Attendance Modal -->
+<div class="modal fade" id="markAttendanceModal" tabindex="-1" aria-labelledby="markAttendanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="markAttendanceModalLabel">
+                    <i class="fas fa-calendar-check me-2"></i>Mark Today's Attendance
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('attendance.mark_batch_attendance', batch_id=batch.id) }}" method="POST">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="attendance_date" class="form-label">Date *</label>
+                            <input type="date" class="form-control" id="attendance_date" name="attendance_date" 
+                                   value="{{ current_date }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="session_type" class="form-label">Session Type *</label>
+                            <select class="form-select" id="session_type" name="session_type" required>
+                                <option value="Regular">Regular Class</option>
+                                <option value="Theory">Theory Session</option>
+                                <option value="Practical">Practical Session</option>
+                                <option value="Assessment">Assessment</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Quick Actions</label>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-success" onclick="markAllPresent()">
+                                    <i class="fas fa-check me-1"></i>All Present
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="markAllAbsent()">
+                                    <i class="fas fa-times me-1"></i>All Absent
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Status</th>
+                                    <th>Check-In Time</th>
+                                    <th>Check-Out Time</th>
+                                    <th>Late Minutes</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ student.full_name }}</div>
+                                        <small class="text-muted">{{ student.student_id }}</small>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="attendance_{{ student.student_id }}" 
+                                                onchange="handleStatusChange(this, {{ student.student_id }})">
+                                            <option value="Present">Present</option>
+                                            <option value="Late">Late</option>
+                                            <option value="Absent">Absent</option>
+                                            <option value="Excused">Excused</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="time" class="form-control form-control-sm time-input" 
+                                               name="check_in_{{ student.student_id }}" id="check_in_{{ student.student_id }}">
+                                    </td>
+                                    <td>
+                                        <input type="time" class="form-control form-control-sm time-input" 
+                                               name="check_out_{{ student.student_id }}" id="check_out_{{ student.student_id }}">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm" 
+                                               name="late_minutes_{{ student.student_id }}" id="late_minutes_{{ student.student_id }}"
+                                               min="0" max="120" placeholder="0">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" 
+                                               name="notes_{{ student.student_id }}" placeholder="Optional notes">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Save Attendance
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Check-In Modal -->
+<div class="modal fade" id="quickCheckInModal" tabindex="-1" aria-labelledby="quickCheckInModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickCheckInModalLabel">
+                    <i class="fas fa-clock me-2"></i>Quick Check-In
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('attendance.mark_batch_attendance', batch_id=batch.id) }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="quick_student" class="form-label">Select Student</label>
+                        <select class="form-select" id="quick_student" name="student_id" required>
+                            <option value="">Choose a student...</option>
+                            {% for student in students %}
+                            <option value="{{ student.id }}">{{ student.full_name }} ({{ student.student_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quick_time" class="form-label">Check-In Time</label>
+                        <input type="time" class="form-control" id="quick_time" name="check_in_time" 
+                               value="{{ current_time }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quick_status" class="form-label">Status</label>
+                        <select class="form-select" id="quick_status" name="status" required>
+                            <option value="Present">Present</option>
+                            <option value="Late">Late</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-clock me-1"></i>Check In
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTables
+    $('#attendanceTable').DataTable({
+        "pageLength": 25,
+        "order": [[6, "desc"]], // Sort by attendance percentage
+        "columnDefs": [
+            { "orderable": false, "targets": [10] } // Actions column
+        ],
+        "language": {
+            "search": "Search students:"
+        }
+    });
+
+    $('#recentSessionsTable').DataTable({
+        "pageLength": 10,
+        "order": [[0, "desc"]], // Sort by date
+        "columnDefs": [
+            { "orderable": false, "targets": [7] } // Actions column
+        ]
+    });
+});
+
+function markAllPresent() {
+    $('select[name^="status_"]').val('Present');
+    setDefaultTimes();
+}
+
+function markAllAbsent() {
+    $('select[name^="status_"]').val('Absent');
+    clearAllTimes();
+}
+
+function setDefaultTimes() {
+    const now = new Date();
+    const timeString = now.toTimeString().substr(0, 5);
+    $('input[name^="check_in_"]').val(timeString);
+    
+    // Set check-out time 1 hour later
+    const checkOut = new Date(now.getTime() + 60 * 60 * 1000);
+    const checkOutString = checkOut.toTimeString().substr(0, 5);
+    $('input[name^="check_out_"]').val(checkOutString);
+}
+
+function clearAllTimes() {
+    $('input[name^="check_in_"]').val('');
+    $('input[name^="check_out_"]').val('');
+    $('input[name^="late_minutes_"]').val('');
+}
+
+function handleStatusChange(select, studentId) {
+    const status = select.value;
+    const checkInInput = document.getElementById('check_in_' + studentId);
+    const checkOutInput = document.getElementById('check_out_' + studentId);
+    const lateMinutesInput = document.getElementById('late_minutes_' + studentId);
+    
+    if (status === 'Absent' || status === 'Excused') {
+        checkInInput.value = '';
+        checkOutInput.value = '';
+        lateMinutesInput.value = '';
+        checkInInput.disabled = true;
+        checkOutInput.disabled = true;
+        lateMinutesInput.disabled = true;
+    } else {
+        checkInInput.disabled = false;
+        checkOutInput.disabled = false;
+        lateMinutesInput.disabled = false;
+        
+        if (status === 'Present' || status === 'Late') {
+            if (!checkInInput.value) {
+                const now = new Date();
+                checkInInput.value = now.toTimeString().substr(0, 5);
+            }
+        }
+        
+        if (status === 'Late' && !lateMinutesInput.value) {
+            lateMinutesInput.value = '15'; // Default late minutes
+        }
+    }
+}
+
+function quickMark(studentId, status) {
+    if (confirm('Mark student as ' + status + '?')) {
+        fetch('/attendance/quick-mark/' + studentId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                status: status,
+                batch_id: {{ batch.id }},
+                date: new Date().toISOString().split('T')[0]
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while marking attendance.');
+        });
+    }
+}
+
+function filterBySession() {
+    const sessionType = document.getElementById('sessionFilter').value;
+    // Implement session filtering logic
+    console.log('Filter by session:', sessionType);
+}
+
+function filterByStatus() {
+    const status = document.getElementById('statusFilter').value;
+    // Implement status filtering logic
+    console.log('Filter by status:', status);
+}
+
+function generateReport() {
+    const url = '/attendance/report/' + {{ batch.id }};
+    window.open(url, '_blank');
+}
+
+function viewSessionDetails(sessionId) {
+    // Implement session details view
+    console.log('View session details:', sessionId);
+}
+</script>
+{% endblock %}

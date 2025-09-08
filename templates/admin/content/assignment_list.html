@@ -1,0 +1,463 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Assignment Management{% endblock %}
+{% block page_icon %}fas fa-tasks{% endblock %}
+{% block page_title %}Assignment Management{% endblock %}
+{% block page_description %}Manage assignment creation, approval workflows, and publishing{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('lms_content_management.assignment_create_form') }}" class="btn btn-success">
+    <i class="fas fa-plus me-2"></i>Create Assignment
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="draft" {% if current_status == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="review" {% if current_status == 'review' %}selected{% endif %}>Under Review</option>
+                    <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="published" {% if current_status == 'published' %}selected{% endif %}>Published</option>
+                    <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Course</label>
+                <select name="course_id" class="form-select">
+                    <option value="">All Courses</option>
+                    {% for course in courses %}
+                    <option value="{{ course.id }}" {% if current_course_id == course.id %}selected{% endif %}>
+                        {{ course.course_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Assignment Type</label>
+                <select name="assignment_type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="project">Project</option>
+                    <option value="essay">Essay</option>
+                    <option value="practical">Practical</option>
+                    <option value="presentation">Presentation</option>
+                    <option value="research">Research</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-filter me-1"></i>Filter
+                </button>
+                <a href="{{ url_for('lms_content_management.assignment_list') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Assignment Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ assignments.total }}</h4>
+                        <p class="mb-0">Total Assignments</p>
+                    </div>
+                    <div class="display-4 opacity-50">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ assignments.items | selectattr('workflow_stage', 'equalto', 'draft') | list | length }}</h4>
+                        <p class="mb-0">Draft</p>
+                    </div>
+                    <div class="display-4 opacity-50">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ assignments.items | selectattr('workflow_stage', 'equalto', 'review') | list | length }}</h4>
+                        <p class="mb-0">Under Review</p>
+                    </div>
+                    <div class="display-4 opacity-50">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ assignments.items | selectattr('workflow_stage', 'equalto', 'published') | list | length }}</h4>
+                        <p class="mb-0">Published</p>
+                    </div>
+                    <div class="display-4 opacity-50">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assignment List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-tasks me-2 text-primary"></i>Assignment List
+        </h5>
+        <span class="badge bg-primary">{{ assignments.total }} assignments</span>
+    </div>
+    <div class="card-body p-0">
+        {% if assignments.items %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Assignment Details</th>
+                        <th>Course & Module</th>
+                        <th>Type & Placement</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assignment in assignments.items %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="assignment-icon me-3">
+                                    {% if assignment.assignment_type == 'project' %}
+                                        <i class="fas fa-project-diagram text-primary fa-lg"></i>
+                                    {% elif assignment.assignment_type == 'essay' %}
+                                        <i class="fas fa-pen-fancy text-success fa-lg"></i>
+                                    {% elif assignment.assignment_type == 'practical' %}
+                                        <i class="fas fa-laptop-code text-info fa-lg"></i>
+                                    {% elif assignment.assignment_type == 'presentation' %}
+                                        <i class="fas fa-presentation text-warning fa-lg"></i>
+                                    {% elif assignment.assignment_type == 'research' %}
+                                        <i class="fas fa-search text-danger fa-lg"></i>
+                                    {% else %}
+                                        <i class="fas fa-tasks text-secondary fa-lg"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ assignment.assignment_title }}</h6>
+                                    <small class="text-muted">{{ assignment.assignment_description[:50] }}{% if assignment.assignment_description|length > 50 %}...{% endif %}</small>
+                                    <br><small class="text-muted">by {{ assignment.creator.full_name if assignment.creator else 'Unknown' }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <strong>{{ assignment.course.course_name if assignment.course else 'Unknown Course' }}</strong>
+                                <br><small class="text-muted">{{ assignment.module.module_name if assignment.module else 'Unknown Module' }}</small>
+                                {% if assignment.section %}
+                                <br><small class="text-muted">Section: {{ assignment.section.section_name }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ assignment.assignment_type|title }}</span>
+                            <br>
+                            <small class="text-muted">
+                                {{ assignment.assignment_placement|title }}-level
+                                {% if assignment.placement_order %}(Order: {{ assignment.placement_order }}){% endif %}
+                            </small>
+                            {% if assignment.is_mandatory %}
+                            <br><span class="badge bg-danger">Mandatory</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if assignment.due_date %}
+                                <span class="text-{% if assignment.is_overdue() %}danger{% else %}dark{% endif %}">
+                                    {{ assignment.due_date.strftime('%d %b %Y') }}
+                                </span>
+                                {% if assignment.is_overdue() %}
+                                <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Overdue</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">No due date</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if assignment.workflow_stage == 'draft' %}
+                                <span class="badge bg-warning">Draft</span>
+                            {% elif assignment.workflow_stage == 'review' %}
+                                <span class="badge bg-info">Under Review</span>
+                            {% elif assignment.workflow_stage == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif assignment.workflow_stage == 'published' %}
+                                <span class="badge bg-primary">Published</span>
+                            {% elif assignment.workflow_stage == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ assignment.workflow_stage|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ assignment.max_score }}</strong> points
+                            {% if assignment.grading_rubric %}
+                            <br><small class="text-muted"><i class="fas fa-list-check"></i> Has Rubric</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {{ assignment.created_at.strftime('%d %b %Y') }}
+                                <br>{{ assignment.created_at.strftime('%I:%M %p') }}
+                            </small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('lms_content_management.assignment_detail', assignment_id=assignment.id) }}" 
+                                   class="btn btn-outline-success" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if assignment.workflow_stage in ['draft', 'rejected'] %}
+                                <a href="#" class="btn btn-outline-primary" title="Edit Assignment">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                                {% if assignment.workflow_stage == 'draft' %}
+                                <button class="btn btn-outline-info" 
+                                        onclick="submitForReview({{ assignment.id }})" title="Submit for Review">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                                {% endif %}
+                                {% if assignment.workflow_stage == 'review' %}
+                                <button class="btn btn-outline-success" 
+                                        onclick="approveAssignment({{ assignment.id }})" title="Approve">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" 
+                                        onclick="rejectAssignment({{ assignment.id }})" title="Reject">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                {% endif %}
+                                {% if assignment.workflow_stage == 'approved' %}
+                                <form method="POST" action="{{ url_for('lms_content_management.assignment_publish', assignment_id=assignment.id) }}" 
+                                      style="display: inline;" onsubmit="return confirm('Are you sure you want to publish this assignment?')">
+                                    <button type="submit" class="btn btn-outline-primary" title="Publish">
+                                        <i class="fas fa-globe"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No assignments found</h5>
+            <p class="text-muted">Start by creating your first assignment to manage course assessments.</p>
+            <a href="{{ url_for('lms_content_management.assignment_create_form') }}" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Create Assignment
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if assignments.pages > 1 %}
+<nav aria-label="Assignment pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if assignments.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('lms_content_management.assignment_list', page=assignments.prev_num, status=current_status, course_id=current_course_id) }}">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </li>
+        {% endif %}
+        
+        {% for page_num in assignments.iter_pages() %}
+            {% if page_num %}
+                {% if page_num != assignments.page %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('lms_content_management.assignment_list', page=page_num, status=current_status, course_id=current_course_id) }}">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item active">
+                    <span class="page-link">{{ page_num }}</span>
+                </li>
+                {% endif %}
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">...</span>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if assignments.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('lms_content_management.assignment_list', page=assignments.next_num, status=current_status, course_id=current_course_id) }}">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Approval Modal -->
+<div class="modal fade" id="approvalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Approve Assignment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="approvalForm" method="POST">
+                    <div class="mb-3">
+                        <label for="approvalComments" class="form-label">Comments (Optional)</label>
+                        <textarea class="form-control" id="approvalComments" name="comments" rows="3" 
+                                  placeholder="Add any comments about the approval..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitApproval()">Approve Assignment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rejection Modal -->
+<div class="modal fade" id="rejectionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Assignment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="rejectionForm" method="POST">
+                    <div class="mb-3">
+                        <label for="rejectionReason" class="form-label">Rejection Reason *</label>
+                        <textarea class="form-control" id="rejectionReason" name="rejection_reason" rows="3" 
+                                  placeholder="Please provide a reason for rejection..." required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="submitRejection()">Reject Assignment</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentAssignmentId = null;
+
+function approveAssignment(assignmentId) {
+    currentAssignmentId = assignmentId;
+    const form = document.getElementById('approvalForm');
+    form.action = `/admin/content/assignments/${assignmentId}/approve`;
+    new bootstrap.Modal(document.getElementById('approvalModal')).show();
+}
+
+function rejectAssignment(assignmentId) {
+    currentAssignmentId = assignmentId;
+    const form = document.getElementById('rejectionForm');
+    form.action = `/admin/content/assignments/${assignmentId}/reject`;
+    new bootstrap.Modal(document.getElementById('rejectionModal')).show();
+}
+
+function submitApproval() {
+    document.getElementById('approvalForm').submit();
+}
+
+function submitRejection() {
+    const reason = document.getElementById('rejectionReason').value.trim();
+    if (!reason) {
+        alert('Please provide a rejection reason');
+        return;
+    }
+    document.getElementById('rejectionForm').submit();
+}
+
+function submitForReview(assignmentId) {
+    if (confirm('Are you sure you want to submit this assignment for review?')) {
+        fetch(`/admin/content/assignments/${assignmentId}/submit-review`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Assignment submitted for review!', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(data.error || 'Failed to submit for review', 'error');
+            }
+        }).catch(error => {
+            showToast('Error submitting for review', 'error');
+        });
+    }
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `toast position-fixed top-0 end-0 m-3`;
+    toast.innerHTML = `
+        <div class="toast-body bg-${type === 'success' ? 'success' : 'danger'} text-white">
+            ${message}
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    setTimeout(() => {
+        document.body.removeChild(toast);
+    }, 3000);
+}
+
+// Auto-refresh every 30 seconds for real-time updates
+setInterval(() => {
+    // Only refresh if no modals are open
+    if (!document.querySelector('.modal.show')) {
+        location.reload();
+    }
+}, 30000);
+</script>
+{% endblock %}

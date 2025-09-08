@@ -1,0 +1,245 @@
+{% extends "student_portal/base_student.html" %}
+{% set title = "Error - " + error_title %}
+
+{% block extra_css %}
+<style>
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 2rem;
+}
+
+.error-icon {
+    font-size: 6rem;
+    color: #dc3545;
+    margin-bottom: 1.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.error-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 3rem;
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.error-code {
+    font-size: 8rem;
+    font-weight: bold;
+    color: #dc3545;
+    line-height: 1;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.error-title {
+    font-size: 2rem;
+    color: #343a40;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.error-message {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-error {
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.btn-outline-secondary {
+    border: 2px solid #6c757d;
+    color: #6c757d;
+    background: transparent;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.error-details {
+    background: #f8f9fa;
+    border-left: 4px solid #dc3545;
+    padding: 1rem;
+    margin-top: 2rem;
+    border-radius: 0 8px 8px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #495057;
+    text-align: left;
+}
+
+.student-info {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.breadcrumb-error {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-error .breadcrumb-item + .breadcrumb-item::before {
+    content: "→";
+    color: #6c757d;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb for context -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-error">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('student_portal.dashboard') }}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item active">Error {{ error_code }}</li>
+        </ol>
+    </nav>
+
+    <div class="error-container">
+        <div class="error-card">
+            <!-- Error Icon and Code -->
+            <div class="error-code">{{ error_code }}</div>
+            
+            <!-- Error Content -->
+            <h1 class="error-title">{{ error_title }}</h1>
+            <p class="error-message">{{ error_message }}</p>
+
+            <!-- Student Context (if available) -->
+            {% if student %}
+            <div class="student-info">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Student:</strong> {{ student.full_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Student ID:</strong> {{ student.student_id }}
+                    </div>
+                </div>
+                {% if student.course_name %}
+                <div class="mt-2">
+                    <strong>Course:</strong> {{ student.course_name }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="error-actions">
+                {% if show_dashboard_link %}
+                <a href="{{ url_for('student_portal.dashboard') }}" class="btn btn-primary btn-error">
+                    <i class="fas fa-home"></i>
+                    Back to Dashboard
+                </a>
+                {% endif %}
+                
+                <a href="{{ url_for('student_portal.my_courses') }}" class="btn btn-outline-secondary btn-error">
+                    <i class="fas fa-graduation-cap"></i>
+                    My Courses
+                </a>
+                
+                <a href="{{ url_for('student_portal.support') }}" class="btn btn-outline-secondary btn-error">
+                    <i class="fas fa-life-ring"></i>
+                    Get Help
+                </a>
+            </div>
+
+            <!-- Additional Error Information -->
+            {% if error_code == 500 %}
+            <div class="error-details">
+                <strong>Troubleshooting Tips:</strong><br>
+                • Try refreshing the page<br>
+                • Clear your browser cache<br>
+                • Contact support if the issue persists<br>
+                • Error occurred at: {{ moment().format('YYYY-MM-DD HH:mm:ss') }}
+            </div>
+            {% elif error_code == 404 %}
+            <div class="error-details">
+                <strong>Possible Reasons:</strong><br>
+                • The page URL was typed incorrectly<br>
+                • The page has been moved or deleted<br>
+                • You don't have permission to access this page<br>
+                • The link you followed may be outdated
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add some interactivity to make the error page feel responsive
+    const errorCard = document.querySelector('.error-card');
+    
+    // Add a subtle animation on load
+    errorCard.style.opacity = '0';
+    errorCard.style.transform = 'translateY(20px)';
+    
+    setTimeout(() => {
+        errorCard.style.transition = 'all 0.6s ease';
+        errorCard.style.opacity = '1';
+        errorCard.style.transform = 'translateY(0)';
+    }, 100);
+    
+    // Auto-focus on primary action button
+    const primaryBtn = document.querySelector('.btn-primary');
+    if (primaryBtn) {
+        setTimeout(() => primaryBtn.focus(), 1000);
+    }
+});
+</script>
+{% endblock %}

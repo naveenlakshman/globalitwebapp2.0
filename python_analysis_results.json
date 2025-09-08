@@ -1,0 +1,4419 @@
+{
+  "keywords_used": {
+    "with": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "init_db.py",
+      "run_dev.py",
+      "docker\\mysql connect.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\folder_frond_end.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "def": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "config_pythonanywhere.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "routes\\__init__.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\logger.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "for": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "config_pythonanywhere.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\folder_frond_end.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\logger.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "try": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\moodle_integration.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "elif": [
+      "analyze_python_keywords.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\batch_model.py",
+      "models\\installment_model.py",
+      "models\\lead_model.py",
+      "models\\student_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\timezone_helper.py"
+    ],
+    "else": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "docker\\apitopythonanywhere.py",
+      "docker\\mysql_connection_corrected.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "and": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "Docs\\folder_frond_end.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\lead_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "return": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "config_pythonanywhere.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "in": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "config_pythonanywhere.py",
+      "init_db.py",
+      "docker\\mysql_connection_corrected.py",
+      "Docs\\folder_frond_end.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "routes\\__init__.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "continue": [
+      "analyze_python_keywords.py",
+      "Docs\\setup_database_from_schema.py",
+      "routes\\batch_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\student_routes.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py"
+    ],
+    "False": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "config_pythonanywhere.py",
+      "docker\\mysql_connection_corrected.py",
+      "Docs\\setup_database_from_schema.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "class": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "config_pythonanywhere.py",
+      "docker\\pythonanywhere_config.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\dashboard_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\moodle_integration.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\timezone_helper.py"
+    ],
+    "except": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\moodle_integration.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "import": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "config_pythonanywhere.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\apitopythonanywhere.py",
+      "docker\\mysql connect.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\folder_frond_end.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "routes\\__init__.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\logger.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "as": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "docker\\mysql connect.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\folder_frond_end.py",
+      "Docs\\setup_database_from_schema.py",
+      "models\\assessment_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\moodle_integration.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "if": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\apitopythonanywhere.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\logger.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "from": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "config_pythonanywhere.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "routes\\__init__.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\logger.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "or": [
+      "config.py",
+      "Docs\\setup_database_from_schema.py",
+      "models\\assessment_model.py",
+      "models\\batch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\lead_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\model_helpers.py",
+      "utils\\outcome_categories.py",
+      "utils\\pdf_utils.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py"
+    ],
+    "pass": [
+      "config.py",
+      "config_pythonanywhere.py",
+      "Docs\\setup_database_from_schema.py",
+      "models\\lead_model.py",
+      "routes\\audit_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\error_handler.py",
+      "utils\\moodle_integration.py",
+      "utils\\role_permissions.py"
+    ],
+    "True": [
+      "config.py",
+      "config_pythonanywhere.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\folder_frond_end.py",
+      "Docs\\setup_database_from_schema.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\logger.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\role_permissions.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "raise": [
+      "config_pythonanywhere.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\setup_database_from_schema.py",
+      "utils\\courses.py",
+      "utils\\moodle_integration.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "while": [
+      "init_db.py",
+      "models\\communication_model.py",
+      "models\\lead_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\course_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_routes.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "is": [
+      "run_dev.py",
+      "docker\\mysql_connection_corrected.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\lead_model.py",
+      "models\\payment_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\internal_lms.py",
+      "utils\\logger.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\pdf_utils.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "finally": [
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py"
+    ],
+    "yield": [
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "routes\\lead_routes.py"
+    ],
+    "None": [
+      "docker\\pythonanywhere_config.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py"
+    ],
+    "break": [
+      "Docs\\setup_database_from_schema.py",
+      "routes\\invoice_routes.py",
+      "utils\\courses.py"
+    ],
+    "not": [
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\lead_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "global": [
+      "globalit_app\\__init__.py",
+      "routes\\dashboard_routes.py"
+    ],
+    "lambda": [
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\internal_lms.py"
+    ]
+  },
+  "builtins_used": {
+    "sum": [
+      "analyze_python_keywords.py",
+      "models\\assessment_model.py",
+      "models\\communication_model.py",
+      "models\\course_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_model.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py"
+    ],
+    "__name__": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\moodle_integration.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "dict": [
+      "analyze_python_keywords.py",
+      "models\\assessment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "routes\\lead_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\timezone_helper.py"
+    ],
+    "dir": [
+      "analyze_python_keywords.py"
+    ],
+    "str": [
+      "analyze_python_keywords.py",
+      "docker\\mysql_connection_corrected.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\expense_audit_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\pdf_utils.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\timezone_helper.py"
+    ],
+    "id": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\pdf_utils.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "enumerate": [
+      "analyze_python_keywords.py",
+      "Docs\\setup_database_from_schema.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\moodle_integration.py"
+    ],
+    "list": [
+      "analyze_python_keywords.py",
+      "models\\assessment_model.py",
+      "models\\batch_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "models\\student_attendance_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\courses.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "print": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\apitopythonanywhere.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\folder_frond_end.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\expense_audit_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\courses.py",
+      "utils\\model_helpers.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\student_auth.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "len": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "docker\\mysql_connection_corrected.py",
+      "Docs\\setup_database_from_schema.py",
+      "models\\assessment_model.py",
+      "models\\communication_model.py",
+      "models\\lead_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\internal_lms.py",
+      "utils\\moodle_integration.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "open": [
+      "analyze_python_keywords.py",
+      "Docs\\folder_frond_end.py",
+      "Docs\\setup_database_from_schema.py",
+      "models\\communication_model.py",
+      "routes\\lead_routes.py",
+      "routes\\student_portal_routes.py"
+    ],
+    "Exception": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\setup_database_from_schema.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\moodle_integration.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "any": [
+      "analyze_python_keywords.py",
+      "init_db.py",
+      "models\\lead_model.py",
+      "routes\\batch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\pdf_utils.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "bytes": [
+      "analyze_python_keywords.py",
+      "models\\assessment_model.py"
+    ],
+    "all": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\outcome_categories.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "isinstance": [
+      "analyze_python_keywords.py",
+      "globalit_app\\__init__.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\system_audit_logs_model.py",
+      "routes\\lead_routes.py",
+      "utils\\courses.py",
+      "utils\\moodle_integration.py",
+      "utils\\timezone_helper.py"
+    ],
+    "set": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "models\\batch_model.py",
+      "models\\lead_model.py",
+      "models\\student_attendance_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\staff_routes.py",
+      "utils\\outcome_categories.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "__import__": [
+      "analyze_python_keywords.py"
+    ],
+    "max": [
+      "config.py",
+      "models\\assessment_model.py",
+      "models\\course_content_model.py",
+      "models\\lead_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\student_routes.py"
+    ],
+    "classmethod": [
+      "config.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\student_attendance_model.py"
+    ],
+    "staticmethod": [
+      "config.py",
+      "config_pythonanywhere.py",
+      "docker\\pythonanywhere_config.py",
+      "models\\attendance_audit_model.py",
+      "models\\communication_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\system_audit_logs_model.py",
+      "utils\\lead_analytics.py"
+    ],
+    "int": [
+      "config.py",
+      "config_pythonanywhere.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\expense_model.py",
+      "models\\staff_profile_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\courses.py",
+      "utils\\moodle_integration.py",
+      "utils\\search_utils.py",
+      "utils\\sms_service_2factor.py"
+    ],
+    "input": [
+      "init_db.py",
+      "Docs\\setup_database_from_schema.py",
+      "utils\\timezone_helper.py"
+    ],
+    "format": [
+      "docker\\apitopythonanywhere.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\batch_model.py",
+      "models\\course_content_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "models\\student_attendance_model.py",
+      "models\\system_audit_logs_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\logger.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\timezone_helper.py"
+    ],
+    "locals": [
+      "docker\\mysql_connection_corrected.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "help": [
+      "docker\\mysql_connection_corrected.py",
+      "models\\lead_model.py",
+      "routes\\lead_routes.py"
+    ],
+    "type": [
+      "Docs\\setup_database_from_schema.py",
+      "models\\communication_model.py",
+      "models\\lead_model.py",
+      "models\\student_attendance_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\model_helpers.py",
+      "utils\\moodle_integration.py",
+      "utils\\search_utils.py"
+    ],
+    "sorted": [
+      "Docs\\setup_database_from_schema.py",
+      "routes\\course_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\outcome_categories.py"
+    ],
+    "next": [
+      "Docs\\setup_database_from_schema.py",
+      "models\\lead_model.py",
+      "models\\student_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\auth.py",
+      "utils\\internal_lms.py"
+    ],
+    "FileNotFoundError": [
+      "Docs\\setup_database_from_schema.py",
+      "utils\\courses.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "filter": [
+      "globalit_app\\__init__.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\communication_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\moodle_integration.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\timezone_helper.py"
+    ],
+    "object": [
+      "globalit_app\\__init__.py",
+      "models\\attendance_audit_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "models\\system_audit_logs_model.py",
+      "routes\\course_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\model_helpers.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py"
+    ],
+    "hasattr": [
+      "globalit_app\\__init__.py",
+      "models\\attendance_audit_model.py",
+      "models\\lead_model.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\error_handler.py",
+      "utils\\model_helpers.py",
+      "utils\\pdf_utils.py",
+      "utils\\search_utils.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py"
+    ],
+    "round": [
+      "models\\batch_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py"
+    ],
+    "property": [
+      "models\\batch_model.py",
+      "models\\course_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "models\\payment_model.py",
+      "models\\student_model.py",
+      "models\\user_model.py"
+    ],
+    "ValueError": [
+      "models\\batch_model.py",
+      "models\\expense_model.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_routes.py",
+      "utils\\courses.py",
+      "utils\\timezone_helper.py"
+    ],
+    "zip": [
+      "models\\course_content_model.py"
+    ],
+    "min": [
+      "models\\course_content_model.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "complex": [
+      "models\\expense_audit_model.py"
+    ],
+    "float": [
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\courses.py"
+    ],
+    "IndexError": [
+      "models\\expense_model.py"
+    ],
+    "super": [
+      "models\\expense_model.py",
+      "models\\installment_model.py"
+    ],
+    "abs": [
+      "models\\lead_model.py"
+    ],
+    "Warning": [
+      "models\\student_attendance_model.py",
+      "utils\\courses.py"
+    ],
+    "range": [
+      "models\\student_attendance_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\moodle_integration.py"
+    ],
+    "bool": [
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "routes\\batch_routes.py",
+      "routes\\sms_routes.py",
+      "utils\\courses.py",
+      "utils\\moodle_integration.py",
+      "utils\\timezone_helper.py"
+    ],
+    "hash": [
+      "models\\student_model.py",
+      "routes\\auth_routes.py"
+    ],
+    "hex": [
+      "routes\\admin_content_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_routes.py"
+    ],
+    "tuple": [
+      "routes\\admin_content_routes.py"
+    ],
+    "TypeError": [
+      "routes\\course_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\staff_routes.py",
+      "utils\\courses.py"
+    ],
+    "getattr": [
+      "routes\\expense_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\internal_lms.py",
+      "utils\\model_helpers.py",
+      "utils\\timezone_helper.py"
+    ],
+    "compile": [
+      "routes\\lead_routes.py"
+    ],
+    "setattr": [
+      "routes\\lead_routes.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "map": [
+      "routes\\student_attendance_routes.py"
+    ],
+    "SystemError": [
+      "utils\\error_handler.py"
+    ],
+    "PermissionError": [
+      "utils\\error_handler.py"
+    ],
+    "exit": [
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "bin": [
+      "tests\\migrations\\fix_enum_fields.py"
+    ]
+  },
+  "imports_used": {
+    "Counter": [
+      "analyze_python_keywords.py"
+    ],
+    "keyword": [
+      "analyze_python_keywords.py"
+    ],
+    "json": [
+      "analyze_python_keywords.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\expense_audit_model.py",
+      "routes\\finance_routes.py",
+      "routes\\sms_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\moodle_integration.py",
+      "utils\\sms_service_2factor.py"
+    ],
+    "re": [
+      "analyze_python_keywords.py",
+      "routes\\lead_routes.py",
+      "routes\\staff_routes.py"
+    ],
+    "builtins": [
+      "analyze_python_keywords.py"
+    ],
+    "collections": [
+      "analyze_python_keywords.py",
+      "models\\student_attendance_model.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "pathlib": [
+      "analyze_python_keywords.py"
+    ],
+    "defaultdict": [
+      "analyze_python_keywords.py",
+      "models\\student_attendance_model.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "Path": [
+      "analyze_python_keywords.py"
+    ],
+    "ast": [
+      "analyze_python_keywords.py"
+    ],
+    "os": [
+      "analyze_python_keywords.py",
+      "config.py",
+      "config_pythonanywhere.py",
+      "init_db.py",
+      "docker\\pythonanywhere_config.py",
+      "Docs\\folder_frond_end.py",
+      "Docs\\setup_database_from_schema.py",
+      "routes\\admin_content_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_routes.py",
+      "utils\\courses.py",
+      "utils\\logger.py",
+      "utils\\pdf_utils.py",
+      "tests\\migrations\\fix_enum_fields.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "StreamHandler": [
+      "config.py"
+    ],
+    "timedelta": [
+      "config.py",
+      "config_pythonanywhere.py",
+      "models\\communication_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py"
+    ],
+    "datetime": [
+      "config.py",
+      "config_pythonanywhere.py",
+      "init_db.py",
+      "Docs\\setup_database_from_schema.py",
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\logger.py",
+      "utils\\moodle_integration.py",
+      "utils\\pdf_utils.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\student_auth.py",
+      "utils\\timezone_helper.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "logging": [
+      "config.py",
+      "docker\\mysql_connection_corrected.py",
+      "routes\\lms_routes.py",
+      "utils\\auth.py",
+      "utils\\auto_sync.py",
+      "utils\\error_handler.py",
+      "utils\\logger.py",
+      "utils\\moodle_integration.py"
+    ],
+    "models.system_audit_logs_model": [
+      "init_db.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\lead_routes.py"
+    ],
+    "Course": [
+      "init_db.py",
+      "models\\batch_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\internal_lms.py"
+    ],
+    "StudentAttendance": [
+      "init_db.py",
+      "models\\batch_model.py",
+      "models\\student_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "models.user_model": [
+      "init_db.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\staff_profile_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_routes.py",
+      "utils\\error_handler.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py"
+    ],
+    "StudentBatchCompletion": [
+      "init_db.py",
+      "routes\\batch_routes.py"
+    ],
+    "models.student_attendance_model": [
+      "init_db.py",
+      "models\\batch_model.py",
+      "models\\student_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "models.branch_model": [
+      "init_db.py",
+      "models\\expense_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_routes.py",
+      "utils\\error_handler.py",
+      "utils\\role_permissions.py"
+    ],
+    "Installment": [
+      "init_db.py",
+      "models\\student_model.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "models.expense_audit_model": [
+      "init_db.py",
+      "routes\\expense_routes.py"
+    ],
+    "werkzeug.security": [
+      "init_db.py",
+      "models\\student_model.py",
+      "routes\\auth_routes.py",
+      "routes\\staff_routes.py"
+    ],
+    "text": [
+      "init_db.py",
+      "routes\\lead_routes.py",
+      "routes\\staff_routes.py",
+      "utils\\role_permissions.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "models.attendance_audit_model": [
+      "init_db.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "models.login_logs_model": [
+      "init_db.py"
+    ],
+    "utils.courses": [
+      "init_db.py"
+    ],
+    "models.payment_model": [
+      "init_db.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py"
+    ],
+    "models.student_batch_completion_model": [
+      "init_db.py",
+      "routes\\batch_routes.py"
+    ],
+    "flask_sqlalchemy": [
+      "init_db.py"
+    ],
+    "SQLAlchemy": [
+      "init_db.py"
+    ],
+    "models.user_branch_assignment_model": [
+      "init_db.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\user_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\staff_routes.py"
+    ],
+    "models.expense_model": [
+      "init_db.py",
+      "routes\\expense_routes.py"
+    ],
+    "models.course_model": [
+      "init_db.py",
+      "models\\batch_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\internal_lms.py"
+    ],
+    "Payment": [
+      "init_db.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py"
+    ],
+    "AttendanceAudit": [
+      "init_db.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "models.installment_model": [
+      "init_db.py",
+      "models\\student_model.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "generate_password_hash": [
+      "init_db.py",
+      "models\\student_model.py",
+      "routes\\staff_routes.py"
+    ],
+    "create_app": [
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "ExpenseAudit": [
+      "init_db.py",
+      "routes\\expense_routes.py"
+    ],
+    "SystemAuditLog": [
+      "init_db.py",
+      "routes\\audit_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\lead_routes.py"
+    ],
+    "sqlalchemy": [
+      "init_db.py",
+      "models\\course_model.py",
+      "models\\lead_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "utils\\lead_analytics.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "models.batch_trainer_assignment_model": [
+      "init_db.py",
+      "models\\batch_model.py",
+      "models\\user_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "Student": [
+      "init_db.py",
+      "models\\batch_model.py",
+      "models\\course_model.py",
+      "models\\student_batch_completion_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\student_auth.py"
+    ],
+    "Branch": [
+      "init_db.py",
+      "models\\expense_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_routes.py",
+      "utils\\error_handler.py",
+      "utils\\role_permissions.py"
+    ],
+    "models.invoice_model": [
+      "init_db.py",
+      "models\\course_model.py",
+      "models\\student_model.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "models.lead_model": [
+      "init_db.py",
+      "models\\student_model.py",
+      "routes\\dashboard_routes.py",
+      "routes\\lead_routes.py",
+      "utils\\lead_analytics.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "timezone": [
+      "init_db.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\batch_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\courses.py",
+      "utils\\sms_service_2factor.py",
+      "utils\\timezone_helper.py"
+    ],
+    "UserBranchAssignment": [
+      "init_db.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\user_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\staff_routes.py"
+    ],
+    "Invoice": [
+      "init_db.py",
+      "models\\course_model.py",
+      "models\\student_model.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "globalit_app": [
+      "init_db.py",
+      "run.py",
+      "run_dev.py",
+      "routes\\lms_routes.py",
+      "utils\\auto_sync.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "BatchTrainerAssignment": [
+      "init_db.py",
+      "models\\batch_model.py",
+      "models\\user_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\student_attendance_routes.py"
+    ],
+    "models.batch_model": [
+      "init_db.py",
+      "models\\course_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\search_utils.py"
+    ],
+    "LoginLog": [
+      "init_db.py"
+    ],
+    "Lead": [
+      "init_db.py",
+      "models\\student_model.py",
+      "routes\\dashboard_routes.py",
+      "routes\\lead_routes.py",
+      "utils\\lead_analytics.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "models.staff_profile_model": [
+      "init_db.py",
+      "routes\\staff_routes.py"
+    ],
+    "init_courses_from_excel": [
+      "init_db.py"
+    ],
+    "Batch": [
+      "init_db.py",
+      "models\\course_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\search_utils.py"
+    ],
+    "models.student_model": [
+      "init_db.py",
+      "models\\batch_model.py",
+      "models\\course_model.py",
+      "models\\student_batch_completion_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py",
+      "utils\\student_auth.py"
+    ],
+    "Expense": [
+      "init_db.py",
+      "routes\\expense_routes.py"
+    ],
+    "User": [
+      "init_db.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\staff_profile_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_routes.py",
+      "utils\\error_handler.py",
+      "utils\\role_permissions.py",
+      "utils\\search_utils.py"
+    ],
+    "StaffProfile": [
+      "init_db.py",
+      "routes\\staff_routes.py"
+    ],
+    "socket": [
+      "run.py",
+      "run_dev.py"
+    ],
+    "requests": [
+      "docker\\apitopythonanywhere.py",
+      "utils\\moodle_integration.py",
+      "utils\\sms_service_2factor.py"
+    ],
+    "sshtunnel": [
+      "docker\\mysql connect.py",
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py"
+    ],
+    "MySQLdb": [
+      "docker\\mysql connect.py"
+    ],
+    "contextlib": [
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py"
+    ],
+    "contextmanager": [
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py"
+    ],
+    "pymysql": [
+      "docker\\mysql_connection_corrected.py",
+      "docker\\pythonanywhere_config.py"
+    ],
+    "sys": [
+      "Docs\\setup_database_from_schema.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "sqlite3": [
+      "Docs\\setup_database_from_schema.py",
+      "tests\\migrations\\migrate_course_table.py"
+    ],
+    "routes.dashboard_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "render_template": [
+      "globalit_app\\__init__.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\error_handler.py"
+    ],
+    "utc_to_ist": [
+      "globalit_app\\__init__.py",
+      "models\\batch_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_model.py",
+      "routes\\expense_routes.py",
+      "routes\\installment_routes.py"
+    ],
+    "routes.batch_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "routes.finance_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "student_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "routes.course_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "utils.timezone_helper": [
+      "globalit_app\\__init__.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\model_helpers.py"
+    ],
+    "get_current_ist_formatted": [
+      "globalit_app\\__init__.py",
+      "routes\\audit_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "utils\\error_handler.py"
+    ],
+    "register_template_filters": [
+      "globalit_app\\__init__.py"
+    ],
+    "student_portal_bp": [
+      "globalit_app\\__init__.py"
+    ],
+    "routes.invoice_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "installment_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "routes.lead_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "branch_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "auth_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "routes.staff_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "format_datetime_indian": [
+      "globalit_app\\__init__.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\lead_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "routes\\audit_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py",
+      "utils\\model_helpers.py"
+    ],
+    "expense_bp": [
+      "globalit_app\\__init__.py"
+    ],
+    "init_database": [
+      "globalit_app\\__init__.py"
+    ],
+    "Markup": [
+      "globalit_app\\__init__.py"
+    ],
+    "routes.admin_content_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "routes.audit_routes": [
+      "globalit_app\\__init__.py",
+      "routes\\auth_routes.py"
+    ],
+    "Flask": [
+      "globalit_app\\__init__.py"
+    ],
+    "session": [
+      "globalit_app\\__init__.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\error_handler.py",
+      "utils\\role_permissions.py",
+      "utils\\student_auth.py"
+    ],
+    "format_date_indian": [
+      "globalit_app\\__init__.py",
+      "models\\branch_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\user_branch_assignment_model.py",
+      "routes\\expense_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\model_helpers.py"
+    ],
+    "finance_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "staff_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "routes.student_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "CORS": [
+      "globalit_app\\__init__.py"
+    ],
+    "invoice_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "audit_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "admin_content_bp": [
+      "globalit_app\\__init__.py"
+    ],
+    "config": [
+      "globalit_app\\__init__.py",
+      "utils\\auto_sync.py"
+    ],
+    "routes.expense_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "db": [
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auto_sync.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\role_permissions.py",
+      "utils\\sms_service_2factor.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "routes.lms_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "flask_cors": [
+      "globalit_app\\__init__.py"
+    ],
+    "batch_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "dashboard_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "init_db": [
+      "globalit_app\\__init__.py",
+      "models\\assessment_model.py",
+      "models\\attendance_audit_model.py",
+      "models\\batch_model.py",
+      "models\\batch_trainer_assignment_model.py",
+      "models\\branch_model.py",
+      "models\\communication_model.py",
+      "models\\course_content_model.py",
+      "models\\course_model.py",
+      "models\\expense_audit_model.py",
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\invoice_model.py",
+      "models\\lead_model.py",
+      "models\\login_logs_model.py",
+      "models\\payment_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "models\\student_batch_completion_model.py",
+      "models\\student_model.py",
+      "models\\system_audit_logs_model.py",
+      "models\\user_branch_assignment_model.py",
+      "models\\user_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\courses.py",
+      "utils\\error_handler.py",
+      "utils\\internal_lms.py",
+      "utils\\lead_analytics.py",
+      "utils\\role_permissions.py",
+      "utils\\sms_service_2factor.py",
+      "tests\\migrations\\fix_enum_fields.py"
+    ],
+    "flask": [
+      "globalit_app\\__init__.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\error_handler.py",
+      "utils\\role_permissions.py",
+      "utils\\student_auth.py"
+    ],
+    "routes.branch_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "attendance_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "course_bp": [
+      "globalit_app\\__init__.py"
+    ],
+    "markupsafe": [
+      "globalit_app\\__init__.py"
+    ],
+    "url_for": [
+      "globalit_app\\__init__.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\role_permissions.py",
+      "utils\\student_auth.py"
+    ],
+    "lms_bp": [
+      "globalit_app\\__init__.py"
+    ],
+    "Config": [
+      "globalit_app\\__init__.py",
+      "utils\\auto_sync.py"
+    ],
+    "routes.auth_routes": [
+      "globalit_app\\__init__.py",
+      "routes\\admin_content_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\student_portal_routes.py"
+    ],
+    "routes.installment_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "redirect": [
+      "globalit_app\\__init__.py",
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\role_permissions.py",
+      "utils\\student_auth.py"
+    ],
+    "routes.student_attendance_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "lead_bp": [
+      "globalit_app\\__init__.py",
+      "routes\\__init__.py"
+    ],
+    "routes.student_portal_routes": [
+      "globalit_app\\__init__.py"
+    ],
+    "time": [
+      "models\\batch_model.py",
+      "models\\student_attendance_model.py",
+      "routes\\lead_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\moodle_integration.py"
+    ],
+    "string": [
+      "models\\communication_model.py",
+      "models\\student_model.py",
+      "utils\\moodle_integration.py"
+    ],
+    "random": [
+      "models\\communication_model.py",
+      "models\\student_model.py"
+    ],
+    "Integer": [
+      "models\\course_model.py"
+    ],
+    "standardize_model_datetime_fields": [
+      "models\\course_model.py",
+      "models\\student_batch_completion_model.py"
+    ],
+    "String": [
+      "models\\course_model.py"
+    ],
+    "Boolean": [
+      "models\\course_model.py"
+    ],
+    "utils.model_helpers": [
+      "models\\course_model.py",
+      "models\\student_batch_completion_model.py"
+    ],
+    "DateTime": [
+      "models\\course_model.py"
+    ],
+    "Float": [
+      "models\\course_model.py"
+    ],
+    "Enum": [
+      "models\\course_model.py",
+      "models\\lead_model.py",
+      "models\\student_model.py"
+    ],
+    "Text": [
+      "models\\course_model.py"
+    ],
+    "Decimal": [
+      "models\\expense_model.py",
+      "routes\\expense_routes.py"
+    ],
+    "decimal": [
+      "models\\expense_model.py",
+      "routes\\expense_routes.py"
+    ],
+    "date": [
+      "models\\expense_model.py",
+      "models\\installment_model.py",
+      "models\\student_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\student_attendance_routes.py",
+      "utils\\timezone_helper.py"
+    ],
+    "ForeignKey": [
+      "models\\lead_model.py"
+    ],
+    "Index": [
+      "models\\lead_model.py"
+    ],
+    "UniqueConstraint": [
+      "models\\lead_model.py"
+    ],
+    "pytz": [
+      "models\\lead_model.py",
+      "utils\\timezone_helper.py"
+    ],
+    "sqlalchemy.sql": [
+      "models\\lead_model.py"
+    ],
+    "func": [
+      "models\\lead_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_attendance_model.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\course_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py",
+      "utils\\lead_analytics.py",
+      "utils\\search_utils.py"
+    ],
+    "get_current_ist_datetime": [
+      "models\\lead_model.py",
+      "models\\staff_profile_model.py",
+      "models\\student_model.py",
+      "routes\\admin_content_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "LeadFollowUp": [
+      "models\\student_model.py",
+      "routes\\lead_routes.py"
+    ],
+    "check_password_hash": [
+      "models\\student_model.py",
+      "routes\\auth_routes.py"
+    ],
+    "CourseModule": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "CourseMaterial": [
+      "routes\\admin_content_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "CourseQuiz": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "models.course_content_model": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "functools": [
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\lms_routes.py",
+      "utils\\auth.py",
+      "utils\\role_permissions.py",
+      "utils\\student_auth.py"
+    ],
+    "Blueprint": [
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py"
+    ],
+    "StudentModuleProgress": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "CourseVideo": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "StudentSupportTicket": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "models.assessment_model": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "QuizQuestion": [
+      "routes\\admin_content_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "flash": [
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\role_permissions.py",
+      "utils\\student_auth.py"
+    ],
+    "AssignmentSubmission": [
+      "routes\\admin_content_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "traceback": [
+      "routes\\admin_content_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\student_portal_routes.py"
+    ],
+    "send_file": [
+      "routes\\admin_content_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py"
+    ],
+    "werkzeug.utils": [
+      "routes\\admin_content_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_routes.py"
+    ],
+    "login_required": [
+      "routes\\admin_content_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py"
+    ],
+    "models.communication_model": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "StudentVideoProgress": [
+      "routes\\admin_content_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "request": [
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py",
+      "utils\\auth.py",
+      "utils\\error_handler.py",
+      "utils\\student_auth.py"
+    ],
+    "InternalLMS": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py"
+    ],
+    "uuid": [
+      "routes\\admin_content_routes.py",
+      "routes\\course_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_routes.py",
+      "utils\\error_handler.py"
+    ],
+    "secure_filename": [
+      "routes\\admin_content_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_routes.py"
+    ],
+    "StudentNotification": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "utils.internal_lms": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py"
+    ],
+    "StudentQuizAttempt": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "CourseAssignment": [
+      "routes\\admin_content_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "current_app": [
+      "routes\\admin_content_routes.py",
+      "routes\\lms_routes.py",
+      "utils\\auth.py"
+    ],
+    "jsonify": [
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\audit_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\batch_routes.py",
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\sms_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_portal_routes.py",
+      "routes\\student_routes.py"
+    ],
+    "wraps": [
+      "routes\\admin_content_routes.py",
+      "routes\\attendance_reports_routes.py",
+      "routes\\auth_routes.py",
+      "routes\\lms_routes.py",
+      "utils\\auth.py",
+      "utils\\role_permissions.py",
+      "utils\\student_auth.py"
+    ],
+    "or_": [
+      "routes\\attendance_reports_routes.py",
+      "routes\\course_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py",
+      "utils\\search_utils.py"
+    ],
+    "and_": [
+      "routes\\attendance_reports_routes.py",
+      "routes\\course_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py",
+      "utils\\lead_analytics.py",
+      "utils\\search_utils.py"
+    ],
+    "calendar": [
+      "routes\\attendance_reports_routes.py"
+    ],
+    "SecurityAlert": [
+      "routes\\audit_routes.py"
+    ],
+    "csv": [
+      "routes\\audit_routes.py",
+      "routes\\lead_routes.py"
+    ],
+    "io": [
+      "routes\\audit_routes.py",
+      "routes\\lead_routes.py"
+    ],
+    "make_response": [
+      "routes\\audit_routes.py"
+    ],
+    "hashlib": [
+      "routes\\auth_routes.py",
+      "routes\\student_portal_routes.py",
+      "utils\\moodle_integration.py"
+    ],
+    "log_user_action": [
+      "routes\\auth_routes.py"
+    ],
+    "create_security_alert": [
+      "routes\\auth_routes.py"
+    ],
+    "utils.search_utils": [
+      "routes\\batch_routes.py"
+    ],
+    "utils.auth": [
+      "routes\\batch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\installment_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\staff_routes.py",
+      "routes\\student_attendance_routes.py",
+      "routes\\student_routes.py"
+    ],
+    "search_students_for_batch": [
+      "routes\\batch_routes.py"
+    ],
+    "get_user_accessible_branches": [
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\staff_routes.py"
+    ],
+    "check_module_permission": [
+      "routes\\branch_routes.py",
+      "routes\\finance_routes.py"
+    ],
+    "utils.role_permissions": [
+      "routes\\branch_routes.py",
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\staff_routes.py"
+    ],
+    "auto_sync_course_to_moodle": [
+      "routes\\course_routes.py",
+      "routes\\lms_routes.py"
+    ],
+    "utils.auto_sync": [
+      "routes\\course_routes.py",
+      "routes\\lms_routes.py",
+      "routes\\student_routes.py"
+    ],
+    "desc": [
+      "routes\\course_routes.py",
+      "routes\\expense_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py"
+    ],
+    "admin_required": [
+      "routes\\course_routes.py",
+      "routes\\dashboard_routes.py",
+      "routes\\invoice_routes.py"
+    ],
+    "asc": [
+      "routes\\course_routes.py",
+      "routes\\finance_routes.py",
+      "routes\\lead_routes.py"
+    ],
+    "role_required": [
+      "routes\\dashboard_routes.py",
+      "routes\\finance_routes.py"
+    ],
+    "LeadAnalytics": [
+      "routes\\dashboard_routes.py"
+    ],
+    "utils.lead_analytics": [
+      "routes\\dashboard_routes.py"
+    ],
+    "format_time_indian": [
+      "routes\\expense_routes.py",
+      "routes\\student_portal_routes.py"
+    ],
+    "parse_date_string": [
+      "routes\\expense_routes.py",
+      "routes\\student_routes.py"
+    ],
+    "ExpenseCategory": [
+      "routes\\expense_routes.py"
+    ],
+    "generate_financial_report_excel": [
+      "routes\\finance_routes.py"
+    ],
+    "generate_financial_report": [
+      "routes\\finance_routes.py"
+    ],
+    "handle_finance_error": [
+      "routes\\finance_routes.py"
+    ],
+    "can_export_financial_data": [
+      "routes\\finance_routes.py"
+    ],
+    "utils.pdf_utils": [
+      "routes\\finance_routes.py"
+    ],
+    "sqlalchemy.orm": [
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py"
+    ],
+    "get_finance_branch_filter": [
+      "routes\\finance_routes.py"
+    ],
+    "joinedload": [
+      "routes\\finance_routes.py",
+      "routes\\invoice_routes.py",
+      "routes\\lead_routes.py",
+      "routes\\sms_routes.py"
+    ],
+    "can_modify_financial_data": [
+      "routes\\finance_routes.py"
+    ],
+    "generate_receipt_pdf": [
+      "routes\\finance_routes.py"
+    ],
+    "utils.error_handler": [
+      "routes\\finance_routes.py"
+    ],
+    "case": [
+      "routes\\lead_routes.py"
+    ],
+    "Response": [
+      "routes\\lead_routes.py"
+    ],
+    "pandas": [
+      "routes\\lead_routes.py",
+      "utils\\courses.py",
+      "utils\\pdf_utils.py"
+    ],
+    "generate_secure_password": [
+      "routes\\lms_routes.py",
+      "utils\\auto_sync.py"
+    ],
+    "MoodleAPI": [
+      "routes\\lms_routes.py",
+      "utils\\auto_sync.py"
+    ],
+    "sanitize_course_shortname": [
+      "routes\\lms_routes.py"
+    ],
+    "auto_sync_student_to_moodle": [
+      "routes\\lms_routes.py",
+      "routes\\student_routes.py"
+    ],
+    "MoodleAPIError": [
+      "routes\\lms_routes.py"
+    ],
+    "sanitize_username": [
+      "routes\\lms_routes.py",
+      "utils\\auto_sync.py"
+    ],
+    "utils.moodle_integration": [
+      "routes\\lms_routes.py",
+      "utils\\auto_sync.py"
+    ],
+    "send_bulk_sms": [
+      "routes\\sms_routes.py"
+    ],
+    "SMSCampaign": [
+      "routes\\sms_routes.py"
+    ],
+    "models.sms_automation_model": [
+      "routes\\sms_routes.py",
+      "utils\\sms_service_2factor.py"
+    ],
+    "get_sms_service": [
+      "routes\\sms_routes.py"
+    ],
+    "SMSAutomationRule": [
+      "routes\\sms_routes.py"
+    ],
+    "utils.sms_service_2factor": [
+      "routes\\sms_routes.py"
+    ],
+    "SMSTemplate": [
+      "routes\\sms_routes.py"
+    ],
+    "SMS_TEMPLATES": [
+      "routes\\sms_routes.py"
+    ],
+    "SMSLog": [
+      "routes\\sms_routes.py",
+      "utils\\sms_service_2factor.py"
+    ],
+    "get_current_student": [
+      "routes\\student_portal_routes.py"
+    ],
+    "log_student_activity": [
+      "routes\\student_portal_routes.py"
+    ],
+    "utils.student_auth": [
+      "routes\\student_portal_routes.py"
+    ],
+    "get_student_context": [
+      "routes\\student_portal_routes.py"
+    ],
+    "student_required": [
+      "routes\\student_portal_routes.py"
+    ],
+    "StudentLearningAnalytics": [
+      "routes\\student_portal_routes.py",
+      "utils\\internal_lms.py"
+    ],
+    "invoice_routes": [
+      "routes\\__init__.py"
+    ],
+    "dashboard_routes": [
+      "routes\\__init__.py"
+    ],
+    "installment_routes": [
+      "routes\\__init__.py"
+    ],
+    "audit_routes": [
+      "routes\\__init__.py"
+    ],
+    "lead_routes": [
+      "routes\\__init__.py"
+    ],
+    "auth_routes": [
+      "routes\\__init__.py"
+    ],
+    "batch_routes": [
+      "routes\\__init__.py"
+    ],
+    "finance_routes": [
+      "routes\\__init__.py"
+    ],
+    "branch_routes": [
+      "routes\\__init__.py"
+    ],
+    "student_routes": [
+      "routes\\__init__.py"
+    ],
+    "staff_routes": [
+      "routes\\__init__.py"
+    ],
+    "student_attendance_routes": [
+      "routes\\__init__.py"
+    ],
+    "generate_unique_course_shortname": [
+      "utils\\auto_sync.py"
+    ],
+    "List": [
+      "utils\\courses.py",
+      "utils\\moodle_integration.py"
+    ],
+    "Dict": [
+      "utils\\courses.py",
+      "utils\\moodle_integration.py"
+    ],
+    "Optional": [
+      "utils\\courses.py",
+      "utils\\moodle_integration.py"
+    ],
+    "typing": [
+      "utils\\courses.py",
+      "utils\\moodle_integration.py"
+    ],
+    "StudentPortalSession": [
+      "utils\\internal_lms.py"
+    ],
+    "secrets": [
+      "utils\\moodle_integration.py"
+    ],
+    "urllib.parse": [
+      "utils\\moodle_integration.py"
+    ],
+    "Union": [
+      "utils\\moodle_integration.py"
+    ],
+    "urlencode": [
+      "utils\\moodle_integration.py"
+    ],
+    "canvas": [
+      "utils\\pdf_utils.py"
+    ],
+    "TableStyle": [
+      "utils\\pdf_utils.py"
+    ],
+    "reportlab.pdfgen": [
+      "utils\\pdf_utils.py"
+    ],
+    "Image": [
+      "utils\\pdf_utils.py"
+    ],
+    "inch": [
+      "utils\\pdf_utils.py"
+    ],
+    "letter": [
+      "utils\\pdf_utils.py"
+    ],
+    "reportlab.platypus": [
+      "utils\\pdf_utils.py"
+    ],
+    "SimpleDocTemplate": [
+      "utils\\pdf_utils.py"
+    ],
+    "colors": [
+      "utils\\pdf_utils.py"
+    ],
+    "Table": [
+      "utils\\pdf_utils.py"
+    ],
+    "Paragraph": [
+      "utils\\pdf_utils.py"
+    ],
+    "getSampleStyleSheet": [
+      "utils\\pdf_utils.py"
+    ],
+    "reportlab.lib.styles": [
+      "utils\\pdf_utils.py"
+    ],
+    "reportlab.lib.pagesizes": [
+      "utils\\pdf_utils.py"
+    ],
+    "ParagraphStyle": [
+      "utils\\pdf_utils.py"
+    ],
+    "reportlab.lib.units": [
+      "utils\\pdf_utils.py"
+    ],
+    "Spacer": [
+      "utils\\pdf_utils.py"
+    ],
+    "reportlab.lib": [
+      "utils\\pdf_utils.py"
+    ],
+    "A4": [
+      "utils\\pdf_utils.py"
+    ],
+    "tempfile": [
+      "utils\\pdf_utils.py"
+    ],
+    "log_info": [
+      "utils\\sms_service_2factor.py"
+    ],
+    "utils.logger": [
+      "utils\\sms_service_2factor.py"
+    ],
+    "log_error": [
+      "utils\\sms_service_2factor.py"
+    ],
+    "shutil": [
+      "tests\\migrations\\migrate_course_table.py"
+    ]
+  },
+  "files_analyzed": [
+    {
+      "path": "analyze_python_keywords.py",
+      "size": 12907,
+      "lines": 338
+    },
+    {
+      "path": "config.py",
+      "size": 4659,
+      "lines": 139
+    },
+    {
+      "path": "config_pythonanywhere.py",
+      "size": 3086,
+      "lines": 109
+    },
+    {
+      "path": "init_db.py",
+      "size": 11607,
+      "lines": 281
+    },
+    {
+      "path": "run.py",
+      "size": 1411,
+      "lines": 41
+    },
+    {
+      "path": "run_dev.py",
+      "size": 1643,
+      "lines": 45
+    },
+    {
+      "path": "docker\\apitopythonanywhere.py",
+      "size": 480,
+      "lines": 15
+    },
+    {
+      "path": "docker\\mysql connect.py",
+      "size": 545,
+      "lines": 19
+    },
+    {
+      "path": "docker\\mysql_connection_corrected.py",
+      "size": 4849,
+      "lines": 137
+    },
+    {
+      "path": "docker\\mysql_connection_fixed.py",
+      "size": 0,
+      "lines": 0
+    },
+    {
+      "path": "docker\\mysql_connection_test.py",
+      "size": 0,
+      "lines": 0
+    },
+    {
+      "path": "docker\\network_test.py",
+      "size": 0,
+      "lines": 0
+    },
+    {
+      "path": "docker\\pythonanywhere_config.py",
+      "size": 3097,
+      "lines": 87
+    },
+    {
+      "path": "Docs\\folder_frond_end.py",
+      "size": 1326,
+      "lines": 46
+    },
+    {
+      "path": "Docs\\setup_database_from_schema.py",
+      "size": 9502,
+      "lines": 259
+    },
+    {
+      "path": "globalit_app\\__init__.py",
+      "size": 6945,
+      "lines": 163
+    },
+    {
+      "path": "models\\assessment_model.py",
+      "size": 12047,
+      "lines": 304
+    },
+    {
+      "path": "models\\attendance_audit_model.py",
+      "size": 6843,
+      "lines": 151
+    },
+    {
+      "path": "models\\batch_model.py",
+      "size": 12406,
+      "lines": 300
+    },
+    {
+      "path": "models\\batch_trainer_assignment_model.py",
+      "size": 5897,
+      "lines": 159
+    },
+    {
+      "path": "models\\branch_model.py",
+      "size": 1956,
+      "lines": 48
+    },
+    {
+      "path": "models\\communication_model.py",
+      "size": 13971,
+      "lines": 347
+    },
+    {
+      "path": "models\\course_content_model.py",
+      "size": 9663,
+      "lines": 225
+    },
+    {
+      "path": "models\\course_model.py",
+      "size": 8193,
+      "lines": 161
+    },
+    {
+      "path": "models\\expense_audit_model.py",
+      "size": 12224,
+      "lines": 251
+    },
+    {
+      "path": "models\\expense_model.py",
+      "size": 12715,
+      "lines": 337
+    },
+    {
+      "path": "models\\installment_model.py",
+      "size": 4138,
+      "lines": 99
+    },
+    {
+      "path": "models\\invoice_model.py",
+      "size": 1949,
+      "lines": 40
+    },
+    {
+      "path": "models\\lead_model.py",
+      "size": 61030,
+      "lines": 1261
+    },
+    {
+      "path": "models\\login_logs_model.py",
+      "size": 831,
+      "lines": 23
+    },
+    {
+      "path": "models\\payment_model.py",
+      "size": 1790,
+      "lines": 45
+    },
+    {
+      "path": "models\\staff_profile_model.py",
+      "size": 8583,
+      "lines": 198
+    },
+    {
+      "path": "models\\student_attendance_model.py",
+      "size": 14151,
+      "lines": 307
+    },
+    {
+      "path": "models\\student_batch_completion_model.py",
+      "size": 4801,
+      "lines": 110
+    },
+    {
+      "path": "models\\student_model.py",
+      "size": 20239,
+      "lines": 466
+    },
+    {
+      "path": "models\\system_audit_logs_model.py",
+      "size": 4465,
+      "lines": 115
+    },
+    {
+      "path": "models\\user_branch_assignment_model.py",
+      "size": 1428,
+      "lines": 32
+    },
+    {
+      "path": "models\\user_model.py",
+      "size": 2915,
+      "lines": 79
+    },
+    {
+      "path": "models\\__init__.py",
+      "size": 0,
+      "lines": 0
+    },
+    {
+      "path": "routes\\admin_content_routes.py",
+      "size": 31126,
+      "lines": 835
+    },
+    {
+      "path": "routes\\attendance_reports_routes.py",
+      "size": 19360,
+      "lines": 430
+    },
+    {
+      "path": "routes\\audit_routes.py",
+      "size": 8070,
+      "lines": 219
+    },
+    {
+      "path": "routes\\auth_routes.py",
+      "size": 6553,
+      "lines": 162
+    },
+    {
+      "path": "routes\\batch_routes.py",
+      "size": 66249,
+      "lines": 1443
+    },
+    {
+      "path": "routes\\branch_routes.py",
+      "size": 16448,
+      "lines": 399
+    },
+    {
+      "path": "routes\\course_routes.py",
+      "size": 28900,
+      "lines": 655
+    },
+    {
+      "path": "routes\\dashboard_routes.py",
+      "size": 35503,
+      "lines": 829
+    },
+    {
+      "path": "routes\\expense_routes.py",
+      "size": 39491,
+      "lines": 908
+    },
+    {
+      "path": "routes\\finance_routes.py",
+      "size": 40486,
+      "lines": 892
+    },
+    {
+      "path": "routes\\installment_routes.py",
+      "size": 16595,
+      "lines": 394
+    },
+    {
+      "path": "routes\\invoice_routes.py",
+      "size": 30114,
+      "lines": 696
+    },
+    {
+      "path": "routes\\lead_routes.py",
+      "size": 129232,
+      "lines": 3065
+    },
+    {
+      "path": "routes\\lms_routes.py",
+      "size": 29461,
+      "lines": 718
+    },
+    {
+      "path": "routes\\sms_routes.py",
+      "size": 14963,
+      "lines": 395
+    },
+    {
+      "path": "routes\\staff_routes.py",
+      "size": 56289,
+      "lines": 1217
+    },
+    {
+      "path": "routes\\student_attendance_routes.py",
+      "size": 47892,
+      "lines": 1040
+    },
+    {
+      "path": "routes\\student_portal_routes.py",
+      "size": 34802,
+      "lines": 938
+    },
+    {
+      "path": "routes\\student_routes.py",
+      "size": 28396,
+      "lines": 636
+    },
+    {
+      "path": "routes\\__init__.py",
+      "size": 1466,
+      "lines": 30
+    },
+    {
+      "path": "utils\\auth.py",
+      "size": 4597,
+      "lines": 120
+    },
+    {
+      "path": "utils\\auto_sync.py",
+      "size": 6960,
+      "lines": 177
+    },
+    {
+      "path": "utils\\backup.py",
+      "size": 0,
+      "lines": 0
+    },
+    {
+      "path": "utils\\courses.py",
+      "size": 14191,
+      "lines": 333
+    },
+    {
+      "path": "utils\\error_handler.py",
+      "size": 3862,
+      "lines": 109
+    },
+    {
+      "path": "utils\\internal_lms.py",
+      "size": 23928,
+      "lines": 589
+    },
+    {
+      "path": "utils\\lead_analytics.py",
+      "size": 7406,
+      "lines": 199
+    },
+    {
+      "path": "utils\\logger.py",
+      "size": 1119,
+      "lines": 44
+    },
+    {
+      "path": "utils\\model_helpers.py",
+      "size": 2898,
+      "lines": 93
+    },
+    {
+      "path": "utils\\moodle_integration.py",
+      "size": 16823,
+      "lines": 483
+    },
+    {
+      "path": "utils\\outcome_categories.py",
+      "size": 16272,
+      "lines": 252
+    },
+    {
+      "path": "utils\\pdf_utils.py",
+      "size": 20016,
+      "lines": 513
+    },
+    {
+      "path": "utils\\role_permissions.py",
+      "size": 7168,
+      "lines": 186
+    },
+    {
+      "path": "utils\\search_utils.py",
+      "size": 7149,
+      "lines": 210
+    },
+    {
+      "path": "utils\\sms_service_2factor.py",
+      "size": 11721,
+      "lines": 319
+    },
+    {
+      "path": "utils\\student_auth.py",
+      "size": 3922,
+      "lines": 99
+    },
+    {
+      "path": "utils\\timezone_helper.py",
+      "size": 7769,
+      "lines": 262
+    },
+    {
+      "path": "utils\\__init__.py",
+      "size": 0,
+      "lines": 0
+    },
+    {
+      "path": "tests\\migrations\\fix_enum_fields.py",
+      "size": 3569,
+      "lines": 106
+    },
+    {
+      "path": "tests\\migrations\\migrate_course_table.py",
+      "size": 10413,
+      "lines": 258
+    }
+  ],
+  "statistics": {
+    "total_files": 79,
+    "total_keywords_found": 30,
+    "total_builtins_found": 58,
+    "total_imports_found": 291,
+    "most_used_keywords": {
+      "import": 72,
+      "def": 70,
+      "from": 69,
+      "return": 67,
+      "if": 67,
+      "for": 66,
+      "True": 63,
+      "else": 60,
+      "in": 59,
+      "False": 58
+    },
+    "most_used_builtins": {
+      "all": 53,
+      "id": 50,
+      "Exception": 41,
+      "str": 38,
+      "print": 34,
+      "filter": 33,
+      "len": 32,
+      "__name__": 31,
+      "int": 28,
+      "list": 23
+    },
+    "most_used_imports": {
+      "datetime": 57,
+      "db": 50,
+      "init_db": 49,
+      "utils.timezone_helper": 35,
+      "timezone": 29,
+      "models.user_model": 25,
+      "User": 25,
+      "session": 24,
+      "flask": 24,
+      "Student": 23
+    },
+    "total_lines_analyzed": 26990,
+    "total_size_analyzed": 1135471
+  },
+  "errors": []
+}

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Global IT Education{% endblock %}</title>
+
+  <!-- Vendor CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <!-- Brand font -->
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Global IT Design System (imports everything via app.css) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+
+  <!-- Page-specific CSS (avoid if possible; use modules/* instead) -->
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <!-- Mobile Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()" ontouchstart=""></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      {% if session.user_id %}
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('dashboard_bp.admin_dashboard') }}" class="brand">
+            <i class="fas fa-graduation-cap"></i> Global IT
+          </a>
+        {% elif session.role == 'regional_manager' %}
+          <a href="{{ url_for('dashboard_bp.admin_dashboard') }}" class="brand">
+            <i class="fas fa-graduation-cap"></i> Global IT
+          </a>
+        {% elif session.role in ['franchise'] %}
+          <a href="{{ url_for('dashboard_bp.franchise_dashboard') }}" class="brand">
+            <i class="fas fa-graduation-cap"></i> Global IT
+          </a>
+        {% elif session.role == 'branch_manager' %}
+          <a href="{{ url_for('dashboard_bp.branch_manager_dashboard') }}" class="brand">
+            <i class="fas fa-graduation-cap"></i> Global IT
+          </a>
+        {% elif session.role == 'staff' %}
+          <a href="{{ url_for('dashboard_bp.staff_dashboard') }}" class="brand">
+            <i class="fas fa-graduation-cap"></i> Global IT
+          </a>
+        {% elif session.role == 'trainer' %}
+          <a href="{{ url_for('dashboard_bp.trainer_dashboard') }}" class="brand">
+            <i class="fas fa-graduation-cap"></i> Global IT
+          </a>
+        {% elif session.role == 'student' %}
+          <a href="{{ url_for('student_portal.dashboard') }}" class="brand">
+            <i class="fas fa-graduation-cap"></i> Global IT
+          </a>
+        {% elif session.role == 'parent' %}
+          <a href="{{ url_for('dashboard_bp.parent_dashboard') }}" class="brand">
+            <i class="fas fa-graduation-cap"></i> Global IT
+          </a>
+        {% else %}
+          <a href="{{ url_for('students.register_student') }}" class="brand">
+            <i class="fas fa-graduation-cap"></i> Global IT
+          </a>
+        {% endif %}
+      {% else %}
+        <a href="{{ url_for('students.register_student') }}" class="brand">
+          <i class="fas fa-graduation-cap"></i> Global IT
+        </a>
+      {% endif %}
+      <div class="brand-subtitle">Education Management</div>
+    </div>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar-menu">
+      {% if session.user_id %}
+        <!-- a) Dashboard - Direct Button (No Dropdown) -->
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('dashboard_bp.admin_dashboard') }}" class="menu-link dashboard-link" data-title="Admin Dashboard">
+            <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+          </a>
+        {% elif session.role == 'regional_manager' %}
+          <a href="{{ url_for('dashboard_bp.admin_dashboard') }}" class="menu-link dashboard-link" data-title="Regional Dashboard">
+            <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+          </a>
+        {% elif session.role in ['franchise'] %}
+          <a href="{{ url_for('dashboard_bp.franchise_dashboard') }}" class="menu-link dashboard-link" data-title="Franchise Dashboard">
+            <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+          </a>
+        {% elif session.role == 'branch_manager' %}
+          <a href="{{ url_for('dashboard_bp.branch_manager_dashboard') }}" class="menu-link dashboard-link" data-title="Branch Dashboard">
+            <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+          </a>
+        {% elif session.role == 'staff' %}
+          <a href="{{ url_for('dashboard_bp.staff_dashboard') }}" class="menu-link dashboard-link" data-title="Staff Dashboard">
+            <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+          </a>
+        {% elif session.role == 'trainer' %}
+          <a href="{{ url_for('dashboard_bp.trainer_dashboard') }}" class="menu-link dashboard-link" data-title="Trainer Dashboard">
+            <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+          </a>
+        {% elif session.role == 'student' %}
+          <a href="{{ url_for('student_portal.dashboard') }}" class="menu-link dashboard-link" data-title="Student Portal Dashboard">
+            <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+          </a>
+        {% elif session.role == 'parent' %}
+          <a href="{{ url_for('dashboard_bp.parent_dashboard') }}" class="menu-link dashboard-link" data-title="Parent Dashboard">
+            <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+          </a>
+        {% endif %}
+
+        <!-- b) Leads -->
+        {% if session.role in ['admin','regional_manager','branch_manager','franchise','staff'] %}
+          <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleMenuSection(this)">
+              <div class="menu-section-title"><i class="fas fa-bullseye"></i>Leads</div>
+              <i class="fas fa-chevron-down section-toggle"></i>
+            </div>
+            <div class="menu-items">
+              <div class="menu-item">
+                <a href="{{ url_for('leads.lead_dashboard') }}" class="menu-link" data-title="Lead Dashboard">
+                  <i class="fas fa-chart-pie"></i><span>Lead Dashboard</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('leads.lead_create_new') }}" class="menu-link" data-title="Create Lead">
+                  <i class="fas fa-plus-circle"></i><span>Create Lead</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('leads.lead_list') }}" class="menu-link" data-title="All Leads">
+                  <i class="fas fa-list"></i><span>All Leads</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- c) Branches -->
+        {% if session.role in ['admin','regional_manager'] %}
+          <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleMenuSection(this)">
+              <div class="menu-section-title"><i class="fas fa-building"></i>Branches</div>
+              <i class="fas fa-chevron-down section-toggle"></i>
+            </div>
+            <div class="menu-items">
+              <div class="menu-item">
+                <a href="{{ url_for('branch.create_branch') }}" class="menu-link" data-title="Create New Branch">
+                  <i class="fas fa-plus-circle"></i><span>Create New Branch</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('branch.list_branches') }}" class="menu-link" data-title="View All Branches">
+                  <i class="fas fa-building"></i><span>View All Branches</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- d) Students -->
+        {% if session.role in ['admin','regional_manager','branch_manager','franchise','staff'] %}
+          <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleMenuSection(this)">
+              <div class="menu-section-title"><i class="fas fa-user-graduate"></i>Students</div>
+              <i class="fas fa-chevron-down section-toggle"></i>
+            </div>
+            <div class="menu-items">
+              <div class="menu-item">
+                <a href="{{ url_for('students.register_student') }}" class="menu-link" data-title="Create New Student">
+                  <i class="fas fa-user-plus"></i><span>Create New Student</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('students.list_students') }}" class="menu-link" data-title="View All Students">
+                  <i class="fas fa-users"></i><span>View All Students</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- e) Batches -->
+        {% if session.role in ['admin','regional_manager','branch_manager','franchise'] %}
+          <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleMenuSection(this)">
+              <div class="menu-section-title"><i class="fas fa-layer-group"></i>Batches</div>
+              <i class="fas fa-chevron-down section-toggle"></i>
+            </div>
+            <div class="menu-items">
+              <div class="menu-item">
+                <a href="{{ url_for('batches.create_batch_form') }}" class="menu-link" data-title="Create New Batch">
+                  <i class="fas fa-plus-square"></i><span>Create New Batch</span>
+                </a>
+              </div>
+              
+              <div class="menu-item">
+                <a href="{{ url_for('batches.list_batches') }}" class="menu-link" data-title="View Batches">
+                  <i class="fas fa-list-alt"></i><span>View Batches</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- f) Courses -->
+        {% if session.user_id %}
+          <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleMenuSection(this)">
+              <div class="menu-section-title"><i class="bi bi-mortarboard"></i>Courses</div>
+              <i class="fas fa-chevron-down section-toggle"></i>
+            </div>
+            <div class="menu-items">
+              <div class="menu-item">
+                <a href="{{ url_for('courses.list_courses') }}" class="menu-link" data-title="All Courses">
+                  <i class="bi bi-collection"></i><span>All Courses</span>
+                </a>
+              </div>
+              {% if session.role in ['admin','regional_manager'] %}
+              <div class="menu-item">
+                <a href="{{ url_for('courses.create_course_form') }}" class="menu-link" data-title="Create New Course">
+                  <i class="bi bi-plus-circle"></i><span>Create New Course</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('courses.course_analytics') }}" class="menu-link" data-title="Course Analytics">
+                  <i class="bi bi-graph-up"></i><span>Course Analytics</span>
+                </a>
+              </div>
+              {% endif %}
+              {% if session.role in ['admin'] %}
+              <div class="menu-item">
+                <a href="{{ url_for('lms.admin_dashboard') }}" class="menu-link" data-title="Course Content Management">
+                  <i class="fas fa-cogs"></i><span>Course Management</span>
+                </a>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Internal Learning Management System -->
+        {% if session.user_id %}
+          <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleMenuSection(this)">
+              <div class="menu-section-title"><i class="fas fa-laptop-code"></i>LMS</div>
+              <i class="fas fa-chevron-down section-toggle"></i>
+            </div>
+            <div class="menu-items">
+              
+              <!-- Admin Content Management - For Admins -->
+              {% if session.role in ['admin'] %}
+              <div class="menu-item">
+                <a href="{{ url_for('lms_content_management.dashboard') }}" class="menu-link" data-title="Content Management Dashboard">
+                  <i class="fas fa-cogs"></i><span>Content Management</span>
+                </a>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Attendance Management -->
+        {% if session.role in ['branch_manager','trainer','franchise'] %}
+          <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleMenuSection(this)">
+              <div class="menu-section-title"><i class="fas fa-calendar-check"></i>Attendance</div>
+              <i class="fas fa-chevron-down section-toggle"></i>
+            </div>
+            <div class="menu-items">
+              {% if session.role == 'trainer' %}
+              <div class="menu-item">
+                <a href="{{ url_for('attendance.trainer_batches') }}" class="menu-link" data-title="My Batches">
+                  <i class="fas fa-chalkboard-teacher"></i><span>My Batches</span>
+                </a>
+              </div>
+              {% endif %}
+              
+              {% if session.role in ['branch_manager','franchise'] %}
+              <div class="menu-item">
+                <a href="{{ url_for('batches.list_batches') }}" class="menu-link" data-title="Select Batch for Attendance">
+                  <i class="fas fa-list-check"></i><span>Mark Attendance</span>
+                </a>
+              </div>
+              {% endif %}
+              
+              <div class="menu-item">
+                <a href="{{ url_for('batches.list_batches') }}" class="menu-link" data-title="Attendance Reports">
+                  <i class="fas fa-chart-bar"></i><span>Attendance Reports</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+          
+        <!-- g) Finance -->
+        {% if session.role in ['admin','regional_manager','branch_manager','franchise','staff'] %}
+          <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleMenuSection(this)">
+              <div class="menu-section-title"><i class="fas fa-chart-line"></i>Finance</div>
+              <i class="fas fa-chevron-down section-toggle"></i>
+            </div>
+            <div class="menu-items">
+              <div class="menu-item">
+                <a href="{{ url_for('finance.dashboard') }}" class="menu-link" data-title="Finance Dashboard">
+                  <i class="fas fa-chart-pie"></i><span>Finance Dashboard</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('invoices.create_invoice_form') }}" class="menu-link" data-title="Create Invoice">
+                  <i class="fas fa-file-invoice-dollar"></i><span>Create Invoice</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('invoices.list_invoices') }}" class="menu-link" data-title="View All Invoices">
+                  <i class="fas fa-file-invoice"></i><span>View All Invoices</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('installments.due_today') }}" class="menu-link" data-title="Record Payment (Receipt) from Student">
+                  <i class="fas fa-receipt"></i><span>Record Payment (Receipt)</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('finance.payments_list') }}" class="menu-link" data-title="All Payments from Students (Receipts)">
+                  <i class="fas fa-money-check-alt"></i><span>All Payments (Receipts)</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('installments.due_today') }}" class="menu-link" data-title="Due Installments">
+                  <i class="fas fa-calendar-times"></i><span>Due Installments</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('expenses.expense_dashboard') }}" class="menu-link" data-title="Expense Management">
+                  <i class="fas fa-wallet"></i><span>Expense Management</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('expenses.add_expense') }}" class="menu-link" data-title="Add New Expense">
+                  <i class="fas fa-plus-circle"></i><span>Add Expense</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('expenses.expense_reports') }}" class="menu-link" data-title="Expense Reports">
+                  <i class="fas fa-chart-bar"></i><span>Expense Reports</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- h) Staff Management -->
+        {% if session.role in ['admin','franchise'] %}
+          <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleMenuSection(this)">
+              <div class="menu-section-title"><i class="fas fa-users-cog"></i>Staff Management</div>
+              <i class="fas fa-chevron-down section-toggle"></i>
+            </div>
+            <div class="menu-items">
+              <div class="menu-item">
+                <a href="{{ url_for('staff.list_staff') }}" class="menu-link" data-title="Create New Staff">
+                  <i class="fas fa-user-plus"></i><span>Create New Staff</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('staff.list_staff') }}" class="menu-link" data-title="View All Staff">
+                  <i class="fas fa-users"></i><span>View All Staff</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+    <!-- Top Navigation -->
+    <div class="top-nav">
+      <div class="d-flex align-items-center">
+        <!-- Mobile Menu Toggle Button -->
+        <button class="btn btn-link d-md-none me-3 p-1" onclick="toggleSidebar()" title="Toggle Menu">
+          <i class="fas fa-bars" style="font-size: 1.2rem; color: var(--text-primary);"></i>
+        </button>
+        
+        <h5 class="mb-0">{% block page_title %}Dashboard{% endblock %}</h5>
+      </div>
+
+      <div class="user-menu">
+        <!-- Theme Toggle Button -->
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+          <i class="fas fa-moon" id="theme-icon"></i>
+        </button>
+
+        {% if session.user_id %}
+          <div class="dropdown">
+            <button class="btn btn-link dropdown-toggle d-flex align-items-center p-1" type="button" data-bs-toggle="dropdown">
+              <div class="user-avatar me-2">
+                {{ (session.full_name or session.username or 'U')[0].upper() }}
+              </div>
+              <div class="text-start d-none d-md-block">
+                <div class="fw-bold small">{{ session.full_name or session.username }}</div>
+                <small class="text-secondary fw-medium small">{{ session.role.title() }}</small>
+              </div>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><h6 class="dropdown-header">Account Info</h6></li>
+              <li><span class="dropdown-item-text">
+                <small>
+                  <strong>Role:</strong> {{ session.role }}<br />
+                  {% if session.branch_name %}
+                    <strong>Branch:</strong> {{ session.branch_name }}
+                  {% else %}
+                    <strong>Access:</strong> All Branches
+                  {% endif %}
+                </small>
+              </span></li>
+              <li><hr class="dropdown-divider" /></li>
+              <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
+                <i class="fas fa-key"></i> Change Password
+              </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </a></li>
+            </ul>
+          </div>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="toast-container position-fixed top-0 end-0 p-3">
+            {% for category, message in messages %}
+              <div class="toast align-items-center text-bg-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                  <div class="toast-body">
+                    <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'info-circle' }} me-2"></i>
+                    {{ message }}
+                  </div>
+                  <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body text-center py-5">
+                <h2 class="text-primary mb-4">🎯 Welcome to Global IT Education</h2>
+                <p class="lead">Template system is working correctly!</p>
+                <div class="alert alert-info">
+                  <strong>Current User:</strong> {{ session.username or 'Not logged in' }}<br />
+                  <strong>Role:</strong> {{ session.role or 'No role' }}<br />
+                  <strong>Page:</strong> {% block page_title_display %}Default Page{% endblock %}
+                </div>
+                <p class="text-muted">This is the default content. Individual pages will override this content block.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endblock %}
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  
+  <!-- DataTables -->
+  <script src="https://cdn.datatables.net/2.0.0/js/dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/2.0.0/js/dataTables.bootstrap5.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.0.0/css/dataTables.bootstrap5.min.css">
+  
+  <!-- Debug script to check if libraries are loaded -->
+  <script>
+    console.log('jQuery loaded:', typeof $ !== 'undefined');
+    console.log('DataTables loaded:', typeof $.fn.DataTable !== 'undefined');
+    console.log('Bootstrap loaded:', typeof bootstrap !== 'undefined');
+  </script>
+
+  <!-- Behavior JS -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Initialize toasts
+      document.querySelectorAll('.toast').forEach(el => new bootstrap.Toast(el, { delay: 5000 }).show());
+      restoreMenuSectionStates();
+    });
+
+    function toggleMenuSection(header) {
+      const section = header.parentElement;
+      const menuItems = section.querySelector('.menu-items');
+      const toggle = header.querySelector('.section-toggle');
+      const sidebar = document.getElementById('sidebar');
+
+      if (sidebar.classList.contains('collapsed') && window.innerWidth > 768) return;
+
+      menuItems.classList.toggle('show');
+      toggle.classList.toggle('rotated');
+
+      const sectionTitle = header.querySelector('.menu-section-title').textContent.trim();
+      localStorage.setItem(`menuSection_${sectionTitle}`, menuItems.classList.contains('show'));
+    }
+
+    function restoreMenuSectionStates() {
+      document.querySelectorAll('.menu-section').forEach(section => {
+        const header = section.querySelector('.menu-section-header');
+        const menuItems = section.querySelector('.menu-items');
+        const toggle = section.querySelector('.section-toggle');
+        if (!header || !menuItems || !toggle) return;
+
+        const title = header.querySelector('.menu-section-title').textContent.trim();
+        const saved = localStorage.getItem(`menuSection_${title}`);
+        const open = saved !== null ? saved === 'true' : false;
+
+        menuItems.classList.toggle('show', open);
+        toggle.classList.toggle('rotated', open);
+      });
+    }
+
+    // Sidebar toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+
+      if (window.innerWidth <= 768) {
+        // Mobile behavior
+        sidebar.classList.toggle('mobile-open');
+        overlay.classList.toggle('show');
+        
+        // Prevent body scroll when sidebar is open on mobile
+        if (sidebar.classList.contains('mobile-open')) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = '';
+        }
+      } else {
+        // Desktop behavior
+        sidebar.classList.toggle('collapsed');
+      }
+    }
+
+    // Resize handling
+    window.addEventListener('resize', function () {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+
+      if (window.innerWidth > 768) {
+        // When switching to desktop view
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('show');
+        document.body.style.overflow = ''; // Restore body scroll
+        restoreMenuSectionStates();
+      }
+    });
+
+    // Form loading state
+    document.addEventListener('submit', function (e) {
+      const form = e.target;
+      if (form.tagName !== 'FORM') return;
+
+      form.classList.add('loading');
+      const submitBtn = form.querySelector('[type="submit"]');
+      if (!submitBtn) return;
+
+      submitBtn.disabled = true;
+      const original = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+      setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = original;
+        form.classList.remove('loading');
+      }, 10000);
+    });
+
+    // Theme toggle functionality
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      
+      // Update icon
+      const themeIcon = document.getElementById('theme-icon');
+      if (newTheme === 'dark') {
+        themeIcon.className = 'fas fa-sun';
+      } else {
+        themeIcon.className = 'fas fa-moon';
+      }
+    }
+
+    // Initialize theme on page load
+    function initializeTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+      const themeIcon = document.getElementById('theme-icon');
+      if (savedTheme === 'dark') {
+        themeIcon.className = 'fas fa-sun';
+      } else {
+        themeIcon.className = 'fas fa-moon';
+      }
+    }
+
+    // Initialize theme when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function () {
+      // Initialize toasts
+      document.querySelectorAll('.toast').forEach(el => new bootstrap.Toast(el, { delay: 5000 }).show());
+      restoreMenuSectionStates();
+      initializeTheme(); // Initialize theme
+    });
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

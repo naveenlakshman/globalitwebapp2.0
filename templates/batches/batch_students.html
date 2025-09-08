@@ -1,0 +1,503 @@
+{% extends "base.html" %}
+
+{% block title %}{{ batch.name }} - Students{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-users text-primary me-2"></i>{{ batch.name }} - Students
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-book me-1"></i>{{ batch.course_name }} • 
+                <i class="fas fa-building me-1"></i>{{ batch.branch.branch_name if batch.branch else 'Unknown Branch' }}
+                {% if batch.timing %}
+                • <i class="fas fa-clock me-1"></i>{{ batch.timing }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('batches.add_students_to_batch', batch_id=batch.id) }}" class="btn btn-success btn-sm">
+                <i class="fas fa-user-plus me-1"></i>Add Students to Batch
+            </a>
+            <a href="{{ url_for('batches.view_batch', batch_id=batch.id) }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-edit me-1"></i>Edit Batch Status
+            </a>
+            <a href="{{ url_for('batches.list_batches') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Batches
+            </a>
+        </div>
+    </div>
+
+    <!-- Batch Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Students
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ students|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Active Students
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ students|selectattr('is_deleted', 'equalto', 0)|list|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Attendance Rate
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ attendance_rate|default(0) }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Batch Duration
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if batch.start_date and batch.end_date %}
+                                    Duration
+                                {% else %}
+                                    Ongoing
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trainer Information Card -->
+    {% if trainer_assignments %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-info text-white">
+            <h6 class="m-0 font-weight-bold">
+                <i class="fas fa-chalkboard-teacher me-2"></i>Assigned Trainers
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for assignment in trainer_assignments %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="trainer-card p-3 border rounded {% if assignment.role_in_batch == 'Primary Trainer' %}border-primary{% else %}border-secondary{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <div class="trainer-avatar bg-{% if assignment.role_in_batch == 'Primary Trainer' %}primary{% else %}secondary{% endif %} text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 50px; height: 50px; font-size: 20px;">
+                                {{ assignment.trainer.full_name[0].upper() if assignment.trainer else 'T' }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ assignment.trainer.full_name if assignment.trainer else 'Unknown' }}</h6>
+                                <span class="badge badge-{% if assignment.role_in_batch == 'Primary Trainer' %}primary{% else %}secondary{% endif %} mb-1">
+                                    {{ assignment.role_in_batch }}
+                                </span>
+                                {% if assignment.trainer and assignment.trainer.mobile %}
+                                <div class="text-muted small">
+                                    <i class="fas fa-phone me-1"></i>{{ assignment.trainer.mobile }}
+                                </div>
+                                {% endif %}
+                                {% if assignment.trainer and assignment.trainer.email %}
+                                <div class="text-muted small">
+                                    <i class="fas fa-envelope me-1"></i>{{ assignment.trainer.email }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if assignment.notes %}
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-sticky-note me-1"></i>{{ assignment.notes }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Students Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>Student List
+            </h6>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('attendance.mark_attendance_page', batch_id=batch.id) }}" class="btn btn-sm btn-info">
+                    <i class="fas fa-check-circle me-1"></i>Mark Attendance
+                </a>
+                <button class="btn btn-sm btn-outline-primary" onclick="exportStudents()">
+                    <i class="fas fa-download me-1"></i>Export List
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if students %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="studentsTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                </th>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Email</th>
+                                <th>Admission Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input student-checkbox" 
+                                           value="{{ student.student_id }}"
+                                           data-student-id="{{ student.student_id }}">
+                                </td>
+                                <td>
+                                    <strong>{{ student.student_id }}</strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-sm me-2">
+                                            <div class="avatar-initial bg-primary rounded-circle">
+                                                {{ student.full_name[0].upper() }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong>{{ student.full_name }}</strong>
+                                            {% if student.date_of_birth %}
+                                            <br><small class="text-muted">
+                                                DOB: {{ student.date_of_birth }}
+                                            </small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if student.mobile %}
+                                        <i class="fas fa-phone me-1"></i>{{ student.mobile }}
+                                    {% else %}
+                                        <small class="text-muted">Not provided</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if student.email %}
+                                        <i class="fas fa-envelope me-1"></i>{{ student.email }}
+                                    {% else %}
+                                        <small class="text-muted">Not provided</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ student.admission_date | format_date }}
+                                </td>
+                                <td>
+                                    {% if student.is_deleted == 0 %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Bulk Actions -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted">
+                                    <span id="selectedCount">0</span> student(s) selected
+                                </span>
+                            </div>
+                            <div class="bulk-actions" style="display: none;">
+                                <button class="btn btn-sm btn-success me-2" onclick="bulkMarkPresent()">
+                                    <i class="fas fa-check me-1"></i>Mark Present
+                                </button>
+                                <button class="btn btn-sm btn-warning me-2" onclick="bulkMarkAbsent()">
+                                    <i class="fas fa-times me-1"></i>Mark Absent
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="bulkRemoveFromBatch()">
+                                    <i class="fas fa-user-minus me-1"></i>Remove from Batch
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                    <h4 class="text-gray-500">No Students Enrolled</h4>
+                    <p class="text-muted">This batch doesn't have any students yet.</p>
+                    <a href="{{ url_for('students.register_student') }}?batch_id={{ batch.id }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-1"></i>Add First Student
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+    const selectedCount = document.getElementById('selectedCount');
+    const bulkActions = document.querySelector('.bulk-actions');
+
+    // Handle select all
+    selectAllCheckbox.addEventListener('change', function() {
+        studentCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSelectedCount();
+    });
+
+    // Handle individual checkboxes
+    studentCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+
+    function updateSelectedCount() {
+        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+        selectedCount.textContent = checkedBoxes.length;
+        
+        if (checkedBoxes.length > 0) {
+            bulkActions.style.display = 'block';
+        } else {
+            bulkActions.style.display = 'none';
+        }
+
+        // Update select all checkbox
+        selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < studentCheckboxes.length;
+        selectAllCheckbox.checked = checkedBoxes.length === studentCheckboxes.length;
+    }
+
+    // Set today's date is no longer needed for attendance modal
+});
+
+function removeFromBatch(studentId, studentName) {
+    if (confirm(`Are you sure you want to remove ${studentName} from this batch?`)) {
+        // Show loading state
+        const removeBtn = event.target.closest('button');
+        const originalHtml = removeBtn.innerHTML;
+        removeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        removeBtn.disabled = true;
+        
+        // Construct the correct URL for the remove endpoint
+        const removeUrl = `/batches/{{ batch.id }}/remove-student/${studentId}`;
+        
+        // Make AJAX request to remove student
+        fetch(removeUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                alert(data.message);
+                // Reload the page to refresh the student list
+                location.reload();
+            } else {
+                // Show error message
+                alert('Error: ' + data.message);
+                // Restore button state
+                removeBtn.innerHTML = originalHtml;
+                removeBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while removing the student.');
+            // Restore button state
+            removeBtn.innerHTML = originalHtml;
+            removeBtn.disabled = false;
+        });
+    }
+}
+
+function exportStudents() {
+    // Here you would typically generate and download a CSV/Excel file
+    alert('Export functionality will be implemented');
+}
+
+function bulkMarkPresent() {
+    const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+    if (checkedBoxes.length === 0) return;
+    
+    alert(`Marked ${checkedBoxes.length} students as present for today`);
+}
+
+function bulkMarkAbsent() {
+    const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+    if (checkedBoxes.length === 0) return;
+    
+    alert(`Marked ${checkedBoxes.length} students as absent for today`);
+}
+
+function bulkRemoveFromBatch() {
+    const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+        alert('Please select at least one student to remove.');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to remove ${checkedBoxes.length} students from this batch?`)) {
+        const selectedStudents = Array.from(checkedBoxes).map(checkbox => {
+            return checkbox.getAttribute('data-student-id');
+        });
+        
+        // Remove each student
+        let completed = 0;
+        let errors = [];
+        
+        selectedStudents.forEach(studentId => {
+            const removeUrl = `/batches/{{ batch.id }}/remove-student/${studentId}`;
+            
+            fetch(removeUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                completed++;
+                if (!data.success) {
+                    errors.push(`Student ${studentId}: ${data.message}`);
+                }
+                
+                // Check if all requests are complete
+                if (completed === selectedStudents.length) {
+                    if (errors.length > 0) {
+                        alert(`Some students could not be removed:\n${errors.join('\n')}`);
+                    } else {
+                        alert(`Successfully removed ${selectedStudents.length} students from the batch!`);
+                    }
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                completed++;
+                errors.push(`Student ${studentId}: Network error`);
+                console.error('Error:', error);
+                
+                if (completed === selectedStudents.length) {
+                    alert(`Some students could not be removed:\n${errors.join('\n')}`);
+                    location.reload();
+                }
+            });
+        });
+    }
+}
+</script>
+
+<style>
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 4px solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 4px solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 4px solid #f6c23e !important;
+}
+
+.avatar {
+    width: 2rem;
+    height: 2rem;
+}
+
+.avatar-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-weight: 600;
+    color: white;
+}
+
+.bulk-actions {
+    transition: all 0.3s ease;
+}
+
+.trainer-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.trainer-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.trainer-avatar {
+    font-weight: 600;
+    min-width: 50px;
+    min-height: 50px;
+}
+</style>
+
+{% endblock %}

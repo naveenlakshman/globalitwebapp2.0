@@ -1,0 +1,325 @@
+/* ==========================================================================
+   Global IT Education – Design System
+   Tokens & Utilities: Colors, Typography, Spacing, Radius, Shadows, Gradients
+   ========================================================================== */
+
+:root {
+  /* ===== Brand ===== */
+  --brand-primary: #2C3892;     /* Indigo (logo) */
+  --brand-secondary: #3871C1;   /* Blue (logo)   */
+  --brand-accent: #40B93C;      /* Green (logo)  */
+  --brand-black: #000000;
+
+  /* ===== Semantic ===== */
+  --brand-info: var(--brand-secondary);
+  --brand-success: #10B981;
+  --brand-warning: #F59E0B;
+  --brand-danger:  #EF4444;
+
+  /* ===== RGB Values for Alpha Transparency ===== */
+  --brand-primary-rgb: 44, 56, 146;
+  --brand-secondary-rgb: 56, 113, 193;
+  --brand-success-rgb: 16, 185, 129;
+  --brand-danger-rgb: 239, 68, 68;
+
+  /* ===== Background & Text ===== */
+  --bg-primary: #ffffff;
+  --bg-secondary: #F6F7FB; /* App chrome / cards background */
+
+  --text-primary: #1F2937;   /* slate-800 */
+  --text-secondary: #4B5563; /* slate-600 */
+  --text-muted: #6B7280;     /* slate-500 */
+  --text-white: #ffffff;
+
+  /* ===== Neutrals ===== */
+  --gray-50:  #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+
+  /* ===== Typography ===== */
+  --font-sans: "Source Sans 3", "Source Sans Pro", system-ui, -apple-system,
+               "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+               "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-regular: 400;
+  --font-medium:  500;
+  --font-semibold:600;
+  --font-bold:    700;
+
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.6;
+
+  /* ===== Spacing ===== */
+  --space-2xs: .125rem;
+  --space-xs:  .25rem;
+  --space-sm:  .5rem;
+  --space-md:  .75rem;
+  --space-lg:  1rem;
+  --space-xl:  1.5rem;
+  --space-2xl: 2rem;
+  --space-3xl: 3rem;
+  --space-2:   0.5rem;
+  --space-3:   0.75rem;
+  --space-4:   1rem;
+  --space-5:   1.25rem;
+  --space-6:   1.5rem;
+  --space-8:   2rem;
+  --space-12:  3rem;
+
+  /* ===== Radius ===== */
+  --radius-sm:  .375rem;
+  --radius-md:  .5rem;
+  --radius-lg:  .75rem;
+  --radius-xl:  1rem;
+  --radius-2xl: 1.25rem;
+  --radius-full: 999px;
+
+  /* ===== Shadows ===== */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 3px 8px rgba(0,0,0,.10);
+  --shadow-lg: 0 10px 20px rgba(0,0,0,.12);
+  --shadow-xl: 0 16px 32px rgba(0,0,0,.15);
+  --shadow-2xl:0 24px 48px rgba(0,0,0,.16);
+
+  /* ===== Gradients ===== */
+  --gradient-primary: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  --gradient-success: linear-gradient(135deg, #10B981, #059669);
+  --gradient-warning: linear-gradient(135deg, #F59E0B, #D97706);
+  --gradient-danger:  linear-gradient(135deg, #EF4444, #DC2626);
+
+  /* ===== Motion & Layout ===== */
+  --transition-base: .2s ease;
+  --transition-normal: .3s ease;
+  --container-xl: 1200px;
+
+  /* ===== Sidebar Layout ===== */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 70px;
+}
+
+/* ==========================================================================
+   Base Resets
+   ========================================================================== */
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  line-height: var(--leading-relaxed);
+}
+
+*:focus {
+  outline: 2px solid var(--brand-secondary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+/* Text colors */
+.text-primary   { color: var(--brand-primary) !important; }
+.text-secondary { color: var(--brand-secondary) !important; }
+.text-accent    { color: var(--brand-accent) !important; }
+.text-muted     { color: var(--text-muted) !important; }
+.text-inverse   { color: var(--text-white) !important; }
+
+/* Background colors */
+.bg-primary        { background: var(--brand-primary) !important; color: var(--text-white) !important; }
+.bg-secondary      { background: var(--brand-secondary) !important; color: var(--text-white) !important; }
+.bg-accent         { background: var(--brand-accent) !important; color: var(--text-white) !important; }
+.bg-primary-soft   { background: #E8ECFF !important; color: var(--brand-primary) !important; }
+.bg-secondary-soft { background: #E7F0FF !important; color: var(--brand-secondary) !important; }
+.bg-accent-soft    { background: #E8F7EA !important; color: #176A1E !important; }
+
+/* Borders & Radius */
+.border-muted { border: 1px solid var(--gray-200) !important; }
+.rounded-sm   { border-radius: var(--radius-sm) !important; }
+.rounded-md   { border-radius: var(--radius-md) !important; }
+.rounded-lg   { border-radius: var(--radius-lg) !important; }
+.rounded-xl   { border-radius: var(--radius-xl) !important; }
+.rounded-full { border-radius: var(--radius-full) !important; }
+
+/* Shadows */
+.shadow-sm  { box-shadow: var(--shadow-sm); }
+.shadow-md  { box-shadow: var(--shadow-md); }
+.shadow-lg  { box-shadow: var(--shadow-lg); }
+.shadow-2xl { box-shadow: var(--shadow-2xl); }
+
+/* Font Weights */
+.font-regular   { font-weight: var(--font-regular) !important; }
+.font-medium    { font-weight: var(--font-medium) !important; }
+.font-semibold  { font-weight: var(--font-semibold) !important; }
+.font-bold      { font-weight: var(--font-bold) !important; }
+
+/* Spacing helpers (margin & padding) */
+.m-sm { margin: var(--space-sm) !important; }
+.m-md { margin: var(--space-md) !important; }
+.m-lg { margin: var(--space-lg) !important; }
+.p-sm { padding: var(--space-sm) !important; }
+.p-md { padding: var(--space-md) !important; }
+.p-lg { padding: var(--space-lg) !important; }
+
+/* Container */
+.container-responsive {
+  width: 100%;
+  max-width: var(--container-xl);
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+@media (max-width: 768px) {
+  .container-responsive { padding: 0 var(--space-sm); }
+}
+
+/* Badge / Chip */
+.badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .35rem .7rem;
+  border-radius: var(--radius-full);
+  font-size: .8rem;
+  font-weight: var(--font-semibold);
+  letter-spacing: .25px;
+}
+
+/* Badge Styles */
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  font-size: 0.75em;
+  font-weight: var(--font-medium);
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: var(--radius-sm);
+}
+
+.badge-success {
+  background-color: var(--brand-success) !important;
+  color: var(--text-white) !important;
+}
+
+.badge-danger {
+  background-color: var(--brand-danger) !important;
+  color: var(--text-white) !important;
+}
+
+.badge-warning {
+  background-color: var(--brand-warning) !important;
+  color: var(--text-primary) !important;
+}
+
+.badge-info {
+  background-color: var(--brand-info) !important;
+  color: var(--text-white) !important;
+}
+
+.badge-secondary {
+  background-color: var(--gray-500) !important;
+  color: var(--text-white) !important;
+}
+
+.badge-primary {
+  background-color: var(--brand-primary) !important;
+  color: var(--text-white) !important;
+}
+
+/* ==========================================================================
+   Dark Mode
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Enhanced dark mode backgrounds */
+    --bg-primary: #0f172a;      /* slate-900 - main background */
+    --bg-secondary: #1e293b;    /* slate-800 - cards/panels */
+
+    /* Enhanced dark mode text colors */
+    --text-primary: #f8fafc;    /* slate-50 - primary text */
+    --text-secondary: #e2e8f0;  /* slate-200 - secondary text */
+    --text-muted: #94a3b8;      /* slate-400 - muted text */
+
+    /* Enhanced gray scale for dark mode */
+    --gray-50:  #0f172a;   /* slate-900 */
+    --gray-100: #1e293b;   /* slate-800 */
+    --gray-200: #334155;   /* slate-700 */
+    --gray-300: #475569;   /* slate-600 */
+    --gray-400: #64748b;   /* slate-500 */
+    --gray-500: #94a3b8;   /* slate-400 */
+    --gray-600: #cbd5e1;   /* slate-300 */
+    --gray-700: #e2e8f0;   /* slate-200 */
+    --gray-800: #f1f5f9;   /* slate-100 */
+    --gray-900: #f8fafc;   /* slate-50 */
+
+    /* Enhanced shadows for dark mode */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.25);
+    --shadow-md: 0 3px 8px rgba(0,0,0,.35);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,.45);
+    --shadow-xl: 0 16px 32px rgba(0,0,0,.55);
+    --shadow-2xl: 0 24px 48px rgba(0,0,0,.65);
+
+    /* Enhanced brand color soft backgrounds for dark mode */
+    --bg-primary-soft: rgba(44,56,146,.15);
+    --bg-secondary-soft: rgba(56,113,193,.15);
+    --bg-accent-soft: rgba(64,185,60,.15);
+  }
+
+  /* Override soft background colors for better contrast */
+  .bg-primary-soft   { 
+    background: var(--bg-primary-soft) !important; 
+    color: #a5b4fc !important; /* indigo-300 */
+    border: 1px solid rgba(44,56,146,.25) !important;
+  }
+  .bg-secondary-soft { 
+    background: var(--bg-secondary-soft) !important; 
+    color: #93c5fd !important; /* blue-300 */
+    border: 1px solid rgba(56,113,193,.25) !important;
+  }
+  .bg-accent-soft    { 
+    background: var(--bg-accent-soft) !important; 
+    color: #86efac !important; /* green-300 */
+    border: 1px solid rgba(64,185,60,.25) !important;
+  }
+
+  /* Enhanced focus styles for dark mode */
+  *:focus {
+    outline: 2px solid #60a5fa; /* blue-400 */
+    outline-offset: 2px;
+  }
+}
+
+/* ==========================================================================
+   Print
+   ========================================================================== */
+@media print {
+  * {
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+}

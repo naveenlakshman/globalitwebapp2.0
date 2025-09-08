@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Expense Audit Trail - Global IT Education{% endblock %}
+
+{% block extra_css %}
+<style>
+    .audit-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .audit-filters {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .audit-record {
+        border-left: 4px solid;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .audit-record:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .audit-record.CREATE { border-left-color: #28a745; }
+    .audit-record.UPDATE { border-left-color: #ffc107; }
+    .audit-record.DELETE { border-left-color: #dc3545; }
+    .audit-record.APPROVE { border-left-color: #17a2b8; }
+    .audit-record.REJECT { border-left-color: #6c757d; }
+    
+    .action-badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    
+    .action-CREATE { background-color: #d4edda; color: #155724; }
+    .action-UPDATE { background-color: #fff3cd; color: #856404; }
+    .action-DELETE { background-color: #f8d7da; color: #721c24; }
+    .action-APPROVE { background-color: #d1ecf1; color: #0c5460; }
+    .action-REJECT { background-color: #d6d8db; color: #383d41; }
+    
+    .field-change {
+        background: #f8f9fa;
+        border-radius: 4px;
+        padding: 8px;
+        margin: 5px 0;
+        font-family: monospace;
+        font-size: 0.85rem;
+    }
+    
+    .old-value { color: #dc3545; }
+    .new-value { color: #28a745; }
+    
+    .audit-meta {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="audit-header">
+        <h2><i class="fas fa-clipboard-list"></i> Expense Audit Trail</h2>
+        <p class="mb-0">Complete audit trail of all expense management activities</p>
+    </div>
+    
+    <!-- Filters -->
+    <div class="audit-filters">
+        <h5><i class="fas fa-filter"></i> Filters</h5>
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="expense_id" class="form-label">Expense ID</label>
+                <input type="text" class="form-control" id="expense_id" name="expense_id" 
+                       value="{{ expense_filter or '' }}" placeholder="EXP-2024-0001">
+            </div>
+            
+            <div class="col-md-3">
+                <label for="user_id" class="form-label">User</label>
+                <select class="form-select" id="user_id" name="user_id">
+                    <option value="">All Users</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if user_filter == user.id|string %}selected{% endif %}>
+                        {{ user.full_name or user.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label for="action_type" class="form-label">Action</label>
+                <select class="form-select" id="action_type" name="action_type">
+                    <option value="all">All Actions</option>
+                    {% for action in action_types %}
+                    <option value="{{ action }}" {% if action_filter == action %}selected{% endif %}>
+                        {{ action.title() }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label for="days" class="form-label">Time Period</label>
+                <select class="form-select" id="days" name="days">
+                    <option value="1" {% if days_filter == 1 %}selected{% endif %}>Last 24 hours</option>
+                    <option value="7" {% if days_filter == 7 %}selected{% endif %}>Last 7 days</option>
+                    <option value="30" {% if days_filter == 30 %}selected{% endif %}>Last 30 days</option>
+                    <option value="90" {% if days_filter == 90 %}selected{% endif %}>Last 90 days</option>
+                    <option value="0" {% if days_filter == 0 %}selected{% endif %}>All Time</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Audit Records -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-history"></i> Audit Records 
+                <span class="badge bg-secondary ms-2">{{ audit_records|length }} records</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if audit_records %}
+                {% for record in audit_records %}
+                <div class="card audit-record {{ record.action_type }}">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="action-badge action-{{ record.action_type }}">
+                                        {{ record.action_type }}
+                                    </span>
+                                    <strong class="ms-2">{{ record.expense_reference }}</strong>
+                                    {% if record.field_changed %}
+                                        <small class="ms-2 text-muted">→ {{ record.field_changed }}</small>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if record.change_reason %}
+                                <p class="mb-2"><strong>Reason:</strong> {{ record.change_reason }}</p>
+                                {% endif %}
+                                
+                                {% if record.field_changed and record.old_value and record.new_value %}
+                                <div class="field-change">
+                                    <strong>{{ record.field_changed|title }}:</strong><br>
+                                    <span class="old-value">- {{ record.old_value }}</span><br>
+                                    <span class="new-value">+ {{ record.new_value }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if record.amount_change %}
+                                <div class="field-change">
+                                    <strong>Amount Change:</strong> 
+                                    <span class="{% if record.amount_change > 0 %}new-value{% else %}old-value{% endif %}">
+                                        {% if record.amount_change > 0 %}+{% endif %}₹{{ record.amount_change|round(2) }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if record.status_change %}
+                                <div class="field-change">
+                                    <strong>Status Change:</strong> {{ record.status_change }}
+                                </div>
+                                {% endif %}
+                                
+                                {% if record.file_operation %}
+                                <div class="field-change">
+                                    <strong>File Operation:</strong> {{ record.file_operation }}
+                                    {% if record.file_name %}
+                                        → {{ record.file_name }}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 text-end">
+                                <div class="audit-meta">
+                                    <strong>{{ record.user.full_name or record.user.username if record.user else 'Unknown User' }}</strong><br>
+                                    <small>{{ record.get_formatted_changed_at() }}</small><br>
+                                    {% if record.ip_address %}
+                                        <small>IP: {{ record.ip_address }}</small>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if record.expense %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('expenses.view_expense', expense_id=record.expense.expense_id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View Expense
+                                    </a>
+                                    <a href="{{ url_for('expenses.expense_audit_detail', expense_id=record.expense_id) }}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-history"></i> Full History
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted"></i>
+                    <h4 class="mt-3 text-muted">No audit records found</h4>
+                    <p class="text-muted">Try adjusting your filters to see more results.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit form when filters change
+    document.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+    
+    // Real-time search for expense ID
+    let searchTimeout;
+    document.getElementById('expense_id').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            this.form.submit();
+        }, 1000);
+    });
+</script>
+{% endblock %}

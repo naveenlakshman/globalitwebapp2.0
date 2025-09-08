@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installment #{{ installment.installment_number }} - Print</title>
+    <style>
+        /* Print-specific styles */
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+        }
+        
+        /* General styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background: white;
+        }
+        
+        .installment-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border: 1px solid #ddd;
+        }
+        
+        .installment-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 20px;
+        }
+        
+        .installment-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .logo-title-row {
+            margin-bottom: 15px;
+        }
+        
+        .logo-title-row img {
+            height: 60px;
+            margin-right: 20px;
+        }
+        
+        .installment-number {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin: 10px 0;
+        }
+        
+        .company-info {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .company-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .company-details {
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+        
+        .installment-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .bill-to, .installment-details {
+            padding: 20px;
+            border: 1px solid #e1e5e9;
+            border-radius: 5px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e1e5e9;
+            padding-bottom: 5px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #2c3e50;
+            min-width: 120px;
+            margin-right: 10px;
+        }
+        
+        .info-value {
+            color: #555;
+            flex: 1;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-paid { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-overdue { background: #f8d7da; color: #721c24; }
+        .status-partially-paid { background: #d1ecf1; color: #0c5460; }
+        
+        .installment-items {
+            margin-bottom: 30px;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .items-table th, .items-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .items-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .items-table td:last-child {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .totals-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .total-row:last-child {
+            border-bottom: none;
+        }
+        
+        .total-row.grand-total {
+            font-weight: bold;
+            font-size: 16px;
+            color: #2c3e50;
+            border-top: 2px solid #2c3e50;
+            padding-top: 12px;
+        }
+        
+        .payment-history {
+            margin-bottom: 30px;
+        }
+        
+        .payment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .payment-table th, .payment-table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+        
+        .payment-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .payment-table td:nth-child(2) {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .print-buttons {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 0 10px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-print {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-pdf {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .footer-note {
+            margin-top: 30px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+            font-size: 11px;
+            color: #6c757d;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="installment-container">
+        <!-- Print Buttons (hidden when printing) -->
+        <div class="print-buttons no-print">
+            <button onclick="window.print()" class="btn btn-print">
+                🖨️ Print Installment
+            </button>
+            <a href="{{ url_for('installments.download_installment_pdf', installment_id=installment.id) }}" 
+               class="btn btn-pdf">
+                📄 Download PDF
+            </a>
+            <a href="{{ url_for('installments.view_installment', installment_id=installment.id) }}" 
+               class="btn btn-back">
+                ← Back to Installment
+            </a>
+        </div>
+
+        <!-- Installment Header -->
+        <div class="installment-header">
+            <!-- Logo and Title Row -->
+            <div class="logo-title-row" style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                <img src="{{ url_for('static', filename='Global IT Edication Logo.png') }}" alt="Global IT Education Logo" style="height: 60px; margin-right: 20px;">
+                <h1 class="installment-title">Installment Receipt</h1>
+            </div>
+            <div class="installment-number">Installment #{{ installment.installment_number }} 
+                <span class="status-badge status-{{ installment.status.lower().replace(' ', '-') if installment.status else 'pending' }}">
+                    {{ installment.status or 'Pending' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Company Information -->
+        {% if branch %}
+        <div class="company-info">
+            <div class="company-name">{{ branch.branch_name }}</div>
+            <div class="company-details">
+                {{ branch.address or 'Address not provided' }}<br>
+                Phone: {{ branch.phone or 'N/A' }}<br>
+                Email: {{ branch.email or 'N/A' }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Student and Installment Information -->
+        <div class="installment-info">
+            <div class="bill-to">
+                <div class="section-title">Student Information:</div>
+                <div class="info-row">
+                    <span class="info-label">Student Name:</span>
+                    <span class="info-value">{{ student.full_name or 'N/A' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Student ID:</span>
+                    <span class="info-value">{{ student.student_id or 'N/A' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone:</span>
+                    <span class="info-value">{{ student.mobile or 'N/A' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ student.email or 'N/A' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Course:</span>
+                    <span class="info-value">{{ course.course_name if course else 'N/A' }}</span>
+                </div>
+            </div>
+
+            <div class="installment-details">
+                <div class="section-title">Installment Details:</div>
+                <div class="info-row">
+                    <span class="info-label">Installment Number:</span>
+                    <span class="info-value">{{ installment.installment_number }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Invoice Number:</span>
+                    <span class="info-value">INV-{{ invoice.id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Due Date:</span>
+                    <span class="info-value">{{ installment.due_date.strftime('%d/%m/%Y') if installment.due_date else 'N/A' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value">
+                        <span class="status-badge status-{{ installment.status.lower().replace(' ', '-') if installment.status else 'pending' }}">
+                            {{ installment.status or 'Pending' }}
+                        </span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Installment Items -->
+        <div class="installment-items">
+            <div class="section-title">Installment Details:</div>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Amount (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            {% if course %}
+                                Installment #{{ installment.installment_number }} - {{ course.course_name }}
+                            {% else %}
+                                Installment #{{ installment.installment_number }} - Course Fee
+                            {% endif %}
+                        </td>
+                        <td>₹{{ "{:,.2f}".format(installment.amount) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals Section -->
+        <div class="totals-section">
+            <div class="total-row grand-total">
+                <span>Total Amount:</span>
+                <span>₹{{ "{:,.2f}".format(installment.amount) }}</span>
+            </div>
+            <div class="total-row">
+                <span>Paid Amount:</span>
+                <span>₹{{ "{:,.2f}".format(installment.paid_amount) }}</span>
+            </div>
+            <div class="total-row grand-total">
+                <span>Balance Amount:</span>
+                <span>₹{{ "{:,.2f}".format(installment.balance_amount) }}</span>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        {% if payments %}
+        <div class="payment-history">
+            <div class="section-title">Payment History:</div>
+            <table class="payment-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount (₹)</th>
+                        <th>Method</th>
+                        <th>Reference</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>{{ payment.paid_on.strftime('%d/%m/%Y %H:%M') if payment.paid_on else 'N/A' }}</td>
+                        <td>₹{{ "{:,.2f}".format(payment.amount) }}</td>
+                        <td>{{ payment.payment_method or 'Cash' }}</td>
+                        <td>{{ payment.utr_number or '-' }}</td>
+                        <td>{{ payment.notes or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="footer-note">
+            This is a computer-generated document. Generated on {{ current_time.strftime('%d/%m/%Y %H:%M') if current_time else 'N/A' }}
+        </div>
+    </div>
+
+    <script>
+        // Auto print when page loads (optional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

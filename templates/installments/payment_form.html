@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Record Installment Payment{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-credit-card"></i> Record Installment Payment</h2>
+                <a href="{{ url_for('invoices.view_invoice', invoice_id=invoice.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Invoice
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-credit-card-2-front"></i> Installment Payment Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Installment Information -->
+                            <div class="alert alert-info mb-4">
+                                <h6><i class="bi bi-info-circle"></i> Installment Information</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Due Date:</strong> {{ installment.due_date|format_date_indian }}<br>
+                                        <strong>Total Amount:</strong> ₹{{ "{:,.2f}".format(installment.amount) }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Paid Amount:</strong> ₹{{ "{:,.2f}".format(installment.paid_amount or 0) }}<br>
+                                        <strong>Balance Amount:</strong> ₹{{ "{:,.2f}".format(installment.balance_amount or installment.amount) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form method="POST" id="paymentForm">
+                                <div class="row">
+                                    <!-- Payment Amount -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="payment_amount" class="form-label">Payment Amount <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" class="form-control" name="payment_amount" id="payment_amount" 
+                                                   step="0.01" min="0.01" max="{{ "%.2f"|format(installment.balance_amount or installment.amount) }}" 
+                                                   value="{{ "%.2f"|format(installment.balance_amount or installment.amount) }}" required>
+                                        </div>
+                                        <div class="form-text">Maximum: ₹{{ "{:,.2f}".format(installment.balance_amount or installment.amount) }}</div>
+                                    </div>
+
+                                    <!-- Payment Method -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="payment_method" class="form-label">Payment Method <span class="text-danger">*</span></label>
+                                        <select class="form-select" name="payment_method" id="payment_method" required onchange="toggleUTRField()">
+                                            <option value="">Select payment method...</option>
+                                            {% for method in payment_methods %}
+                                            <option value="{{ method }}">{{ method }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <!-- UTR/Reference Number -->
+                                    <div class="col-md-6 mb-3" id="utrField" style="display: none;">
+                                        <label for="utr_ref" class="form-label">UTR/Reference Number</label>
+                                        <input type="text" class="form-control" name="utr_ref" id="utr_ref" 
+                                               placeholder="Enter UTR/Reference number">
+                                        <div class="form-text">Required for online payments</div>
+                                    </div>
+
+                                    <!-- Notes -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="notes" class="form-label">Notes</label>
+                                        <textarea class="form-control" name="notes" id="notes" rows="3" 
+                                                  placeholder="Any additional notes..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="{{ url_for('invoices.view_invoice', invoice_id=invoice.id) }}" 
+                                       class="btn btn-outline-secondary me-md-2">Cancel</a>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-check-circle"></i> Record Payment
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <!-- Student Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-person"></i> Student Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Name:</strong> {{ student.full_name }}</p>
+                            <p><strong>Student ID:</strong> {{ student.student_id }}</p>
+                            <p><strong>Phone:</strong> {{ student.phone_number }}</p>
+                            <p><strong>Email:</strong> {{ student.email }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Information -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-receipt"></i> Invoice Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Invoice #:</strong> {{ invoice.id }}</p>
+                            <p><strong>Enrollment Date:</strong> {{ installment.due_date|format_date_indian }}</p>
+                            <p><strong>Created Date:</strong> {{ installment.due_date|format_date_indian }}</p>
+                            <p><strong>Total Amount:</strong> ₹{{ "{:,.2f}".format(invoice.total_amount) }}</p>
+                            <p><strong>Paid Amount:</strong> ₹{{ "{:,.2f}".format(invoice.paid_amount) }}</p>
+                            <p><strong>Due Amount:</strong> ₹{{ "{:,.2f}".format(invoice.due_amount) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleUTRField() {
+    const paymentMethod = document.getElementById('payment_method').value;
+    const utrField = document.getElementById('utrField');
+    const utrInput = document.getElementById('utr_ref');
+    
+    if (paymentMethod && paymentMethod !== 'Cash' && paymentMethod !== 'Cheque') {
+        utrField.style.display = 'block';
+        utrInput.required = true;
+    } else {
+        utrField.style.display = 'none';
+        utrInput.required = false;
+        utrInput.value = '';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleUTRField();
+});
+</script>
+{% endblock %}

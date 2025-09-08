@@ -1,0 +1,445 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}My Profile - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<div class="welcome-header mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-2">
+                <i class="fas fa-user-circle me-2"></i>My Profile
+            </h1>
+            <p class="mb-0 opacity-75">
+                Manage your personal information and account settings
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="text-white">
+                <i class="fas fa-id-badge me-2"></i>ID: {{ student.student_id }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Content -->
+<div class="row">
+    <!-- Left Column - Profile Information -->
+    <div class="col-lg-8">
+        <!-- Personal Information -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2 text-primary"></i>Personal Information
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-primary btn-sm" onclick="toggleEdit('personal')">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="personalForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="fullName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="fullName" 
+                                   value="{{ student.full_name }}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="studentId" class="form-label">Student ID</label>
+                            <input type="text" class="form-control" id="studentId" 
+                                   value="{{ student.student_id }}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" 
+                                   value="{{ student.email or 'Not provided' }}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" 
+                                   value="{{ student.phone or 'Not provided' }}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" id="dateOfBirth" 
+                                   value="{{ student.date_of_birth.strftime('%Y-%m-%d') if student.date_of_birth else '' }}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="gender" class="form-label">Gender</label>
+                            <select class="form-control" id="gender" disabled>
+                                <option value="male" {{ 'selected' if student.gender == 'male' else '' }}>Male</option>
+                                <option value="female" {{ 'selected' if student.gender == 'female' else '' }}>Female</option>
+                                <option value="other" {{ 'selected' if student.gender == 'other' else '' }}>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" rows="3" readonly>{{ student.address or 'Not provided' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="edit-actions d-none">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-success" onclick="saveProfile('personal')">
+                                <i class="fas fa-save me-1"></i>Save Changes
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelEdit('personal')">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Academic Information -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-graduation-cap me-2 text-success"></i>Academic Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Course Enrolled</label>
+                        <div class="fw-bold">{{ student.course_name or 'Not assigned' }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Batch</label>
+                        <div class="fw-bold">{{ student.batch.batch_name if student.batch else 'Not assigned' }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Enrollment Date</label>
+                        <div class="fw-bold">{{ student.enrollment_date.strftime('%B %d, %Y') if student.enrollment_date else 'Not available' }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Branch</label>
+                        <div class="fw-bold">{{ student.branch.branch_name if student.branch else 'Not assigned' }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Student Status</label>
+                        <div>
+                            <span class="badge bg-{{ 'success' if student.status == 'active' else 'warning' if student.status == 'inactive' else 'secondary' }}">
+                                {{ student.status.title() if student.status else 'Unknown' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Expected Completion</label>
+                        <div class="fw-bold">{{ expected_completion_date or 'To be determined' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div class="student-card">
+            <div class="card-header bg-white border-bottom">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">
+                            <i class="fas fa-phone me-2 text-danger"></i>Emergency Contact
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-primary btn-sm" onclick="toggleEdit('emergency')">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="emergencyForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="emergencyName" class="form-label">Contact Name</label>
+                            <input type="text" class="form-control" id="emergencyName" 
+                                   value="{{ student.emergency_contact_name or 'Not provided' }}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="emergencyRelation" class="form-label">Relationship</label>
+                            <input type="text" class="form-control" id="emergencyRelation" 
+                                   value="{{ student.emergency_contact_relation or 'Not provided' }}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="emergencyPhone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="emergencyPhone" 
+                                   value="{{ student.emergency_contact_phone or 'Not provided' }}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="emergencyEmail" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="emergencyEmail" 
+                                   value="{{ student.emergency_contact_email or 'Not provided' }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="edit-actions d-none">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-success" onclick="saveProfile('emergency')">
+                                <i class="fas fa-save me-1"></i>Save Changes
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelEdit('emergency')">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column - Photo and Settings -->
+    <div class="col-lg-4">
+        <!-- Profile Photo -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-camera me-2 text-info"></i>Profile Photo
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="profile-photo-container mb-3">
+                    {% if student.profile_photo %}
+                        <img src="{{ student.profile_photo }}" alt="Profile Photo" class="profile-photo">
+                    {% else %}
+                        <div class="profile-photo-placeholder">
+                            <i class="fas fa-user fa-4x text-muted"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="uploadPhoto()">
+                        <i class="fas fa-upload me-1"></i>Upload Photo
+                    </button>
+                    {% if student.profile_photo %}
+                    <button class="btn btn-outline-danger btn-sm" onclick="removePhoto()">
+                        <i class="fas fa-trash me-1"></i>Remove Photo
+                    </button>
+                    {% endif %}
+                </div>
+                
+                <small class="text-muted mt-2 d-block">
+                    Recommended: 300x300px, JPG/PNG, Max 2MB
+                </small>
+            </div>
+        </div>
+
+        <!-- Account Settings -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2 text-warning"></i>Account Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="changePassword()">
+                        <i class="fas fa-key me-2"></i>Change Password
+                    </button>
+                    <button class="btn btn-outline-info" onclick="manageNotifications()">
+                        <i class="fas fa-bell me-2"></i>Notification Settings
+                    </button>
+                    <button class="btn btn-outline-success" onclick="downloadProfile()">
+                        <i class="fas fa-download me-2"></i>Download Profile
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="exportData()">
+                        <i class="fas fa-file-export me-2"></i>Export Data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="student-card">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2 text-success"></i>Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_activities %}
+                    {% for activity in recent_activities %}
+                    <div class="activity-item d-flex align-items-start mb-3 pb-3 border-bottom">
+                        <div class="activity-icon me-3">
+                            <div class="icon-circle bg-{{ activity.type_color }} text-white">
+                                <i class="fas fa-{{ activity.icon }}"></i>
+                            </div>
+                        </div>
+                        <div class="activity-details">
+                            <h6 class="mb-1">{{ activity.title }}</h6>
+                            <small class="text-muted">{{ activity.timestamp.strftime('%b %d, %Y at %I:%M %p') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-history text-muted mb-2" style="font-size: 2rem;"></i>
+                        <p class="text-muted mb-0">No recent activity</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden file input for photo upload -->
+<input type="file" id="photoUpload" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
+
+<style>
+    .profile-photo-container {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .profile-photo {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #e9ecef;
+    }
+    
+    .profile-photo-placeholder {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: #f8f9fa;
+        border: 4px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none !important;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .icon-circle {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+    
+    .edit-actions {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Edit functionality
+    function toggleEdit(section) {
+        const form = document.getElementById(section + 'Form');
+        const inputs = form.querySelectorAll('input, textarea, select');
+        const editActions = form.querySelector('.edit-actions');
+        const editButton = form.closest('.card').querySelector('button[onclick*="toggleEdit"]');
+        
+        inputs.forEach(input => {
+            input.readOnly = false;
+            input.disabled = false;
+            input.classList.add('border-primary');
+        });
+        
+        editActions.classList.remove('d-none');
+        editButton.style.display = 'none';
+    }
+    
+    function cancelEdit(section) {
+        const form = document.getElementById(section + 'Form');
+        const inputs = form.querySelectorAll('input, textarea, select');
+        const editActions = form.querySelector('.edit-actions');
+        const editButton = form.closest('.card').querySelector('button[onclick*="toggleEdit"]');
+        
+        inputs.forEach(input => {
+            input.readOnly = true;
+            input.disabled = true;
+            input.classList.remove('border-primary');
+        });
+        
+        editActions.classList.add('d-none');
+        editButton.style.display = 'block';
+        
+        // Reset form values (in real implementation, restore original values)
+        form.reset();
+    }
+    
+    function saveProfile(section) {
+        // In real implementation, send data to server
+        alert(`${section.charAt(0).toUpperCase() + section.slice(1)} information will be saved in Phase 3`);
+        cancelEdit(section);
+    }
+    
+    // Photo management
+    function uploadPhoto() {
+        document.getElementById('photoUpload').click();
+    }
+    
+    function handlePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                alert('File size should be less than 2MB');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const photoContainer = document.querySelector('.profile-photo-container');
+                photoContainer.innerHTML = `<img src="${e.target.result}" alt="Profile Photo" class="profile-photo">`;
+            };
+            reader.readAsDataURL(file);
+            
+            // In real implementation, upload to server
+            alert('Photo upload will be implemented in Phase 3');
+        }
+    }
+    
+    function removePhoto() {
+        if (confirm('Are you sure you want to remove your profile photo?')) {
+            const photoContainer = document.querySelector('.profile-photo-container');
+            photoContainer.innerHTML = `
+                <div class="profile-photo-placeholder">
+                    <i class="fas fa-user fa-4x text-muted"></i>
+                </div>
+            `;
+            // In real implementation, remove from server
+            alert('Photo removal will be implemented in Phase 3');
+        }
+    }
+    
+    // Account settings
+    function changePassword() {
+        alert('Password change functionality will be implemented in Phase 3');
+    }
+    
+    function manageNotifications() {
+        alert('Notification settings will be implemented in Phase 3');
+    }
+    
+    function downloadProfile() {
+        alert('Profile download will be implemented in Phase 3');
+    }
+    
+    function exportData() {
+        alert('Data export will be implemented in Phase 3');
+    }
+</script>
+{% endblock %}

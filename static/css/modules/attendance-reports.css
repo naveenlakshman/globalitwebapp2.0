@@ -1,0 +1,310 @@
+/* ==========================================================================
+   Attendance Reports Module
+   Styles for attendance analytics and reporting dashboard
+   ========================================================================== */
+
+/* ===== Statistics Cards ===== */
+.attendance-reports .stats-card {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+    border: none;
+    border-radius: var(--radius-lg);
+    color: var(--text-white);
+    transition: transform var(--transition-normal) ease;
+    /* Ensure high contrast for accessibility */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.attendance-reports .stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.attendance-reports .stats-card .card-body {
+    padding: 1.5rem;
+}
+
+.attendance-reports .stats-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    /* Improve icon visibility */
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.attendance-reports .stats-value {
+    font-size: 2.5rem;
+    font-weight: var(--font-bold);
+    margin-bottom: 0.5rem;
+    /* High contrast white text */
+    color: #ffffff;
+}
+
+.attendance-reports .stats-label {
+    font-size: var(--text-sm);
+    opacity: 0.95;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    /* Ensure label is readable */
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* ===== Chart Containers ===== */
+.attendance-reports .chart-container {
+    position: relative;
+    height: 400px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ===== Batch Cards ===== */
+.attendance-reports .batch-card {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-normal) ease;
+    margin-bottom: 1rem;
+}
+
+.attendance-reports .batch-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+}
+
+/* ===== Attendance Rate Bars ===== */
+.attendance-reports .attendance-rate-bar {
+    height: 8px;
+    background: var(--gray-200);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.attendance-reports .attendance-rate-fill {
+    height: 100%;
+    transition: width var(--transition-normal) ease;
+}
+
+.attendance-reports .rate-excellent { 
+    background: linear-gradient(90deg, var(--brand-success), #20c997); 
+}
+
+.attendance-reports .rate-good { 
+    background: linear-gradient(90deg, var(--brand-info), var(--brand-primary)); 
+}
+
+.attendance-reports .rate-average { 
+    background: linear-gradient(90deg, var(--brand-warning), #fd7e14); 
+}
+
+.attendance-reports .rate-poor { 
+    background: linear-gradient(90deg, var(--brand-danger), #e83e8c); 
+}
+
+/* ===== Attendance Rate Text Colors with High Contrast ===== */
+.attendance-reports .attendance-text-excellent {
+    color: #065f46 !important; /* Dark green for excellent rates */
+    font-weight: var(--font-bold);
+}
+
+.attendance-reports .attendance-text-good {
+    color: #1e40af !important; /* Dark blue for good rates */
+    font-weight: var(--font-bold);
+}
+
+.attendance-reports .attendance-text-average {
+    color: #d97706 !important; /* Dark orange for average rates */
+    font-weight: var(--font-bold);
+}
+
+.attendance-reports .attendance-text-poor {
+    color: #dc2626 !important; /* Dark red for poor rates */
+    font-weight: var(--font-bold);
+}
+
+/* ===== Filter Card ===== */
+.attendance-reports .filter-card {
+    background: var(--bg-secondary);
+    border: none;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-8);
+}
+
+.attendance-reports .filter-form .row {
+    align-items: end;
+}
+
+/* ===== Filter Buttons ===== */
+.attendance-reports .btn-filter {
+    border-radius: 25px;
+    padding: 8px 20px;
+    font-weight: var(--font-medium);
+}
+
+.attendance-reports .btn-filter:focus {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+}
+
+/* ===== Form Controls Accessibility ===== */
+.attendance-reports .form-control:focus,
+.attendance-reports .form-select:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 0.2rem rgba(44, 56, 146, 0.25);
+}
+
+.attendance-reports .filter-form .form-label {
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-2);
+    font-weight: var(--font-semibold);
+    color: var(--text-primary); /* Ensure label contrast */
+}
+
+/* ===== Table Container ===== */
+.attendance-reports .table-container {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+.attendance-reports .table thead th {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+    color: #ffffff;
+    border: none;
+    font-weight: var(--font-semibold);
+    padding: var(--space-4);
+    /* Improve text contrast on gradient background */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.attendance-reports .table tbody td {
+    padding: var(--space-4);
+    vertical-align: middle;
+    border-color: var(--gray-100);
+    /* Ensure good contrast for table text */
+    color: var(--text-primary);
+}
+
+/* ===== Badge Status ===== */
+.attendance-reports .badge-status {
+    padding: 8px 12px;
+    font-size: var(--text-xs);
+    border-radius: var(--radius-full);
+    font-weight: var(--font-medium);
+}
+
+/* ===== Page Header ===== */
+.attendance-reports .page-header {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+    color: #ffffff;
+    padding: var(--space-8) 0;
+    margin-bottom: var(--space-8);
+    border-radius: 0 0 30px 30px;
+    /* Improve text readability on gradient */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.attendance-reports .page-header h1 {
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.attendance-reports .page-header p {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+    .attendance-reports .filter-form .col-md-2,
+    .attendance-reports .filter-form .col-md-3 {
+        margin-bottom: var(--space-4);
+    }
+    
+    .attendance-reports .filter-form .d-flex.gap-2 {
+        flex-direction: column;
+    }
+    
+    .attendance-reports .stats-card .stats-value {
+        font-size: 2rem;
+    }
+    
+    .attendance-reports .chart-container {
+        height: 300px;
+        padding: var(--space-3);
+    }
+}
+
+/* ===== Empty State ===== */
+.attendance-reports .empty-state {
+    text-align: center;
+    padding: var(--space-12) var(--space-4);
+}
+
+.attendance-reports .empty-state-icon {
+    font-size: 3rem;
+    color: var(--gray-500); /* Improved contrast from gray-400 */
+    margin-bottom: var(--space-4);
+}
+
+.attendance-reports .empty-state-title {
+    color: var(--gray-700); /* Improved contrast from gray-600 */
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    margin-bottom: var(--space-2);
+}
+
+.attendance-reports .empty-state-text {
+    color: var(--gray-600); /* Improved contrast from gray-500 */
+    margin-bottom: var(--space-6);
+}
+
+/* ===== Data Tables Styling ===== */
+.attendance-reports .dataTables_wrapper .dataTables_length,
+.attendance-reports .dataTables_wrapper .dataTables_filter,
+.attendance-reports .dataTables_wrapper .dataTables_info,
+.attendance-reports .dataTables_wrapper .dataTables_paginate {
+    color: var(--text-primary); /* Improved from text-secondary */
+}
+
+.attendance-reports .dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: var(--radius-md);
+    margin: 0 2px;
+    color: var(--text-primary) !important;
+}
+
+.attendance-reports .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: var(--gray-100) !important;
+    border: 1px solid var(--gray-300) !important;
+    color: var(--text-primary) !important;
+}
+
+.attendance-reports .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: var(--brand-primary) !important;
+    border: 1px solid var(--brand-primary) !important;
+    color: white !important;
+}
+
+.attendance-reports .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+    color: var(--gray-400) !important;
+}
+
+/* ===== Search Input Styling ===== */
+.attendance-reports .dataTables_wrapper .dataTables_filter input {
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+    margin-left: 0.5rem;
+}
+
+.attendance-reports .dataTables_wrapper .dataTables_filter input:focus {
+    border-color: var(--brand-primary);
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(44, 56, 146, 0.25);
+}

@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ course.course_name }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/course-management.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('courses.list_courses') }}">
+                            <i class="bi bi-mortarboard"></i> Courses
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('courses.view_course', course_id=course.id) }}">
+                            {{ course.course_name }}
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
+            <h2 class="mb-1">
+                <i class="bi bi-pencil text-primary"></i> Edit Course
+            </h2>
+            <p class="text-muted mb-0">Update course information for {{ course.course_name }}</p>
+        </div>
+    </div>
+
+    <!-- Course Edit Form -->
+    <form method="POST" action="{{ url_for('courses.edit_course', course_id=course.id) }}" class="needs-validation" novalidate>
+        <div class="row">
+            <!-- Left Column - Basic Information -->
+            <div class="col-lg-8">
+                <!-- Basic Course Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Basic Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="course_name" class="form-label required">Course Name</label>
+                                <input type="text" class="form-control" id="course_name" name="course_name" 
+                                       value="{{ course.course_name }}" required>
+                                <div class="invalid-feedback">Please provide a course name.</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="course_code" class="form-label">Course Code</label>
+                                <input type="text" class="form-control" id="course_code" name="course_code" 
+                                       value="{{ course.course_code or '' }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="category" class="form-label required">Category</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Programming" {{ 'selected' if course.category == 'Programming' }}>Programming</option>
+                                    <option value="Office Suite" {{ 'selected' if course.category == 'Office Suite' }}>Office Suite</option>
+                                    <option value="Web Development" {{ 'selected' if course.category == 'Web Development' }}>Web Development</option>
+                                    <option value="Data Science" {{ 'selected' if course.category == 'Data Science' }}>Data Science</option>
+                                    <option value="Digital Marketing" {{ 'selected' if course.category == 'Digital Marketing' }}>Digital Marketing</option>
+                                    <option value="Graphic Design" {{ 'selected' if course.category == 'Graphic Design' }}>Graphic Design</option>
+                                    <option value="Hardware" {{ 'selected' if course.category == 'Hardware' }}>Hardware</option>
+                                    <option value="Networking" {{ 'selected' if course.category == 'Networking' }}>Networking</option>
+                                    <option value="Cloud Computing" {{ 'selected' if course.category == 'Cloud Computing' }}>Cloud Computing</option>
+                                    <option value="Mobile Development" {{ 'selected' if course.category == 'Mobile Development' }}>Mobile Development</option>
+                                    <option value="Other" {{ 'selected' if course.category == 'Other' }}>Other</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a category.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="difficulty_level" class="form-label">Difficulty Level</label>
+                                <select class="form-select" id="difficulty_level" name="difficulty_level">
+                                    <option value="Beginner" {{ 'selected' if course.difficulty_level == 'Beginner' }}>Beginner</option>
+                                    <option value="Intermediate" {{ 'selected' if course.difficulty_level == 'Intermediate' }}>Intermediate</option>
+                                    <option value="Advanced" {{ 'selected' if course.difficulty_level == 'Advanced' }}>Advanced</option>
+                                    <option value="Expert" {{ 'selected' if course.difficulty_level == 'Expert' }}>Expert</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Course Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3">{{ course.description or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Duration and Timing -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-clock"></i> Duration & Timing</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="duration" class="form-label required">Duration</label>
+                                <input type="text" class="form-control" id="duration" name="duration" 
+                                       value="{{ course.duration }}" required>
+                                <div class="invalid-feedback">Please provide course duration.</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="duration_in_hours" class="form-label">Total Hours</label>
+                                <input type="number" class="form-control" id="duration_in_hours" name="duration_in_hours" 
+                                       value="{{ course.duration_in_hours or '' }}" min="1">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="duration_in_days" class="form-label">Total Days</label>
+                                <input type="number" class="form-control" id="duration_in_days" name="duration_in_days" 
+                                       value="{{ course.duration_in_days or '' }}" min="1">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="delivery_mode" class="form-label">Delivery Mode</label>
+                                <select class="form-select" id="delivery_mode" name="delivery_mode">
+                                    <option value="Classroom" {{ 'selected' if course.delivery_mode == 'Classroom' }}>Classroom</option>
+                                    <option value="Online" {{ 'selected' if course.delivery_mode == 'Online' }}>Online</option>
+                                    <option value="Hybrid" {{ 'selected' if course.delivery_mode == 'Hybrid' }}>Hybrid</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="typical_schedule" class="form-label">Typical Schedule</label>
+                                <input type="text" class="form-control" id="typical_schedule" name="typical_schedule" 
+                                       value="{{ course.typical_schedule or '' }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="batch_size_min" class="form-label">Minimum Batch Size</label>
+                                <input type="number" class="form-control" id="batch_size_min" name="batch_size_min" 
+                                       value="{{ course.batch_size_min }}" min="1" max="50">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="batch_size_max" class="form-label">Maximum Batch Size</label>
+                                <input type="number" class="form-control" id="batch_size_max" name="batch_size_max" 
+                                       value="{{ course.batch_size_max }}" min="1" max="100">
+                            </div>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="flexible_timing" name="flexible_timing" 
+                                   {{ 'checked' if course.flexible_timing }}>
+                            <label class="form-check-label" for="flexible_timing">
+                                Flexible timing available
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-currency-rupee"></i> Pricing Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="fee" class="form-label required">Course Fee (₹)</label>
+                                <input type="number" class="form-control" id="fee" name="fee" 
+                                       value="{{ course.fee }}" min="0" step="100" required>
+                                <div class="invalid-feedback">Please provide course fee.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="registration_fee" class="form-label">Registration Fee (₹)</label>
+                                <input type="number" class="form-control" id="registration_fee" name="registration_fee" 
+                                       value="{{ course.registration_fee }}" min="0" step="100">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="material_fee" class="form-label">Material Fee (₹)</label>
+                                <input type="number" class="form-control" id="material_fee" name="material_fee" 
+                                       value="{{ course.material_fee }}" min="0" step="100">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="certification_fee" class="form-label">Certification Fee (₹)</label>
+                                <input type="number" class="form-control" id="certification_fee" name="certification_fee" 
+                                       value="{{ course.certification_fee }}" min="0" step="100">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="early_bird_discount" class="form-label">Early Bird Discount (%)</label>
+                                <input type="number" class="form-control" id="early_bird_discount" name="early_bird_discount" 
+                                       value="{{ course.early_bird_discount }}" min="0" max="50" step="1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="group_discount" class="form-label">Group Discount (%)</label>
+                                <input type="number" class="form-control" id="group_discount" name="group_discount" 
+                                       value="{{ course.group_discount }}" min="0" max="50" step="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Content -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-book"></i> Course Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="course_outline" class="form-label">Course Outline / Syllabus</label>
+                            <textarea class="form-control" id="course_outline" name="course_outline" rows="6">{{ course.course_outline or '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="learning_outcomes" class="form-label">Learning Outcomes</label>
+                            <textarea class="form-control" id="learning_outcomes" name="learning_outcomes" rows="4">{{ course.learning_outcomes or '' }}</textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="prerequisites" class="form-label">Prerequisites</label>
+                                <textarea class="form-control" id="prerequisites" name="prerequisites" rows="3">{{ course.prerequisites or '' }}</textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="software_requirements" class="form-label">Software Requirements</label>
+                                <textarea class="form-control" id="software_requirements" name="software_requirements" rows="3">{{ course.software_requirements or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="target_audience" class="form-label">Target Audience</label>
+                                <textarea class="form-control" id="target_audience" name="target_audience" rows="3">{{ course.target_audience or '' }}</textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="career_opportunities" class="form-label">Career Opportunities</label>
+                                <textarea class="form-control" id="career_opportunities" name="career_opportunities" rows="3">{{ course.career_opportunities or '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Additional Settings -->
+            <div class="col-lg-4">
+                <!-- Certification & Assessment -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-award"></i> Certification & Assessment</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="has_certification" name="has_certification" 
+                                   {{ 'checked' if course.has_certification }}>
+                            <label class="form-check-label" for="has_certification">
+                                Course provides certification
+                            </label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="certification_body" class="form-label">Certification Body</label>
+                            <input type="text" class="form-control" id="certification_body" name="certification_body" 
+                                   value="{{ course.certification_body or '' }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="assessment_type" class="form-label">Assessment Type</label>
+                            <select class="form-select" id="assessment_type" name="assessment_type">
+                                <option value="Both" {{ 'selected' if course.assessment_type == 'Both' }}>Project + Exam</option>
+                                <option value="Project" {{ 'selected' if course.assessment_type == 'Project' }}>Project Only</option>
+                                <option value="Exam" {{ 'selected' if course.assessment_type == 'Exam' }}>Exam Only</option>
+                                <option value="Continuous" {{ 'selected' if course.assessment_type == 'Continuous' }}>Continuous Assessment</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="passing_criteria" class="form-label">Passing Criteria</label>
+                            <input type="text" class="form-control" id="passing_criteria" name="passing_criteria" 
+                                   value="{{ course.passing_criteria or '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Settings -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-gear"></i> Course Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="Active" {{ 'selected' if course.status == 'Active' }}>Active</option>
+                                <option value="Draft" {{ 'selected' if course.status == 'Draft' }}>Draft</option>
+                                <option value="Inactive" {{ 'selected' if course.status == 'Inactive' }}>Inactive</option>
+                                <option value="Archived" {{ 'selected' if course.status == 'Archived' }}>Archived</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="display_order" class="form-label">Display Order</label>
+                            <input type="number" class="form-control" id="display_order" name="display_order" 
+                                   value="{{ course.display_order }}" min="1" max="999">
+                            <div class="form-text">Lower numbers appear first</div>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" 
+                                   {{ 'checked' if course.is_featured }}>
+                            <label class="form-check-label" for="is_featured">
+                                Featured Course
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_popular" name="is_popular" 
+                                   {{ 'checked' if course.is_popular }}>
+                            <label class="form-check-label" for="is_popular">
+                                Popular Course
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Statistics -->
+                <div class="card bg-light">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-bar-chart"></i> Course Statistics</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6 mb-2">
+                                <h6 class="text-primary mb-1">{{ course.total_enrollments }}</h6>
+                                <small class="text-muted">Total Enrollments</small>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <h6 class="text-success mb-1">{{ course.active_batches_count }}</h6>
+                                <small class="text-muted">Active Batches</small>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <div class="text-center">
+                            <h6 class="text-info mb-1">₹{{ "{:,.0f}".format(course.total_revenue) }}</h6>
+                            <small class="text-muted">Total Revenue</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <button type="submit" class="btn btn-primary btn-lg me-3">
+                            <i class="bi bi-check-lg"></i> Update Course
+                        </button>
+                        <a href="{{ url_for('courses.view_course', course_id=course.id) }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    });
+
+    // Validation for batch sizes
+    const minBatchSize = document.getElementById('batch_size_min');
+    const maxBatchSize = document.getElementById('batch_size_max');
+    
+    function validateBatchSizes() {
+        const min = parseInt(minBatchSize.value) || 0;
+        const max = parseInt(maxBatchSize.value) || 0;
+        
+        if (min > max && max > 0) {
+            maxBatchSize.setCustomValidity('Maximum batch size must be greater than minimum batch size');
+        } else {
+            maxBatchSize.setCustomValidity('');
+        }
+    }
+    
+    minBatchSize.addEventListener('input', validateBatchSizes);
+    maxBatchSize.addEventListener('input', validateBatchSizes);
+
+    // Calculate total course cost
+    const feeInput = document.getElementById('fee');
+    const regFeeInput = document.getElementById('registration_fee');
+    const materialFeeInput = document.getElementById('material_fee');
+    const certFeeInput = document.getElementById('certification_fee');
+    
+    function updateTotalCost() {
+        const courseFee = parseFloat(feeInput.value) || 0;
+        const regFee = parseFloat(regFeeInput.value) || 0;
+        const materialFee = parseFloat(materialFeeInput.value) || 0;
+        const certFee = parseFloat(certFeeInput.value) || 0;
+        
+        if (courseFee < (regFee + materialFee + certFee) && courseFee > 0) {
+            feeInput.setCustomValidity('Course fee should be the main component of total cost');
+        } else {
+            feeInput.setCustomValidity('');
+        }
+    }
+    
+    [feeInput, regFeeInput, materialFeeInput, certFeeInput].forEach(input => {
+        input.addEventListener('input', updateTotalCost);
+    });
+});
+</script>
+{% endblock %}

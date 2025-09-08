@@ -1,0 +1,530 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Batches{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+
+<style>
+    /* Custom styling for batch table */
+    .table td {
+        vertical-align: middle;
+        padding: 12px 8px;
+    }
+    
+    .table th {
+        background-color: #f8f9fc;
+        border-bottom: 2px solid #e3e6f0;
+        font-weight: 600;
+        color: #5a5c69;
+        padding: 12px 8px;
+    }
+    
+    /* Table hover effect */
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fc;
+        transition: background-color 0.15s ease;
+    }
+    
+    /* Action button styling */
+    .btn-outline-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+        transition: all 0.2s ease;
+    }
+    
+    /* Batch name styling */
+    .batch-name {
+        color: #5a5c69;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    
+    .batch-name:hover {
+        color: #007bff;
+        text-decoration: none;
+    }
+    
+    /* Badge improvements */
+    .badge {
+        font-weight: 500;
+        letter-spacing: 0.025em;
+    }
+    
+    /* Icon spacing in badges */
+    .badge i {
+        margin-right: 4px;
+    }
+    
+    /* Table responsive improvements */
+    .table-responsive {
+        border-radius: 0.375rem;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+    
+    /* DataTables custom styling */
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_info {
+        margin-bottom: 1rem;
+    }
+    
+    .dataTables_wrapper .dataTables_filter input {
+        margin-left: 0.5rem;
+        border: 1px solid #d1d3e2;
+        border-radius: 0.35rem;
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-layer-group text-primary me-2"></i>Manage Batches
+        </h1>
+        <div class="d-flex gap-2">
+            {% if session.role in ['admin', 'franchise', 'regional_manager', 'branch_manager'] %}
+                <a href="{{ url_for('batches.create_batch_form') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Add New Batch
+                </a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+                <a href="{{ url_for('dashboard_bp.admin_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% elif session.role == 'franchise' %}
+                <a href="{{ url_for('dashboard_bp.franchise_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% elif session.role == 'regional_manager' %}
+                <a href="{{ url_for('dashboard_bp.regional_manager_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% elif session.role in ['branch_manager', 'staff'] %}
+                <a href="{{ url_for('dashboard_bp.branch_manager_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% elif session.role == 'trainer' %}
+                <a href="{{ url_for('dashboard_bp.trainer_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% else %}
+                <a href="{{ url_for('dashboard_bp.admin_dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Batch Statistics -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Batches
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ batches|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-layer-group fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Active Batches
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ batches|selectattr('status', 'equalto', 'Active')|list|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-play-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Completed Batches
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ batches|selectattr('status', 'equalto', 'Completed')|list|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Suspended Batches
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ batches|selectattr('status', 'equalto', 'Suspended')|list|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-pause-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Statistics Row for Audit -->
+    <div class="row mb-4">
+        <div class="col-xl-6 col-md-6 mb-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Cancelled Batches
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ batches|selectattr('status', 'equalto', 'Cancelled')|list|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-6 col-md-6 mb-3">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                Archived Batches
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ all_batches|selectattr('status', 'equalto', 'Archived')|list|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-archive fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-filter me-2"></i>Filter Batches
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="courseFilter" class="form-label">Filter by Course</label>
+                    <select class="form-select" id="courseFilter">
+                        <option value="">All Courses</option>
+                        {% for course in courses %}
+                        <option value="{{ course.course_name }}">{{ course.course_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="statusFilter" class="form-label">Filter by Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Statuses</option>
+                        <option value="Active">🟢 Active</option>
+                        <option value="Completed">✅ Completed</option>
+                        <option value="Suspended">⏸️ Suspended</option>
+                        <option value="Archived">📦 Archived</option>
+                        <option value="Cancelled">❌ Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="trainerFilter" class="form-label">Filter by Trainer</label>
+                    <select class="form-select" id="trainerFilter">
+                        <option value="">All Trainers</option>
+                        {% for trainer in trainers %}
+                        <option value="{{ trainer.full_name }}">{{ trainer.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="branchFilter" class="form-label">Filter by Branch</label>
+                    <select class="form-select" id="branchFilter">
+                        <option value="">All Branches</option>
+                        {% for branch in branches %}
+                        <option value="{{ branch.branch_name }}">{{ branch.branch_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllFilters()">
+                        <i class="fas fa-times me-1"></i>Clear All Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batches Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>Batch List
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if batches %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="batchesTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Batch Name</th>
+                                <th>Course</th>
+                                <th>Branch</th>
+                                <th>Status</th>
+                                <th>Timing</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Students</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in batches %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            <i class="fas fa-layer-group text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <span class="batch-name">{{ batch.name }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary text-white px-2 py-1" style="font-size: 0.8rem;">
+                                        <i class="fas fa-graduation-cap"></i> {{ batch.course_name }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set branch_name = "Branch " + batch.branch_id|string %}
+                                    {% for branch in branches %}
+                                        {% if branch.id == batch.branch_id %}
+                                            {% set branch_name = branch.branch_name %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ branch_name }}
+                                </td>
+                                <td>
+                                    {% if batch.status == 'Active' %}
+                                        <span class="badge bg-success text-white px-2 py-1" style="font-size: 0.8rem;">
+                                            <i class="fas fa-play"></i> Active
+                                        </span>
+                                    {% elif batch.status == 'Completed' %}
+                                        <span class="badge bg-info text-white px-2 py-1" style="font-size: 0.8rem;">
+                                            <i class="fas fa-check-circle"></i> Completed
+                                        </span>
+                                    {% elif batch.status == 'Suspended' %}
+                                        <span class="badge bg-warning text-dark px-2 py-1" style="font-size: 0.8rem;">
+                                            <i class="fas fa-pause-circle"></i> Suspended
+                                        </span>
+                                    {% elif batch.status == 'Archived' %}
+                                        <span class="badge bg-secondary text-white px-2 py-1" style="font-size: 0.8rem;">
+                                            <i class="fas fa-archive"></i> Archived
+                                        </span>
+                                    {% elif batch.status == 'Cancelled' %}
+                                        <span class="badge bg-danger text-white px-2 py-1" style="font-size: 0.8rem;">
+                                            <i class="fas fa-times-circle"></i> Cancelled
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark px-2 py-1" style="font-size: 0.8rem; border: 1px solid #ccc;">
+                                            <i class="fas fa-question-circle"></i> {{ batch.status or 'Unknown' }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if batch.timing %}
+                                        <small class="text-muted">{{ batch.timing }}</small>
+                                    {% else %}
+                                        <small class="text-muted">Not specified</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if batch.start_date %}
+                                        {{ batch.start_date }}
+                                    {% else %}
+                                        <small class="text-muted">Not set</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if batch.end_date %}
+                                        {{ batch.end_date }}
+                                    {% else %}
+                                        <small class="text-muted">Not set</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info text-white px-2 py-1" style="font-size: 0.8rem;">
+                                        <i class="fas fa-users"></i> {{ batch.get_student_count() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <!-- Only View Details Action - Safe and Simple -->
+                                    <a href="{{ url_for('batches.batch_students', batch_id=batch.id) }}" 
+                                       class="btn btn-sm btn-outline-primary" title="View student Details">
+                                        <i class="fas fa-eye me-1"></i>View Students
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-layer-group fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-500">No Batches Found</h5>
+                    <p class="text-gray-400 mb-4">Start by creating your first batch.</p>
+                    <a href="{{ url_for('batches.create_batch_form') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create First Batch
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery (required for DataTables) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- DataTables JavaScript -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable with enhanced filtering
+    const table = $('#batchesTable').DataTable({
+        "pageLength": 25,
+        "order": [[ 5, "desc" ]], // Order by start date descending
+        "columnDefs": [
+            { "orderable": false, "targets": [7, 8] } // Disable sorting for Students and Actions columns
+        ],
+        "language": {
+            "emptyTable": "No batches found matching your criteria",
+            "info": "Showing _START_ to _END_ of _TOTAL_ batches",
+            "search": "Search batches:"
+        },
+        "responsive": true,
+        "dom": 'lrtip' // Remove default search box since we have custom filters
+    });
+
+    // Course Filter - Fixed to work with badge content
+    $('#courseFilter').on('change', function() {
+        const value = this.value;
+        if (value) {
+            // Search for the course name within the badge content
+            table.column(1).search(value, false, false).draw();
+        } else {
+            table.column(1).search('').draw();
+        }
+    });
+
+    // Status Filter - Fixed to work with badge content and emojis
+    $('#statusFilter').on('change', function() {
+        const value = this.value;
+        if (value) {
+            // Search for the status text within the badge content
+            table.column(3).search(value, false, false).draw();
+        } else {
+            table.column(3).search('').draw();
+        }
+    });
+
+    // Branch Filter - Enhanced to work properly
+    $('#branchFilter').on('change', function() {
+        const value = this.value;
+        if (value) {
+            table.column(2).search(value, false, false).draw();
+        } else {
+            table.column(2).search('').draw();
+        }
+    });
+
+    // Trainer Filter - For future implementation when trainer assignments are added
+    $('#trainerFilter').on('change', function() {
+        const value = this.value;
+        if (value) {
+            // Future enhancement: This would need backend changes to include trainer info
+            console.log('Trainer filter selected:', value);
+            // For now, show a message that this feature needs backend integration
+            if (value !== '') {
+                alert('Trainer filtering will be available in the next update when trainer assignments are fully integrated.');
+                $(this).val(''); // Reset the filter
+            }
+        }
+    });
+
+    // Clear All Filters - Enhanced with proper reset
+    window.clearAllFilters = function() {
+        // Reset all select elements
+        $('#courseFilter').val('').trigger('change');
+        $('#statusFilter').val('').trigger('change');
+        $('#trainerFilter').val('').trigger('change');
+        $('#branchFilter').val('').trigger('change');
+        
+        // Clear all table filters
+        table.search('').columns().search('').draw();
+        
+        // Show feedback
+        console.log('All filters cleared');
+    };
+
+    // Enhanced search placeholder
+    $('.dataTables_filter input').attr('placeholder', 'Search by batch name, course, or branch...');
+    
+    // Auto-select branch filter if user is from specific branch (franchise owner functionality)
+    {% if current_user and current_user.role in ['franchise', 'franchise_owner', 'manager', 'staff'] %}
+        // For franchise owners with single branch access, auto-select their branch
+        {% if current_user.role == 'franchise' %}
+            // Franchise owners typically have limited branch access
+            console.log('Auto-selecting branch for franchise user');
+        {% endif %}
+    {% endif %}
+});
+
+// Note: Batch management functions removed - all actions now handled in batch details page
+</script>
+{% endblock %}

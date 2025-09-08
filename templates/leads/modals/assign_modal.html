@@ -1,0 +1,29 @@
+<!-- Assignment Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Lead</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Assign To</label>
+                    <select class="form-select" id="currentAssignee">
+                        <option value="">Unassigned</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.full_name }} ({{ user.role }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <p class="text-muted">
+                    Assigning a lead will notify the selected user and update the lead's assignment.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="assignLead()">Assign Lead</button>
+            </div>
+        </div>
+    </div>
+</div>

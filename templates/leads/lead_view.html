@@ -1,0 +1,2735 @@
+{% extends "base.html" %}
+{% block title %}Lead Details - {{ lead.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/lead-management.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/lead-view.css') }}">
+<style>
+/* Fix modal z-index issues - ensure modals appear above all content */
+.modal {
+  z-index: 1200 !important;
+}
+.modal-backdrop {
+  z-index: 1190 !important;
+}
+.modal.show .modal-dialog {
+  z-index: 1210 !important;
+}
+/* Ensure modal backdrops work properly */
+.modal-backdrop.show {
+  opacity: 0.5 !important;
+  z-index: 1190 !important;
+}
+/* Force modals to be positioned correctly */
+.modal.show {
+  display: block !important;
+  z-index: 1200 !important;
+}
+
+/* Next Follow-up Row Highlighting */
+.table-warning.bg-warning.bg-opacity-25 {
+  background-color: rgba(255, 193, 7, 0.15) !important;
+  border-left: 4px solid #ffc107 !important;
+}
+
+.table-warning.bg-warning.bg-opacity-25:hover {
+  background-color: rgba(255, 193, 7, 0.25) !important;
+}
+
+.badge.bg-warning.text-dark {
+  animation: pulse-next 2s infinite;
+}
+
+@keyframes pulse-next {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Outcome Selection Cards */
+.outcome-option {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.outcome-option:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  border-color: var(--bs-primary);
+}
+
+.outcome-option.selected {
+  border-color: var(--bs-primary);
+  background: linear-gradient(135deg, var(--bs-primary), var(--bs-primary-dark));
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.outcome-option.selected .card-text {
+  color: rgba(255,255,255,0.9) !important;
+}
+
+.outcome-option.success { 
+  border-left: 4px solid #28a745; 
+}
+.outcome-option.success:hover {
+  border-color: #28a745;
+}
+
+.outcome-option.warning { 
+  border-left: 4px solid #ffc107; 
+}
+.outcome-option.warning:hover {
+  border-color: #ffc107;
+}
+
+.outcome-option.danger { 
+  border-left: 4px solid #dc3545; 
+}
+.outcome-option.danger:hover {
+  border-color: #dc3545;
+}
+
+.outcome-option.info { 
+  border-left: 4px solid #17a2b8; 
+}
+.outcome-option.info:hover {
+  border-color: #17a2b8;
+}
+
+.outcome-option .card-body {
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.outcome-option .fs-2 {
+  font-size: 2rem !important;
+  margin-bottom: 0.5rem;
+}
+
+.outcome-option .card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+}
+
+.outcome-option .card-text {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  line-height: 1.3;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Lead Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="lead-header">
+        <h1 class="lead-name">
+          <i class="fas fa-user"></i> {{ lead.name }}
+        </h1>
+
+        <div class="lead-meta">
+          <span class="lead-badge stage-{{ (lead.lead_stage or 'new')|lower|replace(' ', '-') }}">
+            <i class="fas fa-flag"></i> {{ lead.lead_stage or 'New' }}
+          </span>
+          {% set priority_info = lead.get_priority_display() %}
+          <span class="lead-badge priority-{{ priority_info.class }}">
+            <i class="fas fa-thermometer-half"></i> {{ priority_info.emoji }} {{ priority_info.text }} Priority
+          </span>
+          <span class="lead-badge">
+            <i class="fas fa-star"></i> {{ lead.lead_score or 0 }} Score
+            <button class="btn btn-link btn-sm p-0 ms-1" data-bs-toggle="modal" data-bs-target="#scoreBreakdownModal" title="View score breakdown">
+              <i class="fas fa-info-circle text-primary"></i>
+            </button>
+          </span>
+          <span class="lead-badge">
+            <i class="fas fa-clock"></i> {{ lead.lead_age_days }} days
+          </span>
+
+          {% if lead.next_follow_up_at %}
+            <span class="lead-badge upcoming">
+              <i class="fas fa-calendar"></i> {{ lead.next_follow_up_at | format_date_indian }}
+            </span>
+          {% endif %}
+          {% if lead.lead_source %}
+            <span class="lead-badge">
+              <i class="fas fa-bullhorn"></i> {{ lead.lead_source }}
+            </span>
+          {% endif %}
+        </div>
+
+        <p class="lead-sub">
+          Lead ID: {{ lead.lead_sl_number }}
+          · Created: {{ lead.created_at | format_date_indian if lead.created_at }}
+          {% if lead.branch and lead.branch.name %} · Branch: {{ lead.branch.name }}{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+  <!-- Follow-up History -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+              <i class="fas fa-history"></i> Follow-up History
+            </h5>
+            {% if lead.lead_status != 'Converted' %}
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#followupModal">
+              <i class="fas fa-plus"></i> Add Follow-up
+            </button>
+            {% endif %}
+            {% if lead.lead_status != 'Converted' %}
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#convertToStudentModal"
+                    {% if lead.course_interest and lead.course_interest != 'Not specified' %}
+                    title="Lead interested in: {{ lead.course_interest }}"
+                    data-bs-toggle="tooltip"
+                    {% endif %}>
+              <i class="fas fa-user-graduate"></i> Convert to Student
+              {% if lead.course_interest and lead.course_interest != 'Not specified' %}
+              <small class="ms-1">({{ lead.course_interest[:20] }}{% if lead.course_interest|length > 20 %}...{% endif %})</small>
+              {% endif %}
+            </button>
+            {% else %}
+            <div class="badge bg-success fs-6">
+              <i class="fas fa-check-circle"></i> Lead Converted to Student
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body">
+          {% if lead.lead_status == 'Converted' and followups and followups|length > 0 %}
+          <div class="alert alert-info border-info">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-info-circle fa-lg text-info me-3"></i>
+              <div>
+                <strong>Lead Converted:</strong> This lead has been successfully converted to a student. 
+                No further follow-up actions are required. The follow-up history below is maintained for reference.
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          {% if followups and followups|length > 0 %}
+            {% set upcoming_followups = followups|selectattr('next_action_at')|rejectattr('is_completed')|list %}
+            {% set next_followup = upcoming_followups|sort(attribute='next_action_at')|first if upcoming_followups else none %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>When</th>
+                    <th>Type</th>
+                    <th>Note</th>
+                    <th>By</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for f in followups|sort(attribute='created_at', reverse=true) %}
+                  {% set is_next_followup = next_followup and f.id == next_followup.id %}
+                  <tr class="{% if is_next_followup and lead.lead_status != 'Converted' %}table-warning bg-warning bg-opacity-25 border-warning{% endif %}">
+                    <td>
+                      {% if f.next_action_at %}
+                        {{ f.next_action_at | format_datetime_indian }}
+                        {% if is_next_followup and lead.lead_status != 'Converted' %}
+                          <span class="badge bg-warning text-dark ms-1">
+                            <i class="fas fa-clock"></i> Next
+                          </span>
+                        {% endif %}
+                      {% else %}
+                        {{ f.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="badge bg-secondary">{{ f.channel or 'General' }}</span>
+                    </td>
+                    <td title="{{ f.note or '' }}">
+                      {{ (f.note or '')[:80] ~ ('…' if f.note and f.note|length>80 else '') }}
+                      {% if f.is_completed %}
+                        <div class="mt-2">
+                          {% if f.outcome_category %}
+                            <!-- Display structured outcome with visual styling -->
+                            <div class="d-flex align-items-center">
+                              <strong class="text-muted me-2">Outcome:</strong>
+                              {% set outcome_color = 'success' %}
+                              {% if 'Not Interested' in f.outcome_category or 'Budget Constraints' in f.outcome_category or 'Already Enrolled' in f.outcome_category %}
+                                {% set outcome_color = 'danger' %}
+                              {% elif 'No Response' in f.outcome_category or 'Call Back Later' in f.outcome_category or 'Need More Information' in f.outcome_category %}
+                                {% set outcome_color = 'warning' %}
+                              {% elif 'Interested' in f.outcome_category or 'Demo Completed' in f.outcome_category or 'Agreed' in f.outcome_category %}
+                                {% set outcome_color = 'success' %}
+                              {% else %}
+                                {% set outcome_color = 'info' %}
+                              {% endif %}
+                              <span class="badge bg-{{ outcome_color }} fs-6">
+                                {{ f.outcome_category }}
+                              </span>
+                            </div>
+                            {% if f.outcome_notes %}
+                              <div class="mt-1">
+                                <small class="text-muted">
+                                  <i class="fas fa-sticky-note"></i> {{ f.outcome_notes[:100] ~ ('…' if f.outcome_notes and f.outcome_notes|length>100 else '') }}
+                                </small>
+                              </div>
+                            {% endif %}
+                          {% else %}
+                            <!-- Fallback for follow-ups without structured outcomes -->
+                            <div class="mt-1">
+                              <small class="text-muted">
+                                <span class="badge bg-secondary">Completed</span>
+                              </small>
+                            </div>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    </td>
+                    <td>{{ f.created_by.full_name if f.created_by else 'System' }}</td>
+                    <td>
+                      {% if f.is_completed %}
+                        <div class="d-flex flex-column">
+                          <span class="badge bg-success mb-1">
+                            <i class="fas fa-check"></i> Completed
+                          </span>
+                          {% if f.completed_at %}
+                            <small class="text-muted">{{ f.completed_at.strftime('%d %b, %I:%M %p') }}</small>
+                          {% endif %}
+                          {% if f.next_action %}
+                            <small class="text-primary mt-1">
+                              <i class="fas fa-arrow-right"></i> {{ f.next_action[:50] ~ ('…' if f.next_action and f.next_action|length>50 else '') }}
+                            </small>
+                          {% endif %}
+                        </div>
+                      {% else %}
+                        {% if lead.lead_status != 'Converted' %}
+                        <button class="btn btn-outline-success btn-sm" onclick="completeFollowup({{ f.id }})">
+                          <i class="fas fa-check"></i> Mark Done
+                        </button>
+                        {% else %}
+                        <span class="badge bg-secondary">
+                          <i class="fas fa-lock"></i> Lead Converted
+                        </span>
+                        {% endif %}
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-5">
+              <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
+              {% if lead.lead_status == 'Converted' %}
+              <h4>Lead Converted to Student</h4>
+              <p class="text-muted mb-3">This lead has been successfully converted to a student. Follow-ups are no longer needed.</p>
+              <div class="badge bg-success fs-6">
+                <i class="fas fa-user-graduate"></i> Conversion Complete
+              </div>
+              {% else %}
+              <h4>No follow-ups yet</h4>
+              <p class="text-muted mb-3">Start engaging with this lead by scheduling your first follow-up.</p>
+              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#followupModal">
+                <i class="fas fa-calendar-plus"></i> Schedule First Follow-up
+              </button>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Information Cards -->
+  <div class="row mb-4">
+    {% set has_contact = lead.mobile or lead.email or (lead.preferred_language and lead.preferred_language != 'English') %}
+    {% if has_contact %}
+    <div class="col-md-6 mb-3">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-address-card"></i> Contact Information
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if lead.mobile %}
+            <div class="mb-3">
+              <label class="form-label text-muted small">MOBILE</label>
+              <div class="fw-semibold">{{ lead.mobile }}</div>
+            </div>
+          {% endif %}
+          {% if lead.email %}
+            <div class="mb-3">
+              <label class="form-label text-muted small">EMAIL</label>
+              <div class="fw-semibold">{{ lead.email }}</div>
+            </div>
+          {% endif %}
+          {% if lead.preferred_language and lead.preferred_language != 'English' %}
+            <div class="mb-3">
+              <label class="form-label text-muted small">PREFERRED LANGUAGE</label>
+              <div class="fw-semibold">{{ lead.preferred_language }}</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% set has_course = (lead.course_interest and lead.course_interest!='Not specified')
+                        or (lead.qualification and lead.qualification!='Not specified')
+                        or (lead.budget_range and lead.budget_range!='Not specified')
+                        or (lead.preferred_contact_time and lead.preferred_contact_time!='Anytime') %}
+    {% if has_course %}
+    <div class="col-md-6 mb-3">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-graduation-cap"></i> Course Information
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if lead.course_interest and lead.course_interest!='Not specified' %}
+            <div class="mb-3">
+              <label class="form-label text-muted small">COURSE INTEREST</label>
+              <div class="fw-semibold">
+                <i class="fas fa-graduation-cap text-primary me-2"></i>
+                <span class="badge bg-primary fs-6">{{ lead.course_interest }}</span>
+              </div>
+              <small class="text-muted">Original course interest from lead creation</small>
+            </div>
+          {% endif %}
+          {% if lead.qualification and lead.qualification!='Not specified' %}
+            <div class="mb-3">
+              <label class="form-label text-muted small">QUALIFICATION</label>
+              <div class="fw-semibold">{{ lead.qualification }}</div>
+            </div>
+          {% endif %}
+          {% if lead.budget_range and lead.budget_range!='Not specified' %}
+            <div class="mb-3">
+              <label class="form-label text-muted small">BUDGET RANGE</label>
+              <div class="fw-semibold">{{ lead.budget_range }}</div>
+            </div>
+          {% endif %}
+          {% if lead.preferred_contact_time and lead.preferred_contact_time!='Anytime' %}
+            <div class="mb-3">
+              <label class="form-label text-muted small">PREFERRED CONTACT TIME</label>
+              <div class="fw-semibold">{{ lead.preferred_contact_time }}</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Quick Contact -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-phone"></i> Quick Contact
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2">
+            {% if lead.mobile %}
+              <a class="btn btn-outline-primary" href="tel:{{ lead.mobile }}">
+                <i class="fas fa-phone"></i> Call
+              </a>
+            {% endif %}
+            {% if lead.mobile %}
+              <a class="btn btn-outline-success" href="https://wa.me/91{{ lead.mobile }}" target="_blank" rel="noopener">
+                <i class="fab fa-whatsapp"></i> WhatsApp
+              </a>
+            {% endif %}
+            {% if lead.mobile %}
+              <a class="btn btn-outline-info" href="sms:{{ lead.mobile }}">
+                <i class="fas fa-sms"></i> SMS
+              </a>
+            {% endif %}
+            {% if lead.email %}
+              <a class="btn btn-outline-warning" href="mailto:{{ lead.email }}">
+                <i class="fas fa-envelope"></i> Email
+              </a>
+            {% endif %}
+            <button class="btn btn-outline-secondary" id="copy-btn">
+              <i class="fas fa-copy"></i> Copy Info
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="text-brand-primary mb-2">
+            <i class="fas fa-calendar-alt fa-2x"></i>
+          </div>
+          <div class="h4 mb-1 fw-bold text-brand-primary">{{ followups|length }}</div>
+          <div class="text-xs fw-bold text-uppercase text-secondary">Follow-ups</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="text-brand-warning mb-2">
+            <i class="fas fa-clock fa-2x"></i>
+          </div>
+          <div class="h4 mb-1 fw-bold text-brand-warning">{{ lead.lead_age_days }}</div>
+          <div class="text-xs fw-bold text-uppercase text-secondary">Days Old</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="text-brand-success mb-2">
+            <i class="fas fa-star fa-2x"></i>
+          </div>
+          <div class="h4 mb-1 fw-bold text-brand-success">{{ lead.lead_score or 0 }}</div>
+          <div class="text-xs fw-bold text-uppercase text-secondary">Lead Score</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="text-brand-secondary mb-2">
+            <i class="fas fa-check-circle fa-2x"></i>
+          </div>
+          <div class="h4 mb-1 fw-bold text-brand-secondary">{{ followups|selectattr('is_completed')|list|length }}</div>
+          <div class="text-xs fw-bold text-uppercase text-secondary">Completed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals - Outside container to ensure proper z-index -->
+<div class="modal fade" id="followupModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-calendar-plus"></i> Schedule Follow-up
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="followup-form">
+          <div class="mb-3">
+            <label class="form-label">Date & Time</label>
+            <input type="datetime-local" class="form-control" id="followupDate" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Type</label>
+            <select class="form-select" id="followupType">
+              <option value="Outbound Call">📞 Outbound Call</option>
+              <option value="WhatsApp">💬 WhatsApp Message</option>
+              <option value="Email">📧 Email Follow-up</option>
+              <option value="Demo Session">🖥️ Demo Session</option>
+              <option value="Fee Discussion">� Fee Discussion</option>
+              <option value="Course Counseling">👨‍🏫 Course Counseling</option>
+              <option value="Document Collection">� Document Collection</option>
+              <option value="Admission Visit">🏢 Admission Visit</option>
+              <option value="Parent Meeting">👨‍👩‍👧‍👦 Parent Meeting</option>
+              <option value="Video Call">📹 Video Call</option>
+              <option value="SMS">📱 SMS Reminder</option>
+              <option value="Inbound Call">📞 Inbound Call</option>
+              <option value="Site Visit">🚗 Site Visit</option>
+              <option value="Other">📋 Other</option>
+            </select>
+            <div id="followupTypeHelp" class="form-text text-muted"></div>
+          </div>
+          
+          <!-- Phase 2: Smart Suggestions Panel -->
+          <div id="smartSuggestionsPanel" class="alert alert-info" style="display: none;">
+            <h6><i class="fas fa-lightbulb"></i> Smart Suggestions</h6>
+            <div id="smartSuggestionsList"></div>
+          </div>
+          
+          <!-- Phase 2: Conflict Warning Panel -->
+          <div id="conflictWarningPanel" class="alert alert-warning" style="display: none;">
+            <h6><i class="fas fa-exclamation-triangle"></i> Scheduling Conflict Detected</h6>
+            <div id="conflictWarningMessage"></div>
+            <div id="alternativeTimesList"></div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" id="followupNotes" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-info" onclick="loadSmartSuggestions()" type="button">
+          <i class="fas fa-lightbulb"></i> Get AI Suggestions
+        </button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="submitFollowup()">
+          <i class="fas fa-save"></i> Schedule
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-sticky-note"></i> Add Note
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <textarea class="form-control" id="noteText" rows="4" placeholder="Add your note..." required></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="submitNote()">
+          <i class="fas fa-save"></i> Save Note
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Score Breakdown Modal -->
+<div class="modal fade" id="scoreBreakdownModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-star text-warning"></i> Lead Score Breakdown
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="text-center">
+              <div class="display-4 text-primary fw-bold">{{ lead.lead_score or 0 }}</div>
+              <small class="text-muted">Total Score</small>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="text-center">
+              <div class="h5 mb-0">
+                {% if lead.lead_score >= 150 %}
+                  <span class="badge bg-success fs-6">🔥 Hot Lead</span>
+                {% elif lead.lead_score >= 120 %}
+                  <span class="badge bg-warning fs-6">⭐ High Priority</span>
+                {% elif lead.lead_score >= 80 %}
+                  <span class="badge bg-info fs-6">👍 Good Prospect</span>
+                {% elif lead.lead_score >= 50 %}
+                  <span class="badge bg-secondary fs-6">📈 Potential</span>
+                {% else %}
+                  <span class="badge bg-light text-dark fs-6">🤔 Low Priority</span>
+                {% endif %}
+              </div>
+              <small class="text-muted">Score Category</small>
+            </div>
+          </div>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Scoring Factor</th>
+                <th>Current Value</th>
+                <th class="text-end">Points</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><i class="fas fa-bullhorn text-primary"></i> Lead Source</td>
+                <td>{{ lead.lead_source or 'Not specified' }}</td>
+                <td class="text-end">
+                  {% if lead.lead_source == 'Referral' %}+25
+                  {% elif lead.lead_source == 'Walk-in' %}+20
+                  {% elif lead.lead_source == 'College Visit' %}+18
+                  {% elif lead.lead_source == 'Phone' %}+15
+                  {% elif lead.lead_source == 'Google' %}+12
+                  {% elif lead.lead_source in ['Instagram', 'Facebook'] %}+10
+                  {% elif lead.lead_source == 'Tally' %}+8
+                  {% else %}+5{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-graduation-cap text-success"></i> Qualification</td>
+                <td>{{ lead.qualification or 'Not specified' }}</td>
+                <td class="text-end">
+                  {% set qual = (lead.qualification or '').lower() %}
+                  {% if 'phd' in qual or 'doctorate' in qual or 'post graduate' in qual or 'pg' in qual or 'masters' in qual or 'mba' in qual or 'mca' in qual %}+25
+                  {% elif 'graduate' in qual or 'degree' in qual or 'bachelor' in qual or 'btech' in qual or 'be' in qual or 'bcom' in qual or 'bsc' in qual or 'ba' in qual %}+20
+                  {% elif 'diploma' in qual or 'certificate' in qual or 'professional' in qual %}+15
+                  {% elif '12th' in qual or 'puc' in qual or 'hsc' in qual or '+2' in qual %}+10
+                  {% else %}+5{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-briefcase text-info"></i> Employment</td>
+                <td>{{ lead.employment_type or 'Not specified' }}</td>
+                <td class="text-end">
+                  {% if lead.employment_type == 'Employed' %}+20
+                  {% elif lead.employment_type == 'Self-Employed' %}+18
+                  {% elif lead.employment_type == 'Student' %}+12
+                  {% elif lead.employment_type == 'Unemployed' %}+8
+                  {% else %}+5{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-rupee-sign text-warning"></i> Budget Comfort</td>
+                <td>{{ lead.budget_comfort or 'Not specified' }}</td>
+                <td class="text-end">
+                  {% set budget = (lead.budget_comfort or '').lower() %}
+                  {% if 'flexible' in budget or 'no limit' in budget %}+25
+                  {% elif '50k' in budget or '40k' in budget or '30k' in budget or '25k' in budget %}+22
+                  {% elif '20k' in budget or '15k' in budget %}+18
+                  {% elif '10k' in budget or '12k' in budget %}+15
+                  {% elif '5k' in budget or '8k' in budget %}+10
+                  {% else %}+5{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-flag text-danger"></i> Lead Stage</td>
+                <td>{{ lead.lead_stage or 'New' }}</td>
+                <td class="text-end">
+                  {% if lead.lead_stage == 'Won' %}+50
+                  {% elif lead.lead_stage == 'Negotiation' %}+30
+                  {% elif lead.lead_stage == 'Demo Booked' %}+25
+                  {% elif lead.lead_stage == 'Contacted' %}+15
+                  {% elif lead.lead_stage == 'New' %}+10
+                  {% elif lead.lead_stage == 'Lost' %}-10
+                  {% elif lead.lead_stage == 'Not Interested' %}-5
+                  {% else %}+5{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-tasks text-secondary"></i> Lead Status</td>
+                <td>{{ lead.lead_status or 'New' }}</td>
+                <td class="text-end">
+                  {% if lead.lead_status == 'Converted' %}+40
+                  {% elif lead.lead_status in ['Demo Scheduled', 'Demo Booked'] %}+25
+                  {% elif lead.lead_status == 'Negotiation' %}+22
+                  {% elif lead.lead_status == 'Follow-up Scheduled' %}+18
+                  {% elif lead.lead_status == 'In Progress' %}+15
+                  {% elif lead.lead_status == 'Contacted' %}+12
+                  {% elif lead.lead_status == 'Open' %}+8
+                  {% elif lead.lead_status == 'New' %}+5
+                  {% elif lead.lead_status == 'Not Interested' %}-5
+                  {% elif lead.lead_status == 'Lost' %}-10
+                  {% else %}+5{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-phone text-primary"></i> Follow-up Activity</td>
+                <td>{{ followups|length }} follow-ups</td>
+                <td class="text-end">
+                  {% set followup_count = followups|length %}
+                  {% if followup_count >= 5 %}+15
+                  {% elif followup_count >= 3 %}+12
+                  {% elif followup_count >= 1 %}+8
+                  {% else %}+0{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-check-circle text-success"></i> Completion Rate</td>
+                <td>
+                  {% set completed = followups|selectattr('is_completed')|list|length %}
+                  {% if followups|length > 0 %}
+                    {{ (completed / followups|length * 100)|round(0)|int }}%
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  {% if followups|length > 0 %}
+                    {% set completion_rate = completed / followups|length %}
+                    {% if completion_rate >= 0.8 %}+10
+                    {% elif completion_rate >= 0.5 %}+7
+                    {% elif completion_rate >= 0.3 %}+4
+                    {% else %}+0{% endif %}
+                  {% else %}+0{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-user-check text-info"></i> Decision Maker</td>
+                <td>{{ lead.decision_maker or 'Self' }}</td>
+                <td class="text-end">
+                  {% if lead.decision_maker == 'Self' %}+15
+                  {% elif lead.decision_maker == 'Employer' %}+12
+                  {% elif lead.decision_maker == 'Parent' %}+8
+                  {% else %}+5{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-calendar-check text-warning"></i> Join Timeline</td>
+                <td>{{ lead.join_timeline or 'Not Sure' }}</td>
+                <td class="text-end">
+                  {% if lead.join_timeline == 'Immediate' %}+15
+                  {% elif lead.join_timeline == 'This Week' %}+12
+                  {% elif lead.join_timeline == 'This Month' %}+10
+                  {% elif lead.join_timeline == 'After Exams' %}+8
+                  {% else %}+3{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-clock text-muted"></i> Lead Age</td>
+                <td>{{ lead.lead_age_days }} days old</td>
+                <td class="text-end">
+                  {% if lead.lead_age_days <= 1 %}+10
+                  {% elif lead.lead_age_days <= 3 %}+8
+                  {% elif lead.lead_age_days <= 7 %}+6
+                  {% elif lead.lead_age_days <= 14 %}+4
+                  {% elif lead.lead_age_days <= 30 %}+2
+                  {% else %}+0{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-shield-alt text-success"></i> Verification</td>
+                <td>
+                  {% if lead.mobile_verified and lead.email_verified %}Both verified
+                  {% elif lead.mobile_verified %}Mobile verified
+                  {% elif lead.email_verified %}Email verified
+                  {% else %}None verified{% endif %}
+                </td>
+                <td class="text-end">
+                  {% set verification_score = 0 %}
+                  {% if lead.mobile_verified %}{% set verification_score = verification_score + 5 %}{% endif %}
+                  {% if lead.email_verified %}{% set verification_score = verification_score + 5 %}{% endif %}
+                  +{{ verification_score }}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-book text-primary"></i> Course Interest</td>
+                <td>{{ lead.course_interest or 'Not specified' }}</td>
+                <td class="text-end">
+                  {% if lead.course_interest and lead.course_interest.strip() and lead.course_interest != 'Not specified' %}+10
+                  {% else %}+0{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-thermometer-half text-danger"></i> Priority Level</td>
+                <td>{{ lead.priority or 'Medium' }}</td>
+                <td class="text-end">
+                  {% if lead.priority == 'Hot' %}+5
+                  {% elif lead.priority == 'High' %}+4
+                  {% elif lead.priority == 'Medium' %}+2
+                  {% else %}+0{% endif %}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="alert alert-info mt-3">
+          <small>
+            <i class="fas fa-info-circle"></i>
+            <strong>Scoring Guide:</strong>
+            150+ = Hot Lead (Priority 1) | 120-149 = High Priority | 80-119 = Good Prospect | 50-79 = Potential | <50 = Low Priority
+          </small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="recalculateScore()">
+          <i class="fas fa-sync-alt"></i> Recalculate Score
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Convert to Student Modal -->
+<div class="modal fade" id="convertToStudentModal" tabindex="-1" aria-labelledby="convertToStudentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="convertToStudentModalLabel">
+          <i class="fas fa-user-graduate"></i> Convert Lead to Student
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i>
+          <strong>Converting Lead:</strong> {{ lead.name }} will become a registered student in the system.
+        </div>
+
+        <form id="convertToStudentForm">
+          <!-- Pre-filled Lead Information -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <h6 class="text-secondary mb-3"><i class="fas fa-user"></i> Basic Information</h6>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="studentFullName" class="form-label required">Full Name</label>
+                  <input type="text" class="form-control" id="studentFullName" name="full_name" value="{{ lead.name }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="studentGender" class="form-label">Gender</label>
+                  <select class="form-select" id="studentGender" name="gender">
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="studentDob" class="form-label">Date of Birth</label>
+                  <input type="date" class="form-control" id="studentDob" name="dob">
+                  <div class="form-text">Age must be between 8-50 years</div>
+                  <div class="invalid-feedback" id="dobFeedback">Please enter a valid date of birth</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="studentMobile" class="form-label required">Mobile</label>
+                  <input type="tel" class="form-control" id="studentMobile" name="mobile" value="{{ lead.mobile }}" required>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="studentEmail" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="studentEmail" name="email" value="{{ lead.email or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="studentQualification" class="form-label">Qualification</label>
+                  <input type="text" class="form-control" id="studentQualification" name="qualification" value="{{ lead.qualification or '' }}">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="studentAddress" class="form-label">Address</label>
+                <textarea class="form-control" id="studentAddress" name="address" rows="2">{{ lead.address or '' }}</textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Guardian Information -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <h6 class="text-secondary mb-3"><i class="fas fa-users"></i> Guardian Information</h6>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="guardianName" class="form-label">Guardian Name</label>
+                  <input type="text" class="form-control" id="guardianName" name="guardian_name" value="{{ lead.guardian_name or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="guardianMobile" class="form-label">Guardian Mobile</label>
+                  <input type="tel" class="form-control" id="guardianMobile" name="guardian_mobile" value="{{ lead.guardian_mobile or '' }}">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Course and Admission Details -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <h6 class="text-secondary mb-3"><i class="fas fa-graduation-cap"></i> Course & Admission Details</h6>
+              
+              <div class="row">
+                <div class="col-md-12 mb-3">
+                  <label class="form-label required">
+                    <i class="fas fa-book"></i> Course Selection
+                    <small class="text-muted">(Select courses for admission)</small>
+                  </label>
+                  {% if lead.course_interest and lead.course_interest != 'Not specified' %}
+                  <div class="alert alert-info py-2 mb-2">
+                    <small><i class="fas fa-lightbulb"></i> <strong>Lead's Interest:</strong> {{ lead.course_interest }}</small>
+                  </div>
+                  {% endif %}
+                  
+                  <!-- Course Selection Grid -->
+                  <div class="course-grid" id="conversionCourseGrid">
+                    {% for course in courses %}
+                    <div class="course-item">
+                      <input type="checkbox" class="form-check-input course-checkbox"
+                             id="conv_course_{{ course.id }}" name="course_ids"
+                             value="{{ course.id }}"
+                             data-course-name="{{ course.course_name }}"
+                             {% if lead.course_interest and course.course_name in lead.course_interest %}checked{% endif %}>
+                      <label class="form-check-label flex-grow-1" for="conv_course_{{ course.id }}">
+                        {{ course.course_name }}
+                        {% if course.duration %}
+                        <small class="text-muted d-block">Duration: {{ course.duration }}</small>
+                        {% endif %}
+                      </label>
+                    </div>
+                    {% endfor %}
+                  </div>
+
+                  <!-- Selected Courses Display -->
+                  <div id="selectedCoursesConversion" class="selected-courses d-none mt-3">
+                    <strong>Selected Courses:</strong>
+                    <div id="selectedCourseBadgesConversion"></div>
+                  </div>
+                  
+                  <!-- Hidden input to store final course names -->
+                  <input type="hidden" id="courseName" name="course_name" required>
+                  
+                  <div class="form-text mt-2">
+                    <i class="fas fa-info-circle"></i> 
+                    Select one or more courses that the student will be enrolling for. This ensures data consistency across the system.
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="admissionMode" class="form-label">Admission Mode</label>
+                  <select class="form-select" id="admissionMode" name="admission_mode">
+                    <option value="Direct">Direct Admission</option>
+                    <option value="Referral">Through Referral</option>
+                    <option value="Online">Online Admission</option>
+                    <option value="Walk-in">Walk-in</option>
+                    <option value="Phone">Phone Inquiry</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="coursePackage" class="form-label">Course Package/Bundle</label>
+                  <select class="form-select" id="coursePackage" name="course_package">
+                    <option value="">Individual Course</option>
+                    <option value="Basic Package">Basic Package</option>
+                    <option value="Premium Package">Premium Package</option>
+                    <option value="Professional Package">Professional Package</option>
+                    <option value="Enterprise Package">Enterprise Package</option>
+                    <option value="Custom Package">Custom Package</option>
+                  </select>
+                  <div class="form-text">Select if student is enrolling for a course bundle/package</div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="referredBy" class="form-label">Referred By</label>
+                  <input type="text" class="form-control" id="referredBy" name="referred_by" placeholder="Name of person who referred (if any)">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="batchId" class="form-label">Assign to Batch</label>
+                  <select class="form-select" id="batchId" name="batch_id">
+                    <option value="">Select Batch (Optional)</option>
+                    <!-- Batches will be loaded via JavaScript -->
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="admissionDate" class="form-label">Admission Date</label>
+                <input type="date" class="form-control" id="admissionDate" name="admission_date" value="{{ current_date }}">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="button" class="btn btn-success" onclick="submitConvertToStudent()">
+          <i class="fas fa-user-graduate"></i> Convert to Student
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Complete Follow-up Modal -->
+<div class="modal fade" id="completeFollowupModal" tabindex="-1" aria-labelledby="completeFollowupModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="completeFollowupModalLabel">
+          <i class="fas fa-check-circle"></i> Complete Follow-up
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="completeFollowupForm">
+          <input type="hidden" id="followupId" name="followupId">
+          
+          <!-- Current Follow-up Summary -->
+          <div class="card mb-4 border-primary">
+            <div class="card-header bg-primary text-white">
+              <h6 class="mb-0"><i class="fas fa-info-circle"></i> Current Follow-up Details</h6>
+            </div>
+            <div class="card-body">
+              <div id="currentFollowupDetails">
+                <p class="text-muted">Follow-up details will be shown here</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Enhanced Outcome Selection Section -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <h6 class="text-secondary mb-3"><i class="fas fa-clipboard-check"></i> Follow-up Outcome</h6>
+              
+              <!-- Dynamic Outcome Categories -->
+              <div class="mb-3">
+                <label class="form-label required">How did this follow-up go?</label>
+                <div id="outcomeCategories" class="row g-2 mb-3">
+                  <!-- Will be populated dynamically based on follow-up type -->
+                  <div class="col-12 text-center text-muted py-3">
+                    <i class="fas fa-spinner fa-spin"></i> Loading outcome options...
+                  </div>
+                </div>
+
+                <!-- Selected Outcome Display -->
+                <div id="selectedOutcome" class="alert alert-info d-none">
+                  <strong>Selected Outcome:</strong> <span id="selectedOutcomeText"></span>
+                  <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="clearOutcomeSelection()">
+                    <i class="fas fa-edit"></i> Change
+                  </button>
+                </div>
+                
+                <!-- Hidden inputs for selected outcome -->
+                <input type="hidden" id="selectedOutcomeCategory" name="outcome_category">
+                <input type="hidden" id="outcome" name="outcome"> <!-- For backward compatibility -->
+              </div>
+
+              <!-- Additional Notes -->
+              <div class="mb-3">
+                <label for="outcomeNotes" class="form-label">
+                  <i class="fas fa-sticky-note"></i> Additional Details (Optional)
+                </label>
+                <textarea class="form-control" id="outcomeNotes" name="outcome_notes" rows="3"
+                          placeholder="Add any specific details, quotes, or important points from this conversation..."></textarea>
+                <div class="form-text">Use this space for additional context that helps with future follow-ups.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next Action Section -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="d-flex align-items-center mb-3">
+                <h6 class="text-secondary mb-0 me-3"><i class="fas fa-calendar-plus"></i> Next Action</h6>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="scheduleNextAction" checked>
+                  <label class="form-check-label" for="scheduleNextAction">
+                    Schedule next follow-up
+                  </label>
+                </div>
+              </div>
+
+              <div id="nextActionSection">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="nextActionAt" class="form-label">Next Follow-up Date & Time</label>
+                    <input type="datetime-local" class="form-control" id="nextActionAt" name="nextActionAt">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="nextActionChannel" class="form-label">Follow-up Type</label>
+                    <select class="form-select" id="nextActionChannel" name="nextActionChannel">
+                      <option value="Outbound Call">📞 Outbound Call</option>
+                      <option value="WhatsApp">💬 WhatsApp Message</option>
+                      <option value="Email">📧 Email Follow-up</option>
+                      <option value="Visit">🏢 Center Visit</option>
+                      <option value="Demo Session">🖥️ Demo Session</option>
+                      <option value="Course Counseling">👨‍🏫 Course Counseling</option>
+                      <option value="Fee Discussion">💰 Fee Discussion</option>
+                      <option value="Document Collection">📄 Document Collection</option>
+                      <option value="Meeting">👨‍👩‍👧‍👦 Meeting</option>
+                      <option value="Video Call">📹 Video Call</option>
+                      <option value="SMS">📱 SMS Reminder</option>
+                      <option value="Other">📋 Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="nextAction" class="form-label">Next Action Description</label>
+                  <textarea class="form-control" id="nextAction" name="nextAction" rows="3"
+                            placeholder="What should be discussed or accomplished in the next follow-up?"></textarea>
+                  <div class="form-text">Specify the purpose and agenda for the next interaction.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="button" class="btn btn-success" onclick="submitCompleteFollowup()">
+          <i class="fas fa-check"></i> Complete Follow-up
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Define lead ID
+const LEAD_ID = {{ lead.id }};
+
+// Outcome Categories for structured selection
+const OUTCOME_CATEGORIES = {
+    "Demo Session": {
+        "success": [
+            {"value": "Demo Completed Successfully", "icon": "✅", "color": "success", "description": "Demo went well, lead is satisfied"},
+            {"value": "Very Interested After Demo", "icon": "😍", "color": "success", "description": "Lead showed high interest"},
+            {"value": "Ready for Fee Discussion", "icon": "💰", "color": "success", "description": "Lead wants to discuss pricing"},
+        ],
+        "neutral": [
+            {"value": "Demo Completed - Neutral Response", "icon": "😐", "color": "warning", "description": "Demo completed but neutral feedback"},
+            {"value": "Needs More Information", "icon": "❓", "color": "warning", "description": "Lead needs additional details"},
+            {"value": "Wants to Think About It", "icon": "🤔", "color": "warning", "description": "Lead needs time to consider"},
+            {"value": "Technical Questions Raised", "icon": "🔧", "color": "warning", "description": "Lead has technical concerns"},
+        ],
+        "negative": [
+            {"value": "Not Interested After Demo", "icon": "❌", "color": "danger", "description": "Lead lost interest after demo"},
+            {"value": "Found Too Difficult", "icon": "😰", "color": "danger", "description": "Course seems too challenging"},
+            {"value": "Budget Concerns Raised", "icon": "💸", "color": "danger", "description": "Pricing is an issue"},
+            {"value": "Timing Not Right", "icon": "⏰", "color": "warning", "description": "Not the right time for training"},
+        ],
+        "followup": [
+            {"value": "Demo Rescheduled", "icon": "📅", "color": "info", "description": "Demo moved to different time"},
+            {"value": "Parent Involvement Needed", "icon": "👨‍👩‍👧", "color": "info", "description": "Need to involve parents/family"},
+        ]
+    },
+    
+    "Outbound Call": {
+        "success": [
+            {"value": "Interested - Demo Scheduled", "icon": "📅", "color": "success", "description": "Lead interested and demo booked"},
+            {"value": "Very Enthusiastic", "icon": "🎉", "color": "success", "description": "Lead very excited about courses"},
+            {"value": "Ready to Visit Branch", "icon": "🏢", "color": "success", "description": "Lead wants to visit center"},
+            {"value": "Wants Course Details", "icon": "📚", "color": "success", "description": "Lead requesting course information"},
+        ],
+        "neutral": [
+            {"value": "Spoke Briefly - Call Back Later", "icon": "📞", "color": "warning", "description": "Short conversation, will call back"},
+            {"value": "Some Interest - Need More Info", "icon": "🤷", "color": "warning", "description": "Mild interest, needs details"},
+            {"value": "Comparing Options", "icon": "⚖️", "color": "warning", "description": "Lead comparing with other institutes"},
+        ],
+        "negative": [
+            {"value": "Not Interested", "icon": "❌", "color": "danger", "description": "Lead not interested in courses"},
+            {"value": "Wrong Number", "icon": "📵", "color": "danger", "description": "Incorrect contact number"},
+            {"value": "Do Not Call Again", "icon": "🚫", "color": "danger", "description": "Lead requested no more calls"},
+        ],
+        "followup": [
+            {"value": "No Response - Try Again", "icon": "📞", "color": "info", "description": "No answer, will retry"},
+            {"value": "Busy - Call Back Later", "icon": "⏳", "color": "info", "description": "Lead was busy, call later"},
+            {"value": "Voicemail Left", "icon": "📧", "color": "info", "description": "Left voicemail message"},
+        ]
+    },
+    
+    "Fee Discussion": {
+        "success": [
+            {"value": "Agreed to Fees", "icon": "✅", "color": "success", "description": "Lead accepted the pricing"},
+            {"value": "Negotiated Successfully", "icon": "🤝", "color": "success", "description": "Reached mutually acceptable price"},
+            {"value": "Payment Plan Accepted", "icon": "💳", "color": "success", "description": "Installment plan agreed upon"},
+            {"value": "Ready to Pay", "icon": "💰", "color": "success", "description": "Lead ready to make payment"},
+        ],
+        "neutral": [
+            {"value": "Considering Fee Options", "icon": "🤔", "color": "warning", "description": "Lead thinking about pricing"},
+            {"value": "Discussing with Family", "icon": "👨‍👩‍👧", "color": "warning", "description": "Need family consultation"},
+            {"value": "Comparing with Other Institutes", "icon": "📊", "color": "warning", "description": "Comparing prices elsewhere"},
+        ],
+        "negative": [
+            {"value": "Too Expensive", "icon": "💸", "color": "danger", "description": "Fees are too high for lead"},
+            {"value": "Budget Not Available", "icon": "💰", "color": "danger", "description": "Lead cannot afford training"},
+            {"value": "Found Cheaper Alternative", "icon": "🔍", "color": "danger", "description": "Lead found lower cost option"},
+        ],
+        "followup": [
+            {"value": "Need to Discuss with Parents", "icon": "👨‍👩‍👧", "color": "info", "description": "Parent approval required"},
+            {"value": "Will Decide Next Week", "icon": "📅", "color": "info", "description": "Lead needs more time"},
+            {"value": "Wants EMI Options", "icon": "💳", "color": "info", "description": "Interested in installment plans"},
+        ]
+    },
+    
+    "Course Counseling": {
+        "success": [
+            {"value": "Course Matches Goals", "icon": "🎯", "color": "success", "description": "Perfect course for lead's objectives"},
+            {"value": "Very Interested in Program", "icon": "😍", "color": "success", "description": "Lead loves the course structure"},
+            {"value": "Career Path Clarified", "icon": "🛤️", "color": "success", "description": "Clear career direction identified"},
+        ],
+        "neutral": [
+            {"value": "Understanding Requirements", "icon": "📖", "color": "warning", "description": "Lead learning about course needs"},
+            {"value": "Exploring Options", "icon": "🔍", "color": "warning", "description": "Lead considering different courses"},
+            {"value": "Questions Answered", "icon": "❓", "color": "warning", "description": "Provided clarifications"},
+        ],
+        "negative": [
+            {"value": "Course Not Suitable", "icon": "❌", "color": "danger", "description": "Course doesn't match lead's needs"},
+            {"value": "Wrong Career Choice", "icon": "🚫", "color": "danger", "description": "Lead realizes different career path"},
+            {"value": "Not Ready for Training", "icon": "⏳", "color": "danger", "description": "Lead not prepared for course"},
+        ],
+        "followup": [
+            {"value": "Need More Details", "icon": "📚", "color": "info", "description": "Lead wants additional information"},
+            {"value": "Want to See Curriculum", "icon": "📋", "color": "info", "description": "Lead wants detailed syllabus"},
+            {"value": "Discuss with Family", "icon": "👨‍👩‍👧", "color": "info", "description": "Family consultation needed"},
+        ]
+    }
+};
+
+// Default outcome options for any follow-up type
+const DEFAULT_OUTCOME_OPTIONS = {
+    positive: [
+        { value: "Positive Response", description: "Lead shows strong interest", icon: "😍", color: "border-success" },
+        { value: "Expressed Interest", description: "Lead shows moderate interest", icon: "😊", color: "border-success" },
+        { value: "Asked Questions", description: "Lead is thinking about it", icon: "🤔", color: "border-info" },
+        { value: "Responded Positively", description: "Lead has agreed to proceed", icon: "✅", color: "border-success" }
+    ],
+    neutral: [
+        { value: "Need More Details", description: "Lead wants additional details", icon: "ℹ️", color: "border-info" },
+        { value: "Discuss with Family", description: "Lead wants to consult family", icon: "👨‍👩‍👧", color: "border-warning" },
+        { value: "Neutral Response", description: "Lead postponing decision", icon: "⏰", color: "border-warning" },
+        { value: "Busy - Call Back Later", description: "Lead is currently occupied", icon: "⏱️", color: "border-warning" }
+    ],
+    negative: [
+        { value: "Not Interested", description: "Lead declined interest", icon: "❌", color: "border-danger" },
+        { value: "Wrong Number", description: "Contact number is incorrect", icon: "☎️", color: "border-danger" },
+        { value: "Budget Not Available", description: "Lead cannot afford fees", icon: "💸", color: "border-danger" },
+        { value: "Negative Response", description: "Lead gave negative feedback", icon: "📍", color: "border-danger" }
+    ],
+    communication: [
+        { value: "No Response", description: "Lead didn't respond to contact", icon: "📵", color: "border-secondary" },
+        { value: "Message Delivered", description: "Message was sent successfully", icon: "📱", color: "border-secondary" },
+        { value: "Requested Call Back", description: "Lead requested callback", icon: "📞", color: "border-info" },
+        { value: "Message Read - No Reply", description: "Lead will reach out to us", icon: "📲", color: "border-info" }
+    ]
+};
+
+// Global variables for current followup
+let currentFollowupId = null;
+let currentFollowupType = null;
+
+// Simple complete followup function
+window.completeFollowup = function(id) {
+    console.log('completeFollowup called with ID:', id);
+    
+    // Store the followup ID
+    if (document.getElementById('followupId')) {
+        document.getElementById('followupId').value = id;
+    }
+    
+    // Populate follow-up details
+    populateFollowupDetails(id);
+    
+    // Show the modal if it exists
+    const modalElement = document.getElementById('completeFollowupModal');
+    if (modalElement && typeof bootstrap !== 'undefined') {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    } else {
+        console.log('Modal element not found or Bootstrap not loaded');
+    }
+};
+
+// Enhanced function to populate follow-up details and generate outcome options
+function populateFollowupDetails(followupId) {
+    currentFollowupId = followupId;
+    
+    const followupRows = document.querySelectorAll('table tbody tr');
+    followupRows.forEach(row => {
+        const button = row.querySelector(`button[onclick*="${followupId}"]`);
+        if (button) {
+            const cells = row.querySelectorAll('td');
+            const detailsDiv = document.getElementById('currentFollowupDetails');
+            
+            // Extract follow-up type from the second column
+            const followupType = cells[1]?.textContent.trim() || 'Outbound Call';
+            currentFollowupType = followupType;
+            
+            if (detailsDiv && cells.length >= 4) {
+                detailsDiv.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Date:</strong> ${cells[0]?.textContent.trim() || 'N/A'}<br>
+                            <strong>Type:</strong> ${followupType}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Note:</strong> ${cells[2]?.textContent.trim() || 'No notes'}<br>
+                            <strong>Created by:</strong> ${cells[3]?.textContent.trim() || 'System'}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Generate outcome options for this follow-up type
+            generateOutcomeOptions(followupType);
+        }
+    });
+}
+
+// Generate dynamic outcome options based on follow-up type
+function generateOutcomeOptions(followupType) {
+    console.log('🎨 Generating outcome options for:', followupType);
+    
+    const container = document.getElementById('outcomeCategories');
+    if (!container) {
+        console.error('❌ Outcome categories container not found');
+        return;
+    }
+    
+    // Clear previous options
+    container.innerHTML = '';
+    
+    // Get options for this follow-up type (fallback to default)
+    const categories = OUTCOME_CATEGORIES[followupType] || DEFAULT_OUTCOME_OPTIONS;
+    
+    // Generate cards for each category
+    Object.keys(categories).forEach(categoryType => {
+        const outcomes = categories[categoryType];
+        
+        outcomes.forEach(outcome => {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4 mb-2';
+            
+            col.innerHTML = `
+                <div class="card outcome-option ${outcome.color}" 
+                     data-outcome="${outcome.value}"
+                     onclick="selectOutcome('${outcome.value}', '${outcome.description}')">
+                    <div class="card-body">
+                        <div class="fs-2 mb-2">${outcome.icon}</div>
+                        <h6 class="card-title">${outcome.value}</h6>
+                        <p class="card-text small text-muted">${outcome.description}</p>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(col);
+        });
+    });
+}
+
+// Handle outcome selection
+function selectOutcome(outcomeValue, outcomeDescription) {
+    console.log('🎯 Outcome selected:', outcomeValue);
+    
+    // Remove previous selection
+    document.querySelectorAll('.outcome-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Mark current selection
+    const selectedOption = document.querySelector(`[data-outcome="${outcomeValue}"]`);
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+    }
+    
+    // Update hidden inputs
+    document.getElementById('selectedOutcomeCategory').value = outcomeValue;
+    document.getElementById('outcome').value = outcomeValue; // For backward compatibility
+    
+    // Show selected outcome
+    document.getElementById('selectedOutcomeText').textContent = outcomeValue;
+    document.getElementById('selectedOutcome').classList.remove('d-none');
+    
+    // Auto-populate outcome notes placeholder
+    const notesField = document.getElementById('outcomeNotes');
+    if (notesField) {
+        notesField.placeholder = `Add specific details about "${outcomeValue}"...`;
+    }
+    
+    // Auto-suggest next actions based on outcome
+    suggestNextActions(outcomeValue);
+}
+
+// Clear outcome selection
+function clearOutcomeSelection() {
+    document.querySelectorAll('.outcome-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    document.getElementById('selectedOutcomeCategory').value = '';
+    document.getElementById('outcome').value = '';
+    document.getElementById('selectedOutcome').classList.add('d-none');
+    
+    const notesField = document.getElementById('outcomeNotes');
+    if (notesField) {
+        notesField.placeholder = 'Add any specific details, quotes, or important points from this conversation...';
+    }
+}
+
+// Suggest next actions based on outcome with enhanced AI integration
+function suggestNextActions(outcomeValue) {
+    console.log('🤖 AI analyzing outcome for next action suggestions:', outcomeValue);
+    
+    // Immediate next action suggestions based on outcome
+    const nextActionSuggestions = {
+        "Demo Completed Successfully": "Fee Discussion",
+        "Very Interested After Demo": "Fee Discussion", 
+        "Ready for Fee Discussion": "Fee Discussion",
+        "Interested - Demo Scheduled": "Demo Session",
+        "Agreed to Fees": "Document Collection",
+        "Too Expensive": "Fee Discussion",
+        "Needs More Information": "Course Counseling",
+        "No Response - Try Again": "Outbound Call",
+        "Busy - Call Back Later": "Outbound Call",
+        "Parent Involvement Needed": "Parent Meeting",
+        "Course Matches Goals": "Demo Session",
+        "Very Interested in Program": "Fee Discussion",
+        "Career Path Clarified": "Demo Session",
+        "Questions Answered": "Demo Session",
+        "Need More Details": "Course Counseling",
+        "Want to See Curriculum": "Demo Session",
+        "Budget Concerns Raised": "Fee Discussion",
+        "Timing Not Right": "Outbound Call",
+        "Demo Rescheduled": "Demo Session",
+        "Payment Plan Accepted": "Document Collection",
+        "Ready to Pay": "Admission Visit",
+        "Documents Collected": "Admission Visit",
+        "Parents Supportive": "Fee Discussion",
+        "Family Approved": "Document Collection"
+    };
+    
+    const suggestion = nextActionSuggestions[outcomeValue];
+    if (suggestion) {
+        const nextActionChannel = document.getElementById('nextActionChannel');
+        if (nextActionChannel) {
+            nextActionChannel.value = suggestion;
+            
+            // Show smart suggestion feedback
+            showSmartSuggestionFeedback(`🤖 AI suggests: ${suggestion}`);
+        }
+        
+        // Auto-check schedule next action for certain outcomes
+        const autoScheduleOutcomes = [
+            "Demo Rescheduled", "Parent Involvement Needed", "No Response - Try Again",
+            "Busy - Call Back Later", "Need to Discuss with Parents", "Will Decide Next Week",
+            "Wants EMI Options", "Needs More Information", "Need More Details",
+            "Want to See Curriculum", "Budget Concerns Raised", "Timing Not Right"
+        ];
+        
+        if (autoScheduleOutcomes.includes(outcomeValue)) {
+            document.getElementById('scheduleNextAction').checked = true;
+            toggleNextActionSection();
+            
+            // Auto-suggest timing based on outcome urgency
+            suggestOptimalTiming(outcomeValue);
+        }
+    }
+    
+    // Trigger advanced AI suggestions for complex scenarios
+    triggerAdvancedAISuggestions(outcomeValue);
+}
+
+// Show smart suggestion feedback to user
+function showSmartSuggestionFeedback(message) {
+    // Create or update AI feedback element
+    let feedbackDiv = document.getElementById('aiSuggestionFeedback');
+    if (!feedbackDiv) {
+        feedbackDiv = document.createElement('div');
+        feedbackDiv.id = 'aiSuggestionFeedback';
+        feedbackDiv.className = 'alert alert-info mt-2 ai-suggestion-alert';
+        
+        // Insert after the outcome selection
+        const selectedOutcome = document.getElementById('selectedOutcome');
+        if (selectedOutcome) {
+            selectedOutcome.parentNode.insertBefore(feedbackDiv, selectedOutcome.nextSibling);
+        }
+    }
+    
+    feedbackDiv.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-robot me-2"></i>
+            <span>${message}</span>
+            <button type="button" class="btn-close ms-auto" onclick="hideAISuggestion()"></button>
+        </div>
+    `;
+    feedbackDiv.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        if (feedbackDiv) {
+            feedbackDiv.style.opacity = '0.7';
+        }
+    }, 5000);
+}
+
+// Hide AI suggestion feedback
+function hideAISuggestion() {
+    const feedbackDiv = document.getElementById('aiSuggestionFeedback');
+    if (feedbackDiv) {
+        feedbackDiv.style.display = 'none';
+    }
+}
+
+// Suggest optimal timing based on outcome urgency
+function suggestOptimalTiming(outcomeValue) {
+    const now = new Date();
+    let suggestedTime;
+    
+    // Urgent outcomes - schedule within hours
+    const urgentOutcomes = ["Demo Rescheduled", "Ready to Pay", "Agreed to Fees"];
+    
+    // Medium priority - schedule within 1-2 days  
+    const mediumOutcomes = ["Parent Involvement Needed", "Budget Concerns Raised"];
+    
+    // Low priority - schedule within a week
+    const lowPriorityOutcomes = ["No Response - Try Again", "Timing Not Right"];
+    
+    if (urgentOutcomes.includes(outcomeValue)) {
+        // Schedule within 2-4 hours
+        suggestedTime = new Date(now.getTime() + (2 + Math.random() * 2) * 60 * 60 * 1000);
+        showSmartSuggestionFeedback(`⚡ Urgent: Suggested timing within 2-4 hours`);
+    } else if (mediumOutcomes.includes(outcomeValue)) {
+        // Schedule within 1-2 days
+        suggestedTime = new Date(now.getTime() + (1 + Math.random()) * 24 * 60 * 60 * 1000);
+        showSmartSuggestionFeedback(`📅 Medium priority: Suggested timing within 1-2 days`);
+    } else if (lowPriorityOutcomes.includes(outcomeValue)) {
+        // Schedule within a week
+        suggestedTime = new Date(now.getTime() + (3 + Math.random() * 4) * 24 * 60 * 60 * 1000);
+        showSmartSuggestionFeedback(`📆 Standard follow-up: Suggested timing within a week`);
+    } else {
+        // Default: next day
+        suggestedTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    }
+    
+    // Set the suggested time in the form
+    if (suggestedTime) {
+        const timeString = suggestedTime.toISOString().slice(0, 16);
+        const nextActionAt = document.getElementById('nextActionAt');
+        if (nextActionAt) {
+            nextActionAt.value = timeString;
+        }
+    }
+}
+
+// Trigger advanced AI suggestions based on outcome context
+function triggerAdvancedAISuggestions(outcomeValue) {
+    console.log('🧠 Triggering advanced AI analysis for outcome:', outcomeValue);
+    
+    // Call backend for contextual AI suggestions
+    fetch(`/leads/${LEAD_ID}/smart-next-action`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            outcome_category: outcomeValue,
+            current_stage: '{{ lead.lead_stage }}',
+            current_status: '{{ lead.lead_status }}',
+            lead_age_days: {{ lead.lead_age_days }},
+            follow_up_type: currentFollowupType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayAdvancedAISuggestions(data.suggestions);
+        }
+    })
+    .catch(error => {
+        console.log('Advanced AI suggestions not available:', error);
+    });
+}
+
+// Display advanced AI suggestions
+function displayAdvancedAISuggestions(suggestions) {
+    if (!suggestions || suggestions.length === 0) return;
+    
+    // Create advanced suggestions panel
+    let advancedPanel = document.getElementById('advancedAISuggestions');
+    if (!advancedPanel) {
+        advancedPanel = document.createElement('div');
+        advancedPanel.id = 'advancedAISuggestions';
+        advancedPanel.className = 'card mt-3 border-primary';
+        
+        // Insert in the modal body
+        const modalBody = document.querySelector('#completeFollowupModal .modal-body');
+        if (modalBody) {
+            modalBody.appendChild(advancedPanel);
+        }
+    }
+    
+    let html = `
+        <div class="card-header bg-primary text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-brain me-2"></i>
+                Advanced AI Recommendations
+            </h6>
+        </div>
+        <div class="card-body">
+    `;
+    
+    suggestions.forEach((suggestion, index) => {
+        const priorityClass = suggestion.priority === 'High' ? 'danger' : 
+                             suggestion.priority === 'Medium' ? 'warning' : 'info';
+        
+        html += `
+            <div class="recommendation-item mb-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="text-${priorityClass}">
+                            <i class="fas fa-${suggestion.icon || 'lightbulb'}"></i>
+                            ${suggestion.action}
+                        </h6>
+                        <p class="mb-1 text-muted small">${suggestion.reason}</p>
+                        ${suggestion.template ? `<p class="mb-1"><small><strong>Suggested message:</strong> "${suggestion.template}"</small></p>` : ''}
+                        ${suggestion.timing ? `<p class="mb-0"><small><strong>Best timing:</strong> ${suggestion.timing}</small></p>` : ''}
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm ms-2" 
+                            onclick="applyAdvancedSuggestion('${suggestion.action}', '${suggestion.template || ''}', '${suggestion.timing || ''}')">
+                        Apply
+                    </button>
+                </div>
+            </div>
+            ${index < suggestions.length - 1 ? '<hr>' : ''}
+        `;
+    });
+    
+    html += `
+        </div>
+        <div class="card-footer text-end">
+            <button class="btn btn-sm btn-secondary" onclick="hideAdvancedSuggestions()">
+                <i class="fas fa-times"></i> Dismiss
+            </button>
+        </div>
+    `;
+    
+    advancedPanel.innerHTML = html;
+}
+
+// Apply advanced AI suggestion
+function applyAdvancedSuggestion(action, template, timing) {
+    console.log('🤖 Applying advanced suggestion:', action);
+    
+    // Set the action type
+    const nextActionChannel = document.getElementById('nextActionChannel');
+    if (nextActionChannel) {
+        nextActionChannel.value = action;
+    }
+    
+    // Set the template/notes
+    if (template) {
+        const nextActionField = document.getElementById('nextAction');
+        if (nextActionField) {
+            nextActionField.value = template;
+        }
+    }
+    
+    // Set timing if provided
+    if (timing) {
+        // Parse timing and set the date/time
+        // This would need more sophisticated parsing based on the timing format
+    }
+    
+    // Auto-check schedule next action
+    document.getElementById('scheduleNextAction').checked = true;
+    toggleNextActionSection();
+    
+    // Show confirmation
+    showSmartSuggestionFeedback(`✅ Applied AI suggestion: ${action}`);
+    
+    // Hide the advanced suggestions panel
+    hideAdvancedSuggestions();
+}
+
+// Hide advanced AI suggestions
+function hideAdvancedSuggestions() {
+    const advancedPanel = document.getElementById('advancedAISuggestions');
+    if (advancedPanel) {
+        advancedPanel.remove();
+    }
+}
+
+// Submit complete follow-up form with enhanced structured outcome support
+function submitCompleteFollowup() {
+    console.log('🔄 submitCompleteFollowup() called');
+    
+    const followupId = document.getElementById('followupId').value;
+    const outcome = document.getElementById('outcome').value.trim();
+    const selectedOutcomeCategory = document.getElementById('selectedOutcomeCategory').value.trim();
+    const outcomeNotes = document.getElementById('outcomeNotes').value.trim();
+    const nextActionAt = document.getElementById('nextActionAt').value;
+    const nextAction = document.getElementById('nextAction').value.trim();
+    const nextActionChannel = document.getElementById('nextActionChannel').value;
+    const scheduleNext = document.getElementById('scheduleNextAction').checked;
+    
+    console.log('📋 Form data:', {
+        followupId,
+        outcome,
+        selectedOutcomeCategory,
+        outcomeNotes,
+        nextActionAt,
+        nextAction,
+        nextActionChannel,
+        scheduleNext
+    });
+    
+    // Enhanced validation for structured outcomes
+    if (!selectedOutcomeCategory && !outcome) {
+        alert('Please select an outcome for this follow-up');
+        console.log('❌ Validation failed: No outcome selected');
+        return;
+    }
+    
+    if (scheduleNext && !nextActionAt) {
+        alert('Please select a date and time for the next follow-up');
+        console.log('❌ Validation failed: No next action date');
+        return;
+    }
+    
+    if (scheduleNext && !nextAction) {
+        alert('Please describe what should be done in the next follow-up');
+        console.log('❌ Validation failed: No next action description');
+        return;
+    }
+    
+    // Prepare enhanced data for backend
+    const data = {
+        outcome: selectedOutcomeCategory || outcome, // Use structured outcome if available, fallback to manual entry
+        outcome_category: selectedOutcomeCategory, // New field for structured outcome category
+        outcome_notes: outcomeNotes, // Specific notes about the outcome
+        followup_type: currentFollowupType, // Add follow-up type context
+        next_action_at: scheduleNext ? nextActionAt : null,
+        next_action: scheduleNext ? nextAction : null,
+        next_action_type: scheduleNext ? nextActionChannel : null
+    };
+    
+    console.log('📤 Sending data to backend:', data);
+    console.log('🔗 URL:', `/leads/followups/${followupId}/complete`);
+    
+    // Show loading state
+    const btn = document.querySelector('button[onclick="submitCompleteFollowup()"]');
+    if (btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing...';
+        btn.disabled = true;
+        
+        // Submit to backend
+        fetch(`/leads/followups/${followupId}/complete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            console.log('📥 Response status:', response.status);
+            console.log('📥 Response headers:', response.headers);
+            
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            console.log('📥 Content-Type:', contentType);
+            
+            if (contentType && contentType.indexOf('application/json') !== -1) {
+                return response.json();
+            } else {
+                // If not JSON, get text to see what was returned
+                return response.text().then(text => {
+                    console.error('❌ Non-JSON response received:', text.substring(0, 500));
+                    throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}. Content starts with: ${text.substring(0, 100)}`);
+                });
+            }
+        })
+        .then(data => {
+            console.log('📦 Response data:', data);
+            
+            // Reset button state
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            
+            // Check for success - the backend returns {ok: true, data: {...}, message: "..."}
+            if (data.ok || data.success || data.message) {
+                console.log('✅ Success! Closing modal and reloading page');
+                
+                // Phase 2: Trigger auto-update stage after completing followup
+                triggerAutoStageUpdate();
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('completeFollowupModal'));
+                if (modal) {
+                    modal.hide();
+                    console.log('✅ Modal closed');
+                } else {
+                    console.log('⚠️ Modal instance not found');
+                }
+                
+                // Show success message
+                alert('✅ ' + (data.message || data.data?.message || 'Follow-up completed successfully!'));
+                
+                // Reload page to show updates
+                setTimeout(() => {
+                    console.log('🔄 Reloading page...');
+                    window.location.reload();
+                }, 1000);
+            } else {
+                console.log('❌ Error in response:', data);
+                console.log('❌ Data.error:', data.error);
+                console.log('❌ Data keys:', Object.keys(data));
+                alert('❌ Error: ' + (data.error || data.message || 'Failed to complete follow-up'));
+            }
+        })
+        .catch(error => {
+            console.error('💥 Fetch error:', error);
+            // Reset button state
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert('❌ Error completing follow-up: ' + error.message);
+        });
+    } else {
+        console.log('❌ Button not found!');
+    }
+}
+
+// Toggle next action fields
+document.addEventListener('DOMContentLoaded', function() {
+    const scheduleCheckbox = document.getElementById('scheduleNextAction');
+    const nextActionSection = document.getElementById('nextActionSection');
+    
+    if (scheduleCheckbox && nextActionSection) {
+        scheduleCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                nextActionSection.style.display = 'block';
+                // Set default date to tomorrow
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                tomorrow.setHours(10, 0, 0, 0);
+                const dateInput = document.getElementById('nextActionAt');
+                if (dateInput) {
+                    dateInput.value = tomorrow.toISOString().slice(0, 16);
+                }
+            } else {
+                nextActionSection.style.display = 'none';
+            }
+        });
+        
+        // Trigger on page load
+        scheduleCheckbox.dispatchEvent(new Event('change'));
+    }
+    
+    // Phase 2: Add conflict checking event listeners
+    const followupDate = document.getElementById('followupDate');
+    const followupType = document.getElementById('followupType');
+    
+    if (followupDate) {
+        followupDate.addEventListener('change', checkSchedulingConflicts);
+    }
+    
+    if (followupType) {
+        followupType.addEventListener('change', function() {
+            checkSchedulingConflicts();
+            // Clear any previous smart suggestions when type changes
+            document.getElementById('followupTypeHelp').innerHTML = '';
+        });
+    }
+});
+
+// ============================================
+// PHASE 2: SMART AUTOMATION FUNCTIONS 🤖
+// ============================================
+
+// Load smart suggestions when modal opens
+function loadSmartSuggestions() {
+    console.log('🔄 Loading smart suggestions for Lead ID:', LEAD_ID);
+    
+    fetch(`/leads/${LEAD_ID}/smart-suggestions`, {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => {
+            console.log('📥 Smart suggestions response status:', response.status);
+            console.log('📥 Smart suggestions response headers:', response.headers.get('content-type'));
+            
+            // Check if we got redirected to login page
+            if (response.status === 200 && response.headers.get('content-type')?.includes('text/html')) {
+                console.log('❌ Got redirected to login page - session expired');
+                return null;
+            }
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            if (!data) {
+                console.log('⚠️ Session expired - trying test endpoint');
+                loadSmartSuggestionsTest();
+                return;
+            }
+            
+            console.log('📦 Smart suggestions data:', data);
+            if (data.ok && data.data && data.data.suggestions && data.data.suggestions.length > 0) {
+                displaySmartSuggestions(data.data.suggestions);
+            } else {
+                console.log('ℹ️ No smart suggestions available, trying test endpoint');
+                loadSmartSuggestionsTest();
+            }
+        })
+        .catch(error => {
+            console.log('❌ Smart suggestions error:', error);
+            console.log('🔄 Trying test endpoint as fallback');
+            loadSmartSuggestionsTest();
+        });
+}
+
+// Fallback test function
+function loadSmartSuggestionsTest() {
+    console.log('🧪 Loading test smart suggestions');
+    
+    fetch(`/leads/${LEAD_ID}/smart-suggestions-test`, {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log('📦 Test suggestions data:', data);
+            if (data.ok && data.suggestions) {
+                displaySmartSuggestions(data.suggestions);
+            }
+        })
+        .catch(error => {
+            console.log('❌ Test endpoint also failed:', error);
+        });
+}
+
+// Display smart suggestions in the panel
+function displaySmartSuggestions(suggestions) {
+    const panel = document.getElementById('smartSuggestionsPanel');
+    const list = document.getElementById('smartSuggestionsList');
+    
+    let html = '<div class="mb-2"><small class="text-muted">Recommended actions for this stage:</small></div>';
+    
+    suggestions.forEach((suggestion, index) => {
+        const priorityClass = suggestion.priority === 'High' ? 'text-danger' : 
+                            suggestion.priority === 'Medium' ? 'text-warning' : 'text-info';
+        
+        html += `
+            <div class="d-flex align-items-center mb-2">
+                <span class="badge bg-light text-dark me-2">${suggestion.priority}</span>
+                <button class="btn btn-sm btn-outline-primary me-2" 
+                        onclick="applySuggestion('${suggestion.action}', '${suggestion.reason}')">
+                    Apply
+                </button>
+                <small class="${priorityClass}">
+                    <strong>${suggestion.action}:</strong> ${suggestion.reason}
+                </small>
+            </div>
+        `;
+    });
+    
+    list.innerHTML = html;
+    panel.style.display = 'block';
+}
+
+// Apply a smart suggestion to the form
+function applySuggestion(actionType, template) {
+    // Set the followup type if it matches our dropdown options
+    const typeSelect = document.getElementById('followupType');
+    const typeOptions = Array.from(typeSelect.options).map(option => option.value);
+    
+    if (typeOptions.includes(actionType)) {
+        typeSelect.value = actionType;
+    }
+    
+    // Set the notes from template
+    const notesTextarea = document.getElementById('followupNotes');
+    notesTextarea.value = template;
+    
+    // Add helpful text
+    document.getElementById('followupTypeHelp').innerHTML = 
+        `<i class="fas fa-robot text-primary"></i> Smart suggestion applied: ${actionType}`;
+}
+
+// Check for scheduling conflicts when date/time changes
+function checkSchedulingConflicts() {
+    const followupDate = document.getElementById('followupDate').value;
+    const followupType = document.getElementById('followupType').value;
+    
+    if (!followupDate || !followupType) return;
+    
+    const data = {
+        next_action_at: followupDate,
+        channel: followupType
+    };
+    
+    fetch(`/leads/${LEAD_ID}/check-conflicts`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.conflicts && data.conflicts.length > 0) {
+            displayConflictWarning(data.conflicts, data.alternatives);
+        } else {
+            hideConflictWarning();
+        }
+    })
+    .catch(error => {
+        console.log('Conflict check not available:', error);
+    });
+}
+
+// Display conflict warning with alternatives
+function displayConflictWarning(conflicts, alternatives) {
+    const panel = document.getElementById('conflictWarningPanel');
+    const message = document.getElementById('conflictWarningMessage');
+    const alternativesList = document.getElementById('alternativeTimesList');
+    
+    message.innerHTML = `
+        <p class="mb-2">You have ${conflicts.length} conflicting appointment(s) at this time:</p>
+        <ul class="mb-0">
+            ${conflicts.map(c => `<li>${c.channel} - ${c.note}</li>`).join('')}
+        </ul>
+    `;
+    
+    if (alternatives && alternatives.length > 0) {
+        let altHtml = '<div class="mt-2"><small class="text-muted">Suggested alternative times:</small></div>';
+        alternatives.forEach(alt => {
+            const altDate = new Date(alt).toLocaleString();
+            altHtml += `
+                <button class="btn btn-sm btn-outline-success me-2 mb-1" 
+                        onclick="useAlternativeTime('${alt}')">
+                    ${altDate}
+                </button>
+            `;
+        });
+        alternativesList.innerHTML = altHtml;
+    }
+    
+    panel.style.display = 'block';
+}
+
+// Hide conflict warning panel
+function hideConflictWarning() {
+    document.getElementById('conflictWarningPanel').style.display = 'none';
+}
+
+// Use suggested alternative time
+function useAlternativeTime(isoDateTime) {
+    document.getElementById('followupDate').value = isoDateTime.slice(0, 16);
+    hideConflictWarning();
+    // Re-check for conflicts with new time
+    checkSchedulingConflicts();
+}
+
+// Auto-update stage when lead status might change
+function triggerAutoStageUpdate() {
+    fetch(`/leads/${LEAD_ID}/auto-update-stage`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.updated) {
+            console.log('🤖 Stage auto-updated:', data.message);
+            // Optionally show a notification
+            if (data.new_stage) {
+                const toast = document.createElement('div');
+                toast.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 350px;';
+                toast.innerHTML = `
+                    <i class="fas fa-robot"></i> <strong>Smart Update:</strong> 
+                    Stage automatically updated to "${data.new_stage}"
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 5000);
+            }
+        }
+    })
+    .catch(error => {
+        console.log('Auto-update not available:', error);
+    });
+}
+
+// ============================================
+
+// DEBUG: Manual test function for smart suggestions
+window.testSmartSuggestions = function() {
+    console.log('🧪 Manual test: Force showing smart suggestions panel');
+    
+    const panel = document.getElementById('smartSuggestionsPanel');
+    const list = document.getElementById('smartSuggestionsList');
+    
+    if (panel && list) {
+        // Show test suggestions
+        const testSuggestions = [
+            { action: 'Outbound Call', priority: 'High', reason: 'Initial contact to qualify lead' },
+            { action: 'WhatsApp', priority: 'Medium', reason: 'Quick introduction message' },
+            { action: 'Email', priority: 'Low', reason: 'Send course information' }
+        ];
+        
+        displaySmartSuggestions(testSuggestions);
+        console.log('✅ Test suggestions displayed');
+    } else {
+        console.log('❌ Smart suggestion elements not found');
+    }
+};
+
+// Preselect followup type and open modal
+function openFollowup(type) {
+    document.getElementById('followupType').value = type;
+    const modal = new bootstrap.Modal(document.getElementById('followupModal'));
+    modal.show();
+    
+    // Phase 2: Test if smart suggestions elements exist
+    const panel = document.getElementById('smartSuggestionsPanel');
+    const list = document.getElementById('smartSuggestionsList');
+    
+    console.log('🧪 Testing smart suggestions elements:');
+    console.log('Panel exists:', !!panel);
+    console.log('List exists:', !!list);
+    
+    if (panel && list) {
+        // Show a test message first
+        list.innerHTML = '<div class="text-muted">🔄 Loading smart suggestions...</div>';
+        panel.style.display = 'block';
+        
+        // Then try to load real suggestions
+        setTimeout(() => {
+            loadSmartSuggestions();
+        }, 500);
+    } else {
+        console.log('❌ Smart suggestion elements not found in DOM');
+    }
+}
+
+// Submit follow-up form  
+function submitFollowup() {
+    console.log('🔄 submitFollowup() called');
+    
+    // Get form data
+    const followupDate = document.getElementById('followupDate').value;
+    const followupType = document.getElementById('followupType').value;
+    const followupNotes = document.getElementById('followupNotes').value.trim();
+    
+    console.log('📋 Form data:', {
+        followupDate,
+        followupType,
+        followupNotes,
+        leadId: LEAD_ID
+    });
+    
+    // Validation
+    if (!followupDate) {
+        alert('Please select a date and time for the follow-up');
+        console.log('❌ Validation failed: No date');
+        return;
+    }
+    
+    if (!followupType) {
+        alert('Please select a follow-up type');
+        console.log('❌ Validation failed: No type');
+        return;
+    }
+    
+    // Prepare data for backend
+    const data = {
+        lead_id: LEAD_ID,
+        next_action_at: followupDate,
+        channel: followupType,
+        note: followupNotes || 'Follow-up scheduled'
+    };
+    
+    console.log('📤 Sending data to backend:', data);
+    console.log('🔗 URL:', `/leads/${LEAD_ID}/followups`);
+    
+    // Show loading state
+    const btn = document.querySelector('button[onclick="submitFollowup()"]');
+    if (btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scheduling...';
+        btn.disabled = true;
+        
+        // Submit to backend
+        fetch(`/leads/${LEAD_ID}/followups`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            console.log('📥 Response status:', response.status);
+            console.log('📥 Response headers:', response.headers);
+            
+            // Phase 2: Handle conflict responses (409 status)
+            if (response.status === 409) {
+                return response.json().then(conflictData => {
+                    console.log('⚠️ Conflict detected:', conflictData);
+                    if (conflictData.conflicts) {
+                        displayConflictWarning(conflictData.conflicts, conflictData.alternatives);
+                    }
+                    throw new Error(`Scheduling conflict: ${conflictData.message}`);
+                });
+            }
+            
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            console.log('📥 Content-Type:', contentType);
+            
+            if (contentType && contentType.indexOf('application/json') !== -1) {
+                return response.json();
+            } else {
+                // If not JSON, get text to see what was returned
+                return response.text().then(text => {
+                    console.error('❌ Non-JSON response received:', text.substring(0, 500));
+                    throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}. Content starts with: ${text.substring(0, 100)}`);
+                });
+            }
+        })
+        .then(data => {
+            console.log('📦 Response data:', data);
+            
+            // Reset button state
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            
+            // Check for success - same as complete followup
+            if (data.ok || data.success || data.message) {
+                console.log('✅ Success! Closing modal and reloading page');
+                
+                // Phase 2: Trigger auto-update stage after successful followup
+                triggerAutoStageUpdate();
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('followupModal'));
+                if (modal) {
+                    modal.hide();
+                    console.log('✅ Modal closed');
+                } else {
+                    console.log('⚠️ Modal instance not found');
+                }
+                
+                // Show success message
+                alert('✅ ' + (data.message || data.data?.message || 'Follow-up scheduled successfully!'));
+                
+                // Reload page to show updates
+                setTimeout(() => {
+                    console.log('🔄 Reloading page...');
+                    window.location.reload();
+                }, 1000);
+            } else {
+                console.log('❌ Error in response:', data);
+                console.log('❌ Data.error:', data.error);
+                console.log('❌ Data keys:', Object.keys(data));
+                alert('❌ Error: ' + (data.error || data.message || 'Failed to schedule follow-up'));
+            }
+        })
+        .catch(error => {
+            console.error('💥 Fetch error:', error);
+            // Reset button state
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert('❌ Error scheduling follow-up: ' + error.message);
+        });
+    } else {
+        console.log('❌ Button not found!');
+    }
+}
+
+// Course management functions for conversion modal
+function updateSelectedCoursesConversion() {
+    const checkboxes = document.querySelectorAll('.course-checkbox:checked');
+    const selectedContainer = document.getElementById('selectedCoursesConversion');
+    const badgesContainer = document.getElementById('selectedCourseBadgesConversion');
+    const hiddenInput = document.getElementById('courseName');
+    
+    if (checkboxes.length > 0) {
+        selectedContainer.classList.remove('d-none');
+        badgesContainer.innerHTML = '';
+        
+        let courseNames = [];
+        checkboxes.forEach(checkbox => {
+            const courseName = checkbox.getAttribute('data-course-name');
+            courseNames.push(courseName);
+            
+            const badge = document.createElement('span');
+            badge.className = 'course-badge';
+            badge.textContent = courseName;
+            badgesContainer.appendChild(badge);
+        });
+        
+        // Update hidden input with selected course names
+        hiddenInput.value = courseNames.join(', ');
+    } else {
+        selectedContainer.classList.add('d-none');
+        hiddenInput.value = '';
+    }
+}
+
+// Initialize course selection when modal opens
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to course checkboxes
+    const courseCheckboxes = document.querySelectorAll('.course-checkbox');
+    courseCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCoursesConversion);
+    });
+    
+    // Pre-select courses based on lead's course interest when conversion modal opens
+    const convertModal = document.getElementById('convertToStudentModal');
+    if (convertModal) {
+        convertModal.addEventListener('show.bs.modal', function() {
+            console.log('🎯 Conversion modal opening - pre-selecting lead courses');
+            preselectLeadCourses();
+        });
+    }
+    
+    // Load smart suggestions when follow-up modal opens
+    const followupModal = document.getElementById('followupModal');
+    if (followupModal) {
+        followupModal.addEventListener('show.bs.modal', function() {
+            console.log('🤖 Follow-up modal opening - loading smart suggestions');
+            setTimeout(() => {
+                loadSmartSuggestions();
+            }, 500); // Small delay to ensure modal is fully rendered
+        });
+    }
+    
+    // Add DOB validation for age limits (8-50 years)
+    const dobField = document.getElementById('studentDob');
+    if (dobField) {
+        dobField.addEventListener('change', function() {
+            validateDOB(this);
+        });
+        
+        dobField.addEventListener('blur', function() {
+            validateDOB(this);
+        });
+    }
+    
+    // Initialize display for any pre-selected courses
+    updateSelectedCoursesConversion();
+});
+
+// Validate Date of Birth function
+function validateDOB(dobInput) {
+    const dobValue = dobInput.value;
+    const feedbackDiv = document.getElementById('dobFeedback');
+    
+    if (!dobValue) {
+        // DOB is optional, so clear any error states
+        dobInput.classList.remove('is-invalid', 'is-valid');
+        return true;
+    }
+    
+    const dobDate = new Date(dobValue);
+    const today = new Date();
+    let age = today.getFullYear() - dobDate.getFullYear();
+    const monthDiff = today.getMonth() - dobDate.getMonth();
+    
+    // Adjust age if birthday hasn't occurred this year
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
+        age--;
+    }
+    
+    if (age < 8) {
+        dobInput.classList.add('is-invalid');
+        dobInput.classList.remove('is-valid');
+        if (feedbackDiv) {
+            feedbackDiv.textContent = 'Student must be at least 8 years old';
+        }
+        return false;
+    } else if (age > 50) {
+        dobInput.classList.add('is-invalid');
+        dobInput.classList.remove('is-valid');
+        if (feedbackDiv) {
+            feedbackDiv.textContent = 'Student must be 50 years or younger';
+        }
+        return false;
+    } else {
+        dobInput.classList.remove('is-invalid');
+        dobInput.classList.add('is-valid');
+        if (feedbackDiv) {
+            feedbackDiv.textContent = `Age: ${age} years (Valid)`;
+            feedbackDiv.style.color = 'green';
+        }
+        return true;
+    }
+}
+
+// Pre-select courses that match the lead's interest
+function preselectLeadCourses() {
+    const leadCourseInterest = "{{ lead.course_interest or '' }}";
+    console.log('🎯 Lead course interest:', leadCourseInterest);
+    
+    if (!leadCourseInterest || leadCourseInterest === 'Not specified') {
+        console.log('❌ No specific course interest found');
+        return;
+    }
+    
+    // Clear any existing selections first
+    const courseCheckboxes = document.querySelectorAll('.course-checkbox');
+    courseCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // Split course interest by common separators (comma, 'and', '+', '&')
+    const courseNames = leadCourseInterest
+        .split(/[,+&]|\sand\s/)
+        .map(name => name.trim().toLowerCase())
+        .filter(name => name.length > 0);
+    
+    console.log('🔍 Searching for courses:', courseNames);
+    
+    let matchedCourses = 0;
+    
+    // Try to match courses with the lead's interest
+    courseCheckboxes.forEach(checkbox => {
+        const courseName = checkbox.getAttribute('data-course-name');
+        const courseNameLower = courseName.toLowerCase();
+        
+        // Check if any of the lead's course interests match this course
+        const isMatch = courseNames.some(leadCourse => {
+            // Exact match
+            if (leadCourse === courseNameLower) return true;
+            
+            // Partial match (course contains lead interest or vice versa)
+            if (courseNameLower.includes(leadCourse) || leadCourse.includes(courseNameLower)) return true;
+            
+            // Common abbreviations and variations
+            const variations = {
+                'computer': ['comp', 'pc', 'computer course'],
+                'basic': ['basic computer', 'bcc', 'basic comp'],
+                'advanced': ['adv', 'advance'],
+                'excel': ['ms excel', 'microsoft excel', 'excel course'],
+                'dfa': ['diploma in financial accounting', 'financial accounting'],
+                'tally': ['tally erp', 'tally prime', 'tally course'],
+                'dca': ['diploma in computer application', 'computer application'],
+                'data': ['data entry', 'data science'],
+                'web': ['web design', 'web development', 'website'],
+                'digital': ['digital marketing', 'dm'],
+                'python': ['python programming', 'python course'],
+                'java': ['java programming', 'core java'],
+                'mis': ['management information system']
+            };
+            
+            // Check variations
+            for (const [key, vars] of Object.entries(variations)) {
+                if ((leadCourse.includes(key) && vars.some(v => courseNameLower.includes(v))) ||
+                    (courseNameLower.includes(key) && vars.some(v => leadCourse.includes(v)))) {
+                    return true;
+                }
+            }
+            
+            return false;
+        });
+        
+        if (isMatch) {
+            checkbox.checked = true;
+            matchedCourses++;
+            console.log('✅ Pre-selected course:', courseName);
+        }
+    });
+    
+    console.log(`🎯 Pre-selected ${matchedCourses} courses based on lead interest`);
+    
+    // Update the display
+    updateSelectedCoursesConversion();
+    
+    // Show a helpful message to the counselor
+    if (matchedCourses > 0) {
+        const messageDiv = document.querySelector('#convertToStudentModal .alert-info');
+        if (messageDiv) {
+            messageDiv.innerHTML = `
+                <i class="fas fa-lightbulb"></i>
+                <strong>Auto-selected courses:</strong> Based on this lead's original course interest 
+                "<em>${leadCourseInterest}</em>", we've pre-selected ${matchedCourses} matching course(s). 
+                You can modify the selection as needed for the admission.
+            `;
+        }
+    }
+}
+
+// Convert Lead to Student function
+function submitConvertToStudent() {
+    console.log('🔄 submitConvertToStudent() called');
+    
+    // Get form data
+    const formData = {
+        full_name: document.getElementById('studentFullName').value.trim(),
+        gender: document.getElementById('studentGender').value,
+        dob: document.getElementById('studentDob').value,
+        mobile: document.getElementById('studentMobile').value.trim(),
+        email: document.getElementById('studentEmail').value.trim(),
+        qualification: document.getElementById('studentQualification').value.trim(),
+        address: document.getElementById('studentAddress').value.trim(),
+        guardian_name: document.getElementById('guardianName').value.trim(),
+        guardian_mobile: document.getElementById('guardianMobile').value.trim(),
+        course_name: document.getElementById('courseName').value.trim(),
+        course_package: document.getElementById('coursePackage').value,
+        admission_mode: document.getElementById('admissionMode').value,
+        referred_by: document.getElementById('referredBy').value.trim(),
+        batch_id: document.getElementById('batchId').value || null,
+        admission_date: document.getElementById('admissionDate').value
+    };
+    
+    console.log('📋 Form data:', formData);
+    
+    // Validation
+    if (!formData.full_name) {
+        alert('Please enter the student\'s full name');
+        return;
+    }
+    
+    if (!formData.mobile) {
+        alert('Please enter the student\'s mobile number');
+        return;
+    }
+    
+    if (!formData.course_name) {
+        alert('Please select at least one course');
+        return;
+    }
+    
+    // Validate Date of Birth and age limits (8-50 years)
+    if (formData.dob) {
+        const dobField = document.getElementById('studentDob');
+        if (!validateDOB(dobField)) {
+            // validateDOB function will show the appropriate error message
+            return;
+        }
+        console.log('✅ DOB validation passed');
+    }
+    
+    console.log('📤 Converting lead to student...');
+    console.log('🔗 URL:', `/leads/${LEAD_ID}/convert`);
+    
+    // Show loading state
+    const btn = document.querySelector('button[onclick="submitConvertToStudent()"]');
+    if (btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...';
+        btn.disabled = true;
+        
+        // Submit to backend
+        fetch(`/leads/${LEAD_ID}/convert`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            console.log('📥 Response status:', response.status);
+            
+            const contentType = response.headers.get('content-type');
+            console.log('📥 Content-Type:', contentType);
+            
+            if (contentType && contentType.indexOf('application/json') !== -1) {
+                return response.json();
+            } else {
+                return response.text().then(text => {
+                    console.error('❌ Non-JSON response received:', text.substring(0, 500));
+                    throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}`);
+                });
+            }
+        })
+        .then(data => {
+            console.log('📦 Response data:', data);
+            
+            // Reset button state
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            
+            if (data.ok || data.success || data.message) {
+                console.log('✅ Success! Lead converted to student');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('convertToStudentModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // Show success message with student ID
+                const studentId = data.data?.student_sid || data.student_sid || 'Unknown';
+                alert(`✅ Success! Lead converted to student.\nStudent ID: ${studentId}`);
+                
+                // Reload page to show updates
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                console.log('❌ Error in response:', data);
+                alert('❌ Error: ' + (data.error || data.message || 'Failed to convert lead'));
+            }
+        })
+        .catch(error => {
+            console.error('💥 Conversion error:', error);
+            // Reset button state
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert('❌ Error converting lead: ' + error.message);
+        });
+    }
+}
+
+// Toggle next action scheduling section
+function toggleNextActionSection() {
+    const checkbox = document.getElementById('scheduleNextAction');
+    const section = document.getElementById('nextActionSection');
+    
+    if (checkbox && section) {
+        if (checkbox.checked) {
+            section.style.display = 'block';
+            section.classList.remove('d-none');
+            
+            // Auto-focus on next action date
+            const nextActionAt = document.getElementById('nextActionAt');
+            if (nextActionAt) {
+                setTimeout(() => nextActionAt.focus(), 100);
+            }
+        } else {
+            section.style.display = 'none';
+            section.classList.add('d-none');
+            
+            // Clear values when hidden
+            document.getElementById('nextActionAt').value = '';
+            document.getElementById('nextAction').value = '';
+        }
+    }
+}
+
+console.log("✅ Clean script loaded!");
+console.log("✅ Lead ID:", LEAD_ID);
+console.log("✅ Functions available:", {
+    completeFollowup: typeof window.completeFollowup,
+    openFollowup: typeof openFollowup,
+    submitFollowup: typeof submitFollowup
+});
+</script>
+{% endblock %}

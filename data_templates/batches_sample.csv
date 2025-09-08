@@ -1,0 +1,11 @@
+name,course_id,branch_id,start_date,end_date,timing,max_capacity,status
+"CCOM-Jan24-Morning",1,1,"2024-01-15","2024-04-15","9:00 AM - 12:00 PM",25,"Active"
+"CCOM-Jan24-Evening",1,1,"2024-01-15","2024-04-15","6:00 PM - 9:00 PM",25,"Active"
+"PYTHON-Feb24-Morning",2,1,"2024-02-01","2024-08-01","9:00 AM - 1:00 PM",20,"Active"
+"PYTHON-Feb24-Evening",2,2,"2024-02-01","2024-08-01","6:00 PM - 10:00 PM",20,"Active"
+"DM-Mar24-Weekend",3,2,"2024-03-01","2024-07-01","10:00 AM - 4:00 PM",30,"Active"
+"JAVA-Mar24-Morning",4,3,"2024-03-15","2024-08-15","9:00 AM - 1:00 PM",22,"Active"
+"REACT-Apr24-Evening",5,3,"2024-04-01","2024-08-01","6:00 PM - 10:00 PM",18,"Active"
+"DS-Apr24-Weekend",6,1,"2024-04-15","2024-10-15","9:00 AM - 5:00 PM",15,"Active"
+"GD-May24-Morning",7,4,"2024-05-01","2024-08-01","10:00 AM - 1:00 PM",20,"Active"
+"HW-May24-Evening",9,5,"2024-05-15","2024-09-15","6:00 PM - 9:00 PM",25,"Active"

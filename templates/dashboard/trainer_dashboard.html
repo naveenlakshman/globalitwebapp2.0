@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% block title %}Trainer Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>Trainer Dashboard
+                    </h2>
+                    <p class="text-secondary mb-0">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        {% if branch %}
+                            {{ branch.branch_name }} - {{ branch.address }}
+                        {% else %}
+                            {{ branch_name }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="text-end">
+                    <small class="text-secondary">Teaching Overview</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Performance Indicators -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">
+                                My Students
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">{{ total_students }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">
+                                My Batches
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">{{ total_batches }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">
+                                Today's Classes
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">{{ today_classes|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-day fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+                                Attendance Rate
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">{{ attendance_rate }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-check fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-rocket me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <a href="{{ url_for('attendance.trainer_batches') }}" class="btn btn-success btn-block">
+                                <i class="fas fa-clipboard-check me-2"></i>Mark Attendance
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <a href="{{ url_for('attendance.trainer_batches') }}" class="btn btn-primary btn-block">
+                                <i class="fas fa-graduation-cap me-2"></i>My Batches
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <a href="#" class="btn btn-info btn-block" onclick="showComingSoon('Student Progress')">
+                                <i class="fas fa-chart-line me-2"></i>Student Progress
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <a href="#" class="btn btn-warning btn-block" onclick="showComingSoon('Course Materials')">
+                                <i class="fas fa-book me-2"></i>Course Materials
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Management Section -->
+    <div class="row mb-4" id="attendanceSection">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-success">
+                        <i class="fas fa-clipboard-check me-2"></i>My Batches & Attendance Management
+                    </h6>
+                    <div>
+                        <a href="{{ url_for('attendance.trainer_batches') }}" class="btn btn-sm btn-outline-primary me-2">
+                            <i class="fas fa-list me-1"></i>View All Batches
+                        </a>
+                        <small class="text-secondary">{{ attendance_summary|length }} Active Batch{{ 'es' if attendance_summary|length != 1 else '' }}</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if attendance_summary %}
+                        <div class="row">
+                            {% for batch_attendance in attendance_summary %}
+                            <div class="col-lg-6 col-xl-4 mb-4">
+                                <div class="card border-left-{% if batch_attendance.attendance_marked %}success{% else %}warning{% endif %} h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div>
+                                                <h6 class="fw-bold text-primary">{{ batch_attendance.batch_name }}</h6>
+                                                <p class="text-sm text-secondary mb-1">{{ batch_attendance.course_name }}</p>
+                                                <p class="text-sm mb-2">
+                                                    <i class="fas fa-users me-1"></i>{{ batch_attendance.total_students }} Students
+                                                </p>
+                                                {% if batch_attendance.attendance_marked %}
+                                                    <span class="badge badge-success">
+                                                        <i class="fas fa-check me-1"></i>{{ batch_attendance.present_today }}/{{ batch_attendance.total_today }} Present Today
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-warning">
+                                                        <i class="fas fa-exclamation-triangle me-1"></i>Attendance Not Marked
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <a href="{{ url_for('attendance.batch_attendance', batch_id=batch_attendance.batch_id) }}" 
+                                                   class="btn btn-sm btn-{% if batch_attendance.attendance_marked %}primary{% else %}success{% endif %} btn-block">
+                                                    <i class="fas fa-{% if batch_attendance.attendance_marked %}edit{% else %}plus{% endif %} me-1"></i>
+                                                    {% if batch_attendance.attendance_marked %}Edit{% else %}Mark{% endif %} Attendance
+                                                </a>
+                                            </div>
+                                            <div class="col-6">
+                                                <a href="{{ url_for('batches.view_batch', batch_id=batch_attendance.batch_id) }}" 
+                                                   class="btn btn-sm btn-outline-info btn-block">
+                                                    <i class="fas fa-eye me-1"></i>View Batch
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users-slash fa-3x text-gray-400 mb-3"></i>
+                            <h5 class="text-gray-600">No Batches Assigned</h5>
+                            <p class="text-secondary">You are not assigned to any batches yet. Contact your branch manager for batch assignments.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="row">
+        <!-- Recent Students -->
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-users me-2"></i>Recent Student Enrollments
+                    </h6>
+                    <small class="text-secondary">Latest students in my batches</small>
+                </div>
+                <div class="card-body">
+                    {% if recent_students %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
+                                        <th>Course</th>
+                                        <th>Contact</th>
+                                        <th>Admission Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in recent_students %}
+                                    <tr>
+                                        <td><strong>{{ student.student_id }}</strong></td>
+                                        <td>
+                                            <div>
+                                                {{ student.full_name }}
+                                                <br>
+                                                <small class="text-secondary">{{ student.gender }} • {{ student.qualification or 'N/A' }}</small>
+                                            </div>
+                                        </td>
+                                        <td>{{ student.course_name or 'Not Assigned' }}</td>
+                                        <td>
+                                            <div>
+                                                <i class="fas fa-phone me-1"></i>{{ student.mobile }}
+                                                <br>
+                                                <small class="text-secondary">{{ student.email }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <small>{{ student.admission_date|format_date_indian if student.admission_date else 'N/A' }}</small>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('students.view_student', student_id=student.student_id) }}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-user"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-secondary mb-3"></i>
+                            <p class="text-secondary">No recent student enrollments in your batches</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showComingSoon(feature) {
+    alert(`🚧 ${feature} feature is coming soon!\n\nThis will provide comprehensive ${feature.toLowerCase()} functionality for trainers.`);
+}
+</script>
+
+<style>
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 4px solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 4px solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 4px solid #f6c23e !important;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.card-body .progress {
+    background-color: #e3e6f0;
+}
+
+.table th {
+    border-top: none;
+}
+</style>
+{% endblock %}

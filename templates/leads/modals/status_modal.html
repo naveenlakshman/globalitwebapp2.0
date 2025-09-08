@@ -1,0 +1,52 @@
+<!-- Status Update Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Lead Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Current Status</label>
+                    <select class="form-select" id="currentStatus">
+                        <option value="Open">🔵 Open - Fresh lead, not yet contacted</option>
+                        <option value="In Progress">🔄 In Progress - Contacted, under discussion</option>
+                        <option value="Follow-up Scheduled">📅 Follow-up Scheduled - Waiting for next contact date</option>
+                        <option value="Demo Scheduled">🎯 Demo Scheduled - Lead booked for demo class</option>
+                        <option value="Admission Visit Scheduled">🏢 Admission Visit Scheduled - Lead confirmed visit for enrollment</option>
+                        <option value="Converted">✅ Converted - Joined & paid fees</option>
+                        <option value="Not Interested">❌ Not Interested - Lead closed without joining</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes <span class="text-danger" id="reasonRequired" style="display:none;">*Required for Not Interested</span></label>
+                    <textarea class="form-control" id="statusNotes" rows="3"
+                              placeholder="Add notes about the status change"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateStatus()">Update Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide required indicator for notes when status changes
+document.addEventListener('DOMContentLoaded', function() {
+    const statusSelect = document.getElementById('currentStatus');
+    const reasonRequired = document.getElementById('reasonRequired');
+    
+    if (statusSelect && reasonRequired) {
+        statusSelect.addEventListener('change', function() {
+            if (this.value === 'Not Interested') {
+                reasonRequired.style.display = 'inline';
+            } else {
+                reasonRequired.style.display = 'none';
+            }
+        });
+    }
+});
+</script>

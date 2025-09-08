@@ -1,0 +1,4 @@
+/* Login/Register pages */
+.auth-wrapper{min-height:100vh; display:grid; place-items:center; background:var(--bg-secondary)}
+.auth-card{background:#fff; border-radius:var(--radius-xl); box-shadow:var(--shadow-lg); padding:var(--space-2xl); width:min(480px,90vw)}
+.auth-card .brand{display:flex; align-items:center; gap:.75rem; color:var(--brand-primary); font-weight:var(--font-bold); font-size:var(--text-xl); text-decoration:none}

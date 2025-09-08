@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Create Section - {{ module.module_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('lms.admin_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('courses.list_courses') }}">Courses</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('courses.course_modules', course_id=module.course_id) }}">{{ module.course.course_name }} - Modules</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('courses.module_sections', module_id=module.id) }}">{{ module.module_name }} - Sections</a></li>
+                    <li class="breadcrumb-item active">Create Section</li>
+                </ol>
+            </nav>
+
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-list"></i> Create New Section</h4>
+                    <p class="mb-0 text-muted">Module: {{ module.module_name }}</p>
+                </div>
+                <div class="card-body">
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('courses.create_section', module_id=module.id) }}">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="section_name" class="form-label">Section Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="section_name" name="section_name" 
+                                           placeholder="Enter section name" required maxlength="255">
+                                    <div class="form-text">Give your section a clear, descriptive name</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="section_description" class="form-label">Section Description</label>
+                                    <textarea class="form-control" id="section_description" name="section_description" 
+                                              rows="3" placeholder="Describe what this section covers..."></textarea>
+                                    <div class="form-text">Provide a description of the section content</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="section_type" class="form-label">Section Type</label>
+                                    <select class="form-control" id="section_type" name="section_type">
+                                        <option value="content">Content</option>
+                                        <option value="video">Video</option>
+                                        <option value="quiz">Quiz</option>
+                                        <option value="assignment">Assignment</option>
+                                        <option value="discussion">Discussion</option>
+                                        <option value="document">Document</option>
+                                    </select>
+                                    <div class="form-text">What type of content will this section contain?</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="estimated_duration_minutes" class="form-label">Estimated Duration (Minutes)</label>
+                                    <input type="number" class="form-control" id="estimated_duration_minutes" 
+                                           name="estimated_duration_minutes" min="1" step="1" value="30" placeholder="e.g., 30">
+                                    <div class="form-text">How many minutes to complete this section?</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="learning_outcomes" class="form-label">Learning Outcomes</label>
+                                    <textarea class="form-control" id="learning_outcomes" name="learning_outcomes" 
+                                              rows="3" placeholder="What will students learn from this section?"></textarea>
+                                    <div class="form-text">List the specific learning outcomes for this section</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Section Options</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_mandatory" name="is_mandatory">
+                                        <label class="form-check-label" for="is_mandatory">
+                                            <strong>Mandatory Section</strong>
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Check if this section is required for module completion</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section Type Information -->
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6><i class="fas fa-info-circle"></i> Section Types</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <ul class="mb-0 small">
+                                            <li><strong>Content:</strong> General text-based content</li>
+                                            <li><strong>Video:</strong> Video lectures or tutorials</li>
+                                            <li><strong>Quiz:</strong> Assessment questions</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <ul class="mb-0 small">
+                                            <li><strong>Assignment:</strong> Practical tasks</li>
+                                            <li><strong>Discussion:</strong> Forum discussions</li>
+                                            <li><strong>Document:</strong> PDF or downloadable materials</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('courses.module_sections', module_id=module.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Sections
+                            </a>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Create Section
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-resize textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const sectionName = document.getElementById('section_name').value.trim();
+        if (!sectionName) {
+            e.preventDefault();
+            alert('Please enter a section name');
+            document.getElementById('section_name').focus();
+        }
+    });
+
+    // Update duration suggestion based on section type
+    const sectionType = document.getElementById('section_type');
+    const duration = document.getElementById('estimated_duration_minutes');
+    
+    sectionType.addEventListener('change', function() {
+        const suggestions = {
+            'video': 15,
+            'quiz': 10,
+            'assignment': 60,
+            'discussion': 20,
+            'document': 10,
+            'content': 30
+        };
+        
+        if (suggestions[this.value]) {
+            duration.value = suggestions[this.value];
+        }
+    });
+});
+</script>
+{% endblock %}

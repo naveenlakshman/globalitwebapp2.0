@@ -1,0 +1,691 @@
+{% extends "base.html" %}
+{% block title %}Create New Lead{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 lead-create">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">
+        <i class="fas fa-user-plus text-primary me-2"></i>
+        Create New Lead
+      </h1>
+      <p class="text-muted mb-0">Capture and manage new potential student leads</p>
+    </div>
+    <a href="{{ url_for('leads.lead_list') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left me-1"></i>Back to Leads
+    </a>
+  </div>
+
+  <form method="POST" action="{{ url_for('leads.lead_store') }}" id="leadCreateForm" novalidate>
+    <div class="row">
+      <!-- Left Column -->
+      <div class="col-lg-8">
+
+        <!-- 1. Basic Contact Information -->
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-user"></i>
+            Basic Contact Information
+          </div>
+          <div class="section-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="name" class="form-label required">Full Name</label>
+                <input type="text" class="form-control" id="name" name="name"
+                       required placeholder="Enter full name"
+                       value="{{ request.form.name or '' }}">
+                <div class="invalid-feedback">Please enter the lead's full name</div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="mobile" class="form-label required">Mobile Number</label>
+                <input type="tel" class="form-control" id="mobile" name="mobile"
+                       required pattern="[6-9][0-9]{9}" maxlength="10"
+                       placeholder="10-digit mobile number"
+                       value="{{ request.form.mobile or '' }}">
+                <div class="form-text">Enter 10-digit Indian mobile number (starts with 6, 7, 8, or 9)</div>
+                <div class="invalid-feedback">Please enter a valid 10-digit Indian mobile number</div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email"
+                       placeholder="email@example.com"
+                       value="{{ request.form.email or '' }}">
+                <div class="invalid-feedback">Please enter a valid email address</div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="alt_mobile" class="form-label">Alternate Mobile</label>
+                <input type="tel" class="form-control" id="alt_mobile" name="alt_mobile"
+                       pattern="[6-9][0-9]{9}" maxlength="10"
+                       placeholder="10-digit alternate mobile"
+                       value="{{ request.form.alt_mobile or '' }}">
+                <div class="form-text">Optional - Enter 10-digit Indian mobile number</div>
+                <div class="invalid-feedback">Please enter a valid 10-digit Indian mobile number</div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="address" class="form-label">Address</label>
+              <textarea class="form-control" id="address" name="address" rows="2"
+                        placeholder="Enter complete address">{{ request.form.address or '' }}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Lead Source & Branch -->
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-map-marker-alt"></i>
+            Lead Source & Branch Information
+          </div>
+          <div class="section-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="lead_source" class="form-label required">Lead Source</label>
+                <select class="form-select" id="lead_source" name="lead_source" required>
+                  <option value="Walk-in" {% if request.form.lead_source == 'Walk-in' or not request.form.lead_source %}selected{% endif %}>Walk-in</option>
+                  <option value="Referral" {% if request.form.lead_source == 'Referral' %}selected{% endif %}>Referral</option>
+                  <option value="Phone" {% if request.form.lead_source == 'Phone' %}selected{% endif %}>Phone Call</option>
+                  <option value="Instagram" {% if request.form.lead_source == 'Instagram' %}selected{% endif %}>Instagram</option>
+                  <option value="Facebook" {% if request.form.lead_source == 'Facebook' %}selected{% endif %}>Facebook</option>
+                  <option value="Google" {% if request.form.lead_source == 'Google' %}selected{% endif %}>Google Search</option>
+                  <option value="College Visit" {% if request.form.lead_source == 'College Visit' %}selected{% endif %}>College Visit</option>
+                  <option value="Tally" {% if request.form.lead_source == 'Tally' %}selected{% endif %}>Tally Partnership</option>
+                  <option value="Other" {% if request.form.lead_source == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="branch_id" class="form-label required">Branch</label>
+                <select class="form-select" id="branch_id" name="branch_id" required>
+                  <option value="">Select Branch</option>
+                  {% for branch in branches %}
+                  <option value="{{ branch.id }}" {% if request.form.branch_id == branch.id|string %}selected{% endif %}>
+                    {{ branch.branch_name }}
+                  </option>
+                  {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select a branch</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Course Details -->
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-graduation-cap"></i>
+            Course Interest
+          </div>
+          <div class="section-body">
+            <label class="form-label">Select Interested Courses</label>
+            <div class="form-label">Choose one or more courses the lead is interested in</div>
+
+            <div class="course-grid" id="courseGrid">
+              {% for course in courses %}
+              <div class="course-item">
+                <input type="checkbox" class="form-check-input"
+                       id="course_{{ course.id }}" name="course_ids"
+                       value="{{ course.id }}"
+                       {% if course.id|string in request.form.getlist('course_ids') %}checked{% endif %}>
+                <label class="form-check-label flex-grow-1" for="course_{{ course.id }}">
+                  {{ course.course_name }}
+                  {% if course.duration %}
+                  <small class="text-muted d-block">Duration: {{ course.duration }}</small>
+                  {% endif %}
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+
+            <div id="selectedCourses" class="selected-courses d-none">
+              <strong>Selected Courses:</strong>
+              <div id="selectedCourseBadges"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Education & Occupation -->
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-user-graduate"></i>
+            Education & Occupation Details
+          </div>
+          <div class="section-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="qualification" class="form-label">Education Qualification</label>
+                <select class="form-select" id="qualification" name="qualification">
+                  <option value="">Select Education Qualification</option>
+                  <option value="10th Pass" {% if request.form.qualification == '10th Pass' %}selected{% endif %}>10th Pass</option>
+                  <option value="12th Commerce" {% if request.form.qualification == '12th Commerce' %}selected{% endif %}>12th Commerce</option>
+                  <option value="12th Science" {% if request.form.qualification == '12th Science' %}selected{% endif %}>12th Science</option>
+                  <option value="12th Arts" {% if request.form.qualification == '12th Arts' %}selected{% endif %}>12th Arts</option>
+                  <option value="Diploma" {% if request.form.qualification == 'Diploma' %}selected{% endif %}>Diploma</option>
+                  <option value="BBA" {% if request.form.qualification == 'BBA' %}selected{% endif %}>BBA</option>
+                  <option value="BCA" {% if request.form.qualification == 'BCA' %}selected{% endif %}>BCA</option>
+                  <option value="B.Com" {% if request.form.qualification == 'B.Com' %}selected{% endif %}>B.Com</option>
+                  <option value="BA English" {% if request.form.qualification == 'BA English' %}selected{% endif %}>BA English</option>
+                  <option value="BSc IT" {% if request.form.qualification == 'BSc IT' %}selected{% endif %}>BSc IT</option>
+                  <option value="B.Tech Computer Science" {% if request.form.qualification == 'B.Tech Computer Science' %}selected{% endif %}>B.Tech Computer Science</option>
+                  <option value="B.Tech CSE" {% if request.form.qualification == 'B.Tech CSE' %}selected{% endif %}>B.Tech CSE</option>
+                  <option value="Graduate" {% if request.form.qualification == 'Graduate' %}selected{% endif %}>Graduate (Other)</option>
+                  <option value="MBA" {% if request.form.qualification == 'MBA' %}selected{% endif %}>MBA</option>
+                  <option value="MCA" {% if request.form.qualification == 'MCA' %}selected{% endif %}>MCA</option>
+                  <option value="M.Com" {% if request.form.qualification == 'M.Com' %}selected{% endif %}>M.Com</option>
+                  <option value="Post Graduate" {% if request.form.qualification == 'Post Graduate' %}selected{% endif %}>Post Graduate (Other)</option>
+                  <option value="Other" {% if request.form.qualification == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="employment_type" class="form-label">Employment Status</label>
+                <select class="form-select" id="employment_type" name="employment_type">
+                  <option value="Student" {% if request.form.employment_type == 'Student' or not request.form.employment_type %}selected{% endif %}>Student</option>
+                  <option value="Employed" {% if request.form.employment_type == 'Employed' %}selected{% endif %}>Employed</option>
+                  <option value="Self-Employed" {% if request.form.employment_type == 'Self-Employed' %}selected{% endif %}>Self-Employed</option>
+                  <option value="Unemployed" {% if request.form.employment_type == 'Unemployed' %}selected{% endif %}>Unemployed</option>
+                  <option value="Other" {% if request.form.employment_type == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="career_goal" class="form-label">Career Goals</label>
+              <textarea class="form-control" id="career_goal" name="career_goal" rows="2"
+                        placeholder="What are their career aspirations?">{{ request.form.career_goal or '' }}</textarea>
+            </div>
+
+            <!-- Additional Lead Information -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="preferred_language" class="form-label">Preferred Language</label>
+                <select class="form-select" id="preferred_language" name="preferred_language">
+                  <option value="English" {% if request.form.preferred_language == 'English' or not request.form.preferred_language %}selected{% endif %}>English</option>
+                  <option value="Hindi" {% if request.form.preferred_language == 'Hindi' %}selected{% endif %}>Hindi</option>
+                  <option value="Kannada" {% if request.form.preferred_language == 'Kannada' %}selected{% endif %}>Kannada</option>
+                  <option value="Tamil" {% if request.form.preferred_language == 'Tamil' %}selected{% endif %}>Tamil</option>
+                  <option value="Telugu" {% if request.form.preferred_language == 'Telugu' %}selected{% endif %}>Telugu</option>
+                  <option value="Marathi" {% if request.form.preferred_language == 'Marathi' %}selected{% endif %}>Marathi</option>
+                  <option value="Other" {% if request.form.preferred_language == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+
+                            <div class="col-md-6 mb-3">
+                <label for="decision_maker" class="form-label">Decision Maker <span class="text-danger">*</span></label>
+                <select class="form-select" id="decision_maker" name="decision_maker" required>
+                  <option value="">Select Decision Maker</option>
+                  <option value="Self" {% if request.form.decision_maker == 'Self' %}selected{% endif %}>Self</option>
+                  <option value="Parent" {% if request.form.decision_maker == 'Parent' %}selected{% endif %}>Parent</option>
+                  <option value="Employer" {% if request.form.decision_maker == 'Employer' %}selected{% endif %}>Employer</option>
+                  <option value="Other" {% if request.form.decision_maker == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+                            <div class="col-md-6 mb-3">
+                <label for="mode_preference" class="form-label required">Mode Preference</label>
+                <select class="form-select" id="mode_preference" name="mode_preference">
+                  <option value="Offline" {% if request.form.mode_preference == 'Offline' or not request.form.mode_preference %}selected{% endif %}>Offline (In-person)</option>
+                  <option value="Online" {% if request.form.mode_preference == 'Online' %}selected{% endif %}>Online</option>
+                  <option value="Hybrid" {% if request.form.mode_preference == 'Hybrid' %}selected{% endif %}>Hybrid (Both)</option>
+                </select>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="budget_comfort" class="form-label">Budget Range</label>
+                <input type="text" class="form-control" id="budget_comfort" name="budget_comfort"
+                       placeholder="e.g., 10K-20K, Flexible"
+                       value="{{ request.form.budget_comfort or '' }}">
+                <div class="form-text">Expected budget range or preference</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Guardian/Family Information (for students) -->
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-users"></i>
+            Guardian/Family Information
+          </div>
+          <div class="section-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="guardian_name" class="form-label">Guardian/Parent Name</label>
+                <input type="text" class="form-control" id="guardian_name" name="guardian_name"
+                       placeholder="Father/Mother/Guardian name"
+                       value="{{ request.form.guardian_name or '' }}">
+              </div>
+
+                            <div class="col-md-6 mb-3">
+                <label for="guardian_mobile" class="form-label">Guardian Mobile</label>
+                <input type="tel" class="form-control" id="guardian_mobile" name="guardian_mobile"
+                       pattern="[6-9][0-9]{9}" maxlength="10"
+                       placeholder="Guardian's mobile number"
+                       value="{{ request.form.guardian_mobile or '' }}">
+                <div class="form-text">Enter 10-digit Indian mobile number</div>
+                <div class="invalid-feedback">Please enter a valid 10-digit Indian mobile number</div>
+              </div>
+            </div>
+
+            <div class="row">
+                            <div class="col-md-6 mb-3">
+                <label for="guardian_email" class="form-label">Guardian Email</label>
+                <input type="email" class="form-control" id="guardian_email" name="guardian_email"
+                       placeholder="Guardian's email address"
+                       value="{{ request.form.guardian_email or '' }}">
+              </div>
+
+                            <div class="col-md-6 mb-3">
+                <label for="guardian_relation" class="form-label">Relation</label>
+                <select class="form-select" id="guardian_relation" name="guardian_relation">
+                  <option value="">Select Relation</option>
+                  <option value="Father" {% if request.form.guardian_relation == 'Father' %}selected{% endif %}>Father</option>
+                  <option value="Mother" {% if request.form.guardian_relation == 'Mother' %}selected{% endif %}>Mother</option>
+                  <option value="Guardian" {% if request.form.guardian_relation == 'Guardian' %}selected{% endif %}>Guardian</option>
+                  <option value="Relative" {% if request.form.guardian_relation == 'Relative' %}selected{% endif %}>Relative</option>
+                  <option value="Other" {% if request.form.guardian_relation == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column -->
+      <div class="col-lg-4">
+
+        <!-- 5. Lead Stage & Priority -->
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-flag"></i>
+            Lead Management
+          </div>
+          <div class="section-body">
+            <div class="mb-3">
+              <label for="lead_stage" class="form-label required">Lead Stage</label>
+              <select class="form-select" id="lead_stage" name="lead_stage" required>
+                <option value="New" {% if request.form.lead_stage == 'New' or not request.form.lead_stage %}selected{% endif %}>🆕 New</option>
+                <option value="Contacted" {% if request.form.lead_stage == 'Contacted' %}selected{% endif %}>📞 Contacted</option>
+                <option value="Qualified" {% if request.form.lead_stage == 'Qualified' %}selected{% endif %}>✅ Qualified</option>
+                <option value="Demo" {% if request.form.lead_stage == 'Demo' %}selected{% endif %}>🖥️ Demo</option>
+                <option value="Proposal" {% if request.form.lead_stage == 'Proposal' %}selected{% endif %}>📝 Proposal</option>
+                <option value="Negotiation" {% if request.form.lead_stage == 'Negotiation' %}selected{% endif %}>🤝 Negotiation</option>
+                <option value="Closed Won" {% if request.form.lead_stage == 'Closed Won' %}selected{% endif %}>🎉 Closed Won</option>
+                <option value="Closed Lost" {% if request.form.lead_stage == 'Closed Lost' %}selected{% endif %}>❌ Closed Lost</option>
+              </select>
+              <div class="invalid-feedback">Please select a lead stage</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="lead_status" class="form-label required">Lead Status</label>
+              <select class="form-select" id="lead_status" name="lead_status" required>
+                <option value="Open" {% if request.form.lead_status == 'Open' or not request.form.lead_status %}selected{% endif %}>🔓 Open</option>
+                <option value="In Progress" {% if request.form.lead_status == 'In Progress' %}selected{% endif %}>⏳ In Progress</option>
+                <option value="Follow-up Scheduled" {% if request.form.lead_status == 'Follow-up Scheduled' %}selected{% endif %}>📅 Follow-up Scheduled</option>
+                <option value="Demo Scheduled" {% if request.form.lead_status == 'Demo Scheduled' %}selected{% endif %}>🖥️ Demo Scheduled</option>
+                <option value="Converted" {% if request.form.lead_status == 'Converted' %}selected{% endif %}>✅ Converted</option>
+                <option value="Not Interested" {% if request.form.lead_status == 'Not Interested' %}selected{% endif %}>❌ Not Interested</option>
+              </select>
+              <div class="invalid-feedback">Please select a lead status</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="priority" class="form-label required">Lead Priority</label>
+              <select class="form-select" id="priority" name="priority" required>
+                <option value="Low" {% if request.form.priority == 'Low' %}selected{% endif %}>🔵 Low</option>
+                <option value="Medium" {% if request.form.priority == 'Medium' or not request.form.priority %}selected{% endif %}>🟡 Medium</option>
+                <option value="High" {% if request.form.priority == 'High' %}selected{% endif %}>🟠 High</option>
+                <option value="Hot" {% if request.form.priority == 'Hot' %}selected{% endif %}>🔴 Hot</option>
+              </select>
+              <div class="invalid-feedback">Please select a priority level</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Assignment -->
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-user-tie"></i>
+            Assignment
+          </div>
+          <div class="section-body">
+            <div class="mb-3">
+              <label for="assigned_to_user_id" class="form-label">Assigned To</label>
+              <select class="form-select" id="assigned_to_user_id" name="assigned_to_user_id">
+                <option value="">Auto-assign</option>
+                {% for user in users %}
+                <option value="{{ user.id }}"
+                        {% if session.get('user_id') == user.id %}selected{% endif %}>
+                  {{ user.username }} ({{ user.role }})
+                </option>
+                {% endfor %}
+              </select>
+              <div class="form-text">Leave blank for automatic assignment</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. Follow-up Information -->
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-calendar-check"></i>
+            Follow-up Information
+          </div>
+          <div class="section-body">
+            <div class="mb-3">
+              <label for="next_follow_up_at" class="form-label required">Next Follow-up Date</label>
+              <input type="datetime-local" class="form-control" id="next_follow_up_at" name="next_follow_up_at"
+                     required value="{{ request.form.next_follow_up_at or '' }}">
+              <div class="form-text">Schedule when to follow up with this lead</div>
+              <div class="invalid-feedback">Please schedule a follow-up date</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="initial_note" class="form-label required">Initial Follow-up Note</label>
+              <textarea class="form-control" id="initial_note" name="initial_note" rows="3"
+                        required placeholder="Enter initial conversation details, requirements, or follow-up notes">{{ request.form.initial_note or '' }}</textarea>
+              <div class="form-text">This note will be added to the lead's follow-up history</div>
+              <div class="invalid-feedback">Please enter initial follow-up notes</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="initial_channel" class="form-label required">Contact Method</label>
+              <select class="form-select" id="initial_channel" name="initial_channel" required>
+                <option value="">Select Contact Method</option>
+                <option value="Inbound Call" {% if request.form.initial_channel == 'Inbound Call' %}selected{% endif %}>Inbound Call</option>
+                <option value="Outbound Call" {% if request.form.initial_channel == 'Outbound Call' %}selected{% endif %}>Outbound Call</option>
+                <option value="WhatsApp" {% if request.form.initial_channel == 'WhatsApp' %}selected{% endif %}>WhatsApp</option>
+                <option value="Email" {% if request.form.initial_channel == 'Email' %}selected{% endif %}>Email</option>
+                <option value="SMS" {% if request.form.initial_channel == 'SMS' %}selected{% endif %}>SMS</option>
+                <option value="Demo Session" {% if request.form.initial_channel == 'Demo Session' %}selected{% endif %}>Demo Session</option>
+                <option value="Course Counseling" {% if request.form.initial_channel == 'Course Counseling' %}selected{% endif %}>Course Counseling</option>
+                <option value="Site Visit" {% if request.form.initial_channel == 'Site Visit' %}selected{% endif %}>Site Visit</option>
+                <option value="Other" {% if request.form.initial_channel == 'Other' %}selected{% endif %}>Other</option>
+              </select>
+              <div class="form-text">How was this lead initially contacted?</div>
+              <div class="invalid-feedback">Please select how this lead was contacted</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="join_timeline" class="form-label required">Expected Join Timeline</label>
+              <select class="form-select" id="join_timeline" name="join_timeline" required>
+                <option value="">Select Timeline</option>
+                <option value="Not Sure" {% if request.form.join_timeline == 'Not Sure' %}selected{% endif %}>Not Sure</option>
+                <option value="Immediate" {% if request.form.join_timeline == 'Immediate' %}selected{% endif %}>Immediate</option>
+                <option value="This Week" {% if request.form.join_timeline == 'This Week' %}selected{% endif %}>This Week</option>
+                <option value="This Month" {% if request.form.join_timeline == 'This Month' %}selected{% endif %}>This Month</option>
+                <option value="After Exams" {% if request.form.join_timeline == 'After Exams' %}selected{% endif %}>After Exams</option>
+              </select>
+              <div class="invalid-feedback">Please select expected join timeline</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="special_notes" class="form-label">Special Notes</label>
+              <textarea class="form-control" id="special_notes" name="special_notes" rows="3"
+                        placeholder="Any special notes or requirements">{{ request.form.special_notes or '' }}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-save"></i>
+            Save Lead
+          </div>
+          <div class="section-body">
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Create Lead
+              </button>
+              <a href="{{ url_for('leads.lead_list') }}" class="btn btn-secondary">
+                <i class="fas fa-times me-1"></i>Cancel
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('leadCreateForm');
+  
+  if (!form) {
+    console.error('Form not found');
+    return;
+  }
+
+  // Course selection handling
+  const courseCheckboxes = document.querySelectorAll('input[name="course_ids"]');
+  const selectedCoursesDiv = document.getElementById('selectedCourses');
+  const selectedCourseBadges = document.getElementById('selectedCourseBadges');
+
+  function updateSelectedCourses() {
+    const checkedBoxes = document.querySelectorAll('input[name="course_ids"]:checked');
+
+    if (checkedBoxes.length > 0) {
+      if (selectedCoursesDiv) selectedCoursesDiv.classList.remove('d-none');
+      if (selectedCourseBadges) {
+        selectedCourseBadges.innerHTML = '';
+        checkedBoxes.forEach(checkbox => {
+          const label = document.querySelector(`label[for="${checkbox.id}"]`);
+          if (label) {
+            const courseName = label.textContent.trim().split('\n')[0];
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-primary me-1 mb-1';
+            badge.textContent = courseName;
+            selectedCourseBadges.appendChild(badge);
+          }
+        });
+      }
+    } else {
+      if (selectedCoursesDiv) selectedCoursesDiv.classList.add('d-none');
+    }
+  }
+
+  courseCheckboxes.forEach(c => c.addEventListener('change', updateSelectedCourses));
+  updateSelectedCourses();
+
+  // Mobile number sanitization for all tel inputs
+  document.querySelectorAll('input[type="tel"]').forEach(input => {
+    input.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '').slice(0, 10);
+    });
+  });
+
+  // Form validation
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    let isValid = true;
+    let firstInvalidField = null;
+    let invalidFields = [];
+    
+    // Define required fields based on database model constraints
+    const requiredFields = [
+      { name: 'name', label: 'Full Name' },
+      { name: 'mobile', label: 'Mobile Number' },
+      { name: 'branch_id', label: 'Branch' },
+      { name: 'lead_status', label: 'Lead Status' },
+      { name: 'lead_stage', label: 'Lead Stage' },
+      { name: 'priority', label: 'Priority' },
+      { name: 'decision_maker', label: 'Decision Maker' },
+      { name: 'next_follow_up_at', label: 'Next Follow-up Date' },
+      { name: 'initial_note', label: 'Initial Follow-up Note' },
+      { name: 'initial_channel', label: 'Contact Method' },
+      { name: 'join_timeline', label: 'Join Timeline' }
+    ];
+    
+    // Clear previous validation states
+    form.querySelectorAll('.is-invalid').forEach(field => {
+      field.classList.remove('is-invalid');
+    });
+    
+    // Validate required fields
+    requiredFields.forEach(fieldInfo => {
+      const field = form.querySelector(`[name="${fieldInfo.name}"]`);
+      if (!field) return;
+      
+      const value = field.value ? field.value.trim() : '';
+      if (!value) {
+        isValid = false;
+        invalidFields.push(fieldInfo.label);
+        field.classList.add('is-invalid');
+        
+        if (!firstInvalidField) {
+          firstInvalidField = field;
+        }
+        
+        // Create or update error message
+        let errorDiv = field.parentNode.querySelector('.invalid-feedback');
+        if (!errorDiv) {
+          errorDiv = document.createElement('div');
+          errorDiv.className = 'invalid-feedback';
+          field.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = `${fieldInfo.label} is required`;
+      }
+    });
+    
+    // Mobile number format validation
+    const mobileField = form.querySelector('[name="mobile"]');
+    if (mobileField && mobileField.value) {
+      const mobile = mobileField.value.replace(/\D/g, '');
+      if (mobile.length !== 10 || !['6', '7', '8', '9'].includes(mobile[0])) {
+        isValid = false;
+        mobileField.classList.add('is-invalid');
+        if (!firstInvalidField) {
+          firstInvalidField = mobileField;
+        }
+      }
+    }
+    
+    // Validate guardian mobile if provided
+    const guardianMobileField = form.querySelector('[name="guardian_mobile"]');
+    if (guardianMobileField && guardianMobileField.value && guardianMobileField.value.trim()) {
+      const guardianMobile = guardianMobileField.value.replace(/\D/g, '');
+      if (guardianMobile.length !== 10 || !['6', '7', '8', '9'].includes(guardianMobile[0])) {
+        isValid = false;
+        guardianMobileField.classList.add('is-invalid');
+        if (!firstInvalidField) {
+          firstInvalidField = guardianMobileField;
+        }
+      }
+    }
+    
+    // Validate alternate mobile if provided
+    const altMobileField = form.querySelector('[name="alt_mobile"]');
+    if (altMobileField && altMobileField.value && altMobileField.value.trim()) {
+      const altMobile = altMobileField.value.replace(/\D/g, '');
+      if (altMobile.length !== 10 || !['6', '7', '8', '9'].includes(altMobile[0])) {
+        isValid = false;
+        altMobileField.classList.add('is-invalid');
+        if (!firstInvalidField) {
+          firstInvalidField = altMobileField;
+        }
+      }
+    }
+    
+    // Validate email format if provided
+    const emailField = form.querySelector('[name="email"]');
+    if (emailField && emailField.value && emailField.value.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailField.value.trim())) {
+        isValid = false;
+        emailField.classList.add('is-invalid');
+        if (!firstInvalidField) {
+          firstInvalidField = emailField;
+        }
+      }
+    }
+    
+    // Add validation class for Bootstrap styling
+    form.classList.add('was-validated');
+    
+    if (!isValid) {
+      // Show validation summary
+      const errorMessage = `Please fix the following errors:\n\n• ${invalidFields.join('\n• ')}`;
+      
+      // Scroll to first invalid field
+      if (firstInvalidField) {
+        firstInvalidField.focus();
+        firstInvalidField.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        
+        // Highlight the field temporarily
+        firstInvalidField.style.boxShadow = '0 0 10px #dc3545';
+        setTimeout(() => {
+          firstInvalidField.style.boxShadow = '';
+        }, 3000);
+      }
+      
+      // Show alert with missing fields
+      setTimeout(() => {
+        alert(errorMessage);
+      }, 100);
+      
+      return false;
+    }
+    
+    // If validation passes, submit the form
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating Lead...';
+      submitBtn.disabled = true;
+    }
+    
+    // Remove event listener to prevent double submission
+    form.removeEventListener('submit', arguments.callee);
+    setTimeout(() => {
+      form.submit();
+    }, 100);
+  });
+
+  // Real-time validation feedback
+  form.querySelectorAll('input, select, textarea').forEach(input => {
+    input.addEventListener('blur', function() {
+      if (this.hasAttribute('required') && !this.value.trim()) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+      } else if (this.checkValidity()) {
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+      }
+    });
+    
+    input.addEventListener('input', function() {
+      if (this.classList.contains('is-invalid') && this.value.trim()) {
+        this.classList.remove('is-invalid');
+        if (this.checkValidity()) {
+          this.classList.add('is-valid');
+        }
+      }
+    });
+  });
+
+  // Focus on first field for better UX
+  const firstField = document.getElementById('name');
+  if (firstField) {
+    firstField.focus();
+  }
+});
+</script>
+{% endblock %}

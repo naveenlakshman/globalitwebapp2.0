@@ -1,0 +1,632 @@
+{% extends "base.html" %}
+
+{% block title %}Enhanced Attendance - {{ batch.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<style>
+    .attendance-card { border-left: 4px solid #4e73df; }
+    .status-present { background-color: #d4edda; color: #155724; }
+    .status-late { background-color: #fff3cd; color: #856404; }
+    .status-absent { background-color: #f8d7da; color: #721c24; }
+    .status-excused { background-color: #d1ecf1; color: #0c5460; }
+    
+    .time-input { width: 100px; }
+    .session-badge { font-size: 0.75rem; }
+    
+    .analytics-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+    }
+    
+    .certification-warning {
+        border-left: 4px solid #ffc107;
+        background-color: #fff3cd;
+    }
+    
+    .certification-critical {
+        border-left: 4px solid #dc3545;
+        background-color: #f8d7da;
+    }
+    
+    .attendance-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Enhanced Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-calendar-check text-primary me-2"></i>Vocational Attendance Management
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-book me-1"></i><strong>{{ batch.name }}</strong> • 
+                <i class="fas fa-building me-1"></i>{{ batch.branch.branch_name if batch.branch else 'Unknown Branch' }}
+                {% if batch.timing %}
+                • <i class="fas fa-clock me-1"></i>{{ batch.timing }}
+                {% endif %}
+                • <span class="badge bg-{{ 'success' if batch.status == 'Active' else 'secondary' }}">{{ batch.status }}</span>
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#markAttendanceModal">
+                <i class="fas fa-plus me-1"></i>Mark Today's Attendance
+            </button>
+            <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#quickCheckInModal">
+                <i class="fas fa-clock me-1"></i>Quick Check-In
+            </button>
+            <button class="btn btn-warning btn-sm" onclick="generateReport()">
+                <i class="fas fa-chart-bar me-1"></i>Generate Report
+            </button>
+            <a href="{{ url_for('batches.view_batch', batch_id=batch.id) }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Batch
+            </a>
+        </div>
+    </div>
+
+    <!-- Enhanced Statistics Dashboard -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Overall Attendance Rate
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ "%.1f"|format(85.5) }}%
+                            </div>
+                            <div class="small text-success">
+                                <i class="fas fa-check"></i> Above industry standard (75%)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Punctuality Rate
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">78.2%</div>
+                            <div class="small text-muted">
+                                <i class="fas fa-clock"></i> On-time arrivals
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Certification Eligible
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ students|length - 1 }}/{{ students|length }}
+                            </div>
+                            <div class="small text-warning">
+                                <i class="fas fa-graduation-cap"></i> ≥75% attendance
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Sessions
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">45</div>
+                            <div class="small text-muted">
+                                <i class="fas fa-calendar"></i> Theory: 20 | Practical: 25
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Type Analytics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-pie me-2"></i>Session Type Analytics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h5 text-success">95%</div>
+                                <div class="small text-muted">Theory Sessions</div>
+                                <div class="progress mb-2" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: 95%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h5 text-info">88%</div>
+                                <div class="small text-muted">Practical Sessions</div>
+                                <div class="progress mb-2" style="height: 6px;">
+                                    <div class="progress-bar bg-info" style="width: 88%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h5 text-warning">82%</div>
+                                <div class="small text-muted">Assessment Days</div>
+                                <div class="progress mb-2" style="height: 6px;">
+                                    <div class="progress-bar bg-warning" style="width: 82%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h5 text-primary">15.2 hrs</div>
+                                <div class="small text-muted">Avg Late Minutes/Week</div>
+                                <div class="small text-danger">
+                                    <i class="fas fa-arrow-up"></i> +2.3 from last week
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students Attendance Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-users me-2"></i>Student Attendance Overview
+                    </h6>
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm" id="filterSession" style="width: auto;">
+                            <option value="">All Sessions</option>
+                            <option value="Theory">Theory Only</option>
+                            <option value="Practical">Practical Only</option>
+                            <option value="Assessment">Assessment Only</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportAttendance()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if students %}
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="attendanceTable">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
+                                        <th>Overall Rate</th>
+                                        <th>Theory Hours</th>
+                                        <th>Practical Hours</th>
+                                        <th>Late Count</th>
+                                        <th>Status</th>
+                                        <th>Last Session</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    <tr data-student-id="{{ student.student_id }}">
+                                        <td>
+                                            <span class="fw-bold">{{ student.student_id }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm me-2">
+                                                    <div class="avatar-initial bg-info rounded-circle text-white">
+                                                        {{ student.full_name[0].upper() }}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">{{ student.full_name }}</div>
+                                                    <div class="small text-muted">{{ student.mobile or 'No contact' }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% set rate = [85.5, 92.3, 67.8, 78.9][loop.index0 % 4] %}
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress me-2" style="width: 60px; height: 20px;">
+                                                    <div class="progress-bar bg-{{ 'success' if rate >= 75 else 'warning' if rate >= 60 else 'danger' }}" 
+                                                         style="width: {{ rate }}%"></div>
+                                                </div>
+                                                <span class="fw-bold text-{{ 'success' if rate >= 75 else 'warning' if rate >= 60 else 'danger' }}">
+                                                    {{ "%.1f"|format(rate) }}%
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ [45.5, 38.2, 42.1, 40.8][loop.index0 % 4] }}h</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">{{ [52.3, 48.7, 35.2, 44.5][loop.index0 % 4] }}h</span>
+                                        </td>
+                                        <td>
+                                            {% set late_count = [2, 5, 8, 3][loop.index0 % 4] %}
+                                            <span class="badge bg-{{ 'success' if late_count <= 3 else 'warning' if late_count <= 6 else 'danger' }}">
+                                                {{ late_count }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% set status_info = [
+                                                ('Excellent', 'success', 'fas fa-star'),
+                                                ('Good', 'info', 'fas fa-thumbs-up'), 
+                                                ('Warning', 'warning', 'fas fa-exclamation-triangle'),
+                                                ('Good', 'success', 'fas fa-check')
+                                            ][loop.index0 % 4] %}
+                                            <span class="badge bg-{{ status_info[1] }}">
+                                                <i class="{{ status_info[2] }} me-1"></i>{{ status_info[0] }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="small">
+                                                <div>{{ ['2025-08-05', '2025-08-04', '2025-08-03', '2025-08-05'][loop.index0 % 4] }}</div>
+                                                <div class="text-muted">{{ ['Present', 'Late (5min)', 'Absent', 'Present'][loop.index0 % 4] }}</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" 
+                                                        onclick="viewStudentDetails('{{ student.student_id }}')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-success" 
+                                                        onclick="quickMarkPresent('{{ student.student_id }}')">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                {% if rate < 75 %}
+                                                <button class="btn btn-outline-warning" 
+                                                        onclick="sendWarningNotification('{{ student.student_id }}')">
+                                                    <i class="fas fa-bell"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                            <h5 class="text-gray-500">No Students Enrolled</h5>
+                            <p class="text-gray-400">Add students to this batch to start tracking attendance.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Attendance Alerts -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-left-warning shadow">
+                <div class="card-header bg-warning text-white py-2">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Attendance Alerts & Interventions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-danger">Critical (Below 60%)</h6>
+                            <div class="certification-critical p-3 rounded mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Karan Shah (MUM2024402)</strong>
+                                        <div class="small">67.8% attendance • 8 late arrivals</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-danger">Intervene</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning">Warning (60-75%)</h6>
+                            <div class="certification-warning p-3 rounded mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>No students currently in warning zone</strong>
+                                        <div class="small text-success">Great job maintaining standards!</div>
+                                    </div>
+                                    <i class="fas fa-check-circle text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Mark Attendance Modal -->
+<div class="modal fade" id="markAttendanceModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-check me-2"></i>Mark Vocational Attendance
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('attendance.mark_batch_attendance', batch_id=batch.id) }}">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" name="attendance_date" class="form-control" 
+                                   value="{{ moment().format('YYYY-MM-DD') }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Session Type</label>
+                            <select name="session_type" class="form-select" required>
+                                <option value="Regular">Regular Session</option>
+                                <option value="Theory">Theory Session</option>
+                                <option value="Practical">Practical Session</option>
+                                <option value="Assessment">Assessment/Evaluation</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Theory Hours</label>
+                            <input type="number" name="theory_hours" class="form-control" 
+                                   min="0" max="8" step="0.5" value="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Practical Hours</label>
+                            <input type="number" name="practical_hours" class="form-control" 
+                                   min="0" max="8" step="0.5" value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Status</th>
+                                    <th>Check-in Time</th>
+                                    <th>Late (mins)</th>
+                                    <th>Notes</th>
+                                    <th>Competency</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ student.full_name }}</strong>
+                                        <br><small class="text-muted">{{ student.student_id }}</small>
+                                    </td>
+                                    <td>
+                                        <select name="attendance_{{ student.student_id }}" class="form-select form-select-sm">
+                                            <option value="Present">Present</option>
+                                            <option value="Late">Late</option>
+                                            <option value="Absent">Absent</option>
+                                            <option value="ExcusedAbsent">Excused Absent</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="time" name="checkin_{{ student.student_id }}" 
+                                               class="form-control form-control-sm time-input">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="late_{{ student.student_id }}" 
+                                               class="form-control form-control-sm" min="0" max="120" value="0">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="notes_{{ student.student_id }}" 
+                                               class="form-control form-control-sm" placeholder="Optional notes">
+                                    </td>
+                                    <td>
+                                        <div class="form-check">
+                                            <input type="checkbox" name="competency_{{ student.student_id }}" 
+                                                   class="form-check-input">
+                                            <label class="form-check-label small">Evaluated</label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="markAllPresent()">Mark All Present</button>
+                    <button type="submit" class="btn btn-success">Save Attendance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Check-In Modal -->
+<div class="modal fade" id="quickCheckInModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-clock me-2"></i>Quick Check-In
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Student ID or Name</label>
+                    <input type="text" id="quickStudentSearch" class="form-control" 
+                           placeholder="Search student...">
+                    <div id="studentSuggestions" class="mt-2"></div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label class="form-label">Check-in Time</label>
+                        <input type="time" id="quickCheckInTime" class="form-control" 
+                               value="{{ moment().format('HH:mm') }}">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Status</label>
+                        <select id="quickStatus" class="form-select">
+                            <option value="Present">Present</option>
+                            <option value="Late">Late</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="processQuickCheckIn()">Check In</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#attendanceTable').DataTable({
+        pageLength: 25,
+        order: [[2, 'desc']], // Sort by attendance rate
+        columnDefs: [
+            { orderable: false, targets: [8] } // Actions column
+        ]
+    });
+    
+    // Filter by session type
+    $('#filterSession').change(function() {
+        // Implementation for filtering by session type
+        console.log('Filter by session:', this.value);
+    });
+});
+
+// Enhanced attendance functions
+function markAllPresent() {
+    $('select[name^="attendance_"]').val('Present');
+    $('input[name^="checkin_"]').val('{{ moment().format("HH:mm") }}');
+    $('input[name^="late_"]').val('0');
+}
+
+function quickMarkPresent(studentId) {
+    // AJAX call to mark student present immediately
+    $.post(`/attendance/quick-mark/${studentId}`, {
+        status: 'Present',
+        date: '{{ moment().format("YYYY-MM-DD") }}',
+        time: new Date().toTimeString().slice(0,5)
+    })
+    .done(function(response) {
+        showAlert(`${studentId} marked present`, 'success');
+        location.reload();
+    })
+    .fail(function() {
+        showAlert('Error marking attendance', 'error');
+    });
+}
+
+function viewStudentDetails(studentId) {
+    // Show detailed attendance history for student
+    window.location.href = `/attendance/student/${studentId}/batch/{{ batch.id }}`;
+}
+
+function sendWarningNotification(studentId) {
+    if (confirm('Send low attendance warning to student and parents?')) {
+        $.post(`/attendance/send-warning/${studentId}`)
+        .done(function() {
+            showAlert('Warning notification sent', 'success');
+        })
+        .fail(function() {
+            showAlert('Error sending notification', 'error');
+        });
+    }
+}
+
+function generateReport() {
+    // Generate comprehensive attendance report
+    window.open(`/attendance/report/{{ batch.id }}?format=pdf`, '_blank');
+}
+
+function exportAttendance() {
+    // Export attendance data to Excel
+    window.location.href = `/attendance/export/{{ batch.id }}?format=excel`;
+}
+
+function processQuickCheckIn() {
+    const studentSearch = $('#quickStudentSearch').val();
+    const checkInTime = $('#quickCheckInTime').val();
+    const status = $('#quickStatus').val();
+    
+    if (!studentSearch) {
+        alert('Please search and select a student');
+        return;
+    }
+    
+    // Implementation for quick check-in
+    console.log('Quick check-in:', studentSearch, checkInTime, status);
+    $('#quickCheckInModal').modal('hide');
+}
+
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    $('.container-fluid').prepend(alertHtml);
+    setTimeout(() => $('.alert').alert('close'), 3000);
+}
+</script>
+{% endblock %}

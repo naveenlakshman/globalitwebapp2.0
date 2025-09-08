@@ -1,0 +1,102 @@
+<!-- Convert to Student Modal -->
+<div class="modal fade" id="convertModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Convert Lead to Student</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> Converting this lead will create a new student record and mark the lead as "Converted".
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Course *</label>
+                    <select class="form-select" id="convertCourse" required>
+                        <option value="">Select Course</option>
+                        <!-- Courses will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Batch (Optional)</label>
+                    <select class="form-select" id="convertBatch">
+                        <option value="">Select Batch (Optional)</option>
+                        <!-- Batches will be populated based on course selection -->
+                    </select>
+                    <div class="form-text">Leave blank to assign to batch later</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Additional Notes</label>
+                    <textarea class="form-control" id="convertNotes" rows="3"
+                              placeholder="Any additional notes for the conversion"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="convertToStudent()">
+                    <i class="fas fa-graduation-cap"></i> Convert to Student
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load courses when modal is shown
+document.getElementById('convertModal').addEventListener('show.bs.modal', function() {
+    loadCourses();
+});
+
+// Load batches when course is selected
+document.getElementById('convertCourse').addEventListener('change', function() {
+    const courseId = this.value;
+    if (courseId) {
+        loadBatches(courseId);
+    } else {
+        document.getElementById('convertBatch').innerHTML = '<option value="">Select Batch (Optional)</option>';
+    }
+});
+
+function loadCourses() {
+    fetch('/api/courses')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('convertCourse');
+            select.innerHTML = '<option value="">Select Course</option>';
+            
+            if (data.ok && data.data) {
+                data.data.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = course.course_name;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading courses:', error);
+        });
+}
+
+function loadBatches(courseId) {
+    fetch(`/api/courses/${courseId}/batches`)
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('convertBatch');
+            select.innerHTML = '<option value="">Select Batch (Optional)</option>';
+            
+            if (data.ok && data.data) {
+                data.data.forEach(batch => {
+                    const option = document.createElement('option');
+                    option.value = batch.id;
+                    option.textContent = `${batch.batch_name} (${batch.start_date} - ${batch.end_date})`;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading batches:', error);
+        });
+}
+</script>

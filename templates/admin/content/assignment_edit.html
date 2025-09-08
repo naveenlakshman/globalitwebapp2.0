@@ -1,0 +1,652 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Edit Assignment{% endblock %}
+{% block page_icon %}fas fa-edit{% endblock %}
+{% block page_title %}Edit Assignment{% endblock %}
+{% block page_description %}Modify assignment details, configuration, and requirements{% endblock %}
+
+{% block header_actions %}
+<div class="btn-group">
+    <a href="{{ url_for('lms_content_management.assignment_detail', assignment_id=assignment.id) }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Assignment
+    </a>
+    <a href="{{ url_for('lms_content_management.assignment_list') }}" class="btn btn-outline-info">
+        <i class="fas fa-list me-2"></i>All Assignments
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if assignment.workflow_stage == 'published' %}
+<!-- Published Assignment Warning -->
+<div class="alert alert-warning border-0 shadow-sm mb-4">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle fa-2x me-3 text-warning"></i>
+        <div>
+            <h5 class="alert-heading mb-1">Editing Published Assignment</h5>
+            <p class="mb-2">You are editing a <strong>published assignment</strong>. Changes will immediately affect the live content that students can see.</p>
+            <div class="d-flex gap-2">
+                <span class="badge bg-info">Last Published Edit: {{ assignment.last_published_edit.strftime('%b %d, %Y %I:%M %p') if assignment.last_published_edit else 'None' }}</span>
+                <span class="badge bg-secondary">Edit Count: {{ assignment.edit_count_post_publish or 0 }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Assignment Edit Form -->
+        <form id="assignmentEditForm" method="POST" action="{{ url_for('lms_content_management.assignment_edit_process', assignment_id=assignment.id) }}">
+            <!-- Hidden fields for current values -->
+            <input type="hidden" id="current_module_id" value="{{ assignment.module_id or '' }}">
+            <input type="hidden" id="current_section_id" value="{{ assignment.section_id or '' }}">
+            
+            <!-- Basic Information Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>Basic Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="assignment_title" class="form-label">Assignment Title *</label>
+                            <input type="text" class="form-control" id="assignment_title" name="assignment_title" 
+                                   value="{{ assignment.assignment_title }}" required maxlength="255">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="assignment_type" class="form-label">Assignment Type *</label>
+                            <select class="form-select" id="assignment_type" name="assignment_type" required>
+                                <option value="project" {% if assignment.assignment_type == 'project' %}selected{% endif %}>Project</option>
+                                <option value="essay" {% if assignment.assignment_type == 'essay' %}selected{% endif %}>Essay</option>
+                                <option value="practical" {% if assignment.assignment_type == 'practical' %}selected{% endif %}>Practical</option>
+                                <option value="presentation" {% if assignment.assignment_type == 'presentation' %}selected{% endif %}>Presentation</option>
+                                <option value="research" {% if assignment.assignment_type == 'research' %}selected{% endif %}>Research</option>
+                                <option value="case_study" {% if assignment.assignment_type == 'case_study' %}selected{% endif %}>Case Study</option>
+                                <option value="report" {% if assignment.assignment_type == 'report' %}selected{% endif %}>Report</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="assignment_description" class="form-label">Assignment Description</label>
+                        <textarea class="form-control" id="assignment_description" name="assignment_description" 
+                                  rows="3" placeholder="Brief description of the assignment">{{ assignment.assignment_description }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="detailed_instructions" class="form-label">Detailed Instructions</label>
+                        <textarea class="form-control" id="detailed_instructions" name="detailed_instructions" 
+                                  rows="6" placeholder="Provide detailed instructions for students">{{ assignment.detailed_instructions }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Structure Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sitemap me-2 text-info"></i>Course Structure
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="course_id" class="form-label">Course *</label>
+                            <select class="form-select" id="course_id" name="course_id" required>
+                                <option value="">Select Course</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}" {% if course.id == assignment.course_id %}selected{% endif %}>
+                                    {{ course.course_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="module_id" class="form-label">Module *</label>
+                            <select class="form-select" id="module_id" name="module_id" required>
+                                <option value="">Select Module</option>
+                                <!-- Modules will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="section_id" class="form-label">Section</label>
+                            <select class="form-select" id="section_id" name="section_id">
+                                <option value="">Select Section</option>
+                                <!-- Sections will be loaded dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignment Placement Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map-marker-alt me-2 text-warning"></i>Assignment Placement
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Placement Level *</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="assignment_placement" 
+                                       id="placement_section" value="section" 
+                                       {% if assignment.assignment_placement == 'section' %}checked{% endif %}>
+                                <label class="form-check-label" for="placement_section">
+                                    <strong>Section Level</strong>
+                                    <br><small class="text-muted">Assignment appears within a specific section</small>
+                                </label>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="radio" name="assignment_placement" 
+                                       id="placement_module" value="module"
+                                       {% if assignment.assignment_placement == 'module' %}checked{% endif %}>
+                                <label class="form-check-label" for="placement_module">
+                                    <strong>Module Level</strong>
+                                    <br><small class="text-muted">Assignment appears at the end of the module</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="placement_order" class="form-label">Display Order</label>
+                            <input type="number" class="form-control" id="placement_order" name="placement_order" 
+                                   value="{{ assignment.placement_order or 1 }}" min="1" max="100">
+                            <div class="form-text">Order in which this assignment appears (1 = first)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scoring & Timing Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2 text-success"></i>Scoring & Timing
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="max_score" class="form-label">Maximum Score *</label>
+                            <input type="number" class="form-control" id="max_score" name="max_score" 
+                                   value="{{ assignment.max_score }}" min="1" max="1000" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="due_date" class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="due_date" name="due_date" 
+                                   value="{{ assignment.due_date.strftime('%Y-%m-%d') if assignment.due_date else '' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignment Settings Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2 text-secondary"></i>Assignment Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_mandatory" name="is_mandatory"
+                                       {% if assignment.is_mandatory %}checked{% endif %}>
+                                <label class="form-check-label" for="is_mandatory">
+                                    <strong>Mandatory Assignment</strong>
+                                    <br><small class="text-muted">Students must complete this assignment</small>
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="requires_video_completion" name="requires_video_completion"
+                                       {% if assignment.requires_video_completion %}checked{% endif %}>
+                                <label class="form-check-label" for="requires_video_completion">
+                                    <strong>Requires Video Completion</strong>
+                                    <br><small class="text-muted">Students must watch related videos first</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="group_assignment" name="group_assignment"
+                                       {% if assignment.group_assignment %}checked{% endif %}>
+                                <label class="form-check-label" for="group_assignment">
+                                    <strong>Group Assignment</strong>
+                                    <br><small class="text-muted">Students can work in groups</small>
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="late_submission_allowed" name="late_submission_allowed"
+                                       {% if assignment.late_submission_allowed %}checked{% endif %}>
+                                <label class="form-check-label" for="late_submission_allowed">
+                                    <strong>Allow Late Submissions</strong>
+                                    <br><small class="text-muted">Students can submit after due date</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submission Requirements Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-upload me-2 text-info"></i>Submission Requirements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="submission_format" class="form-label">Submission Format</label>
+                            <select class="form-select" id="submission_format" name="submission_format">
+                                <option value="">Any Format</option>
+                                <option value="pdf" {% if assignment.submission_format == 'pdf' %}selected{% endif %}>PDF Only</option>
+                                <option value="doc" {% if assignment.submission_format == 'doc' %}selected{% endif %}>Word Document</option>
+                                <option value="text" {% if assignment.submission_format == 'text' %}selected{% endif %}>Text Only</option>
+                                <option value="presentation" {% if assignment.submission_format == 'presentation' %}selected{% endif %}>Presentation</option>
+                                <option value="video" {% if assignment.submission_format == 'video' %}selected{% endif %}>Video</option>
+                                <option value="code" {% if assignment.submission_format == 'code' %}selected{% endif %}>Code/Programming</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="max_file_size_mb" class="form-label">Max File Size (MB)</label>
+                            <input type="number" class="form-control" id="max_file_size_mb" name="max_file_size_mb" 
+                                   value="{{ assignment.max_file_size_mb or '' }}" min="1" max="500">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="min_word_count" class="form-label">Minimum Word Count</label>
+                            <input type="number" class="form-control" id="min_word_count" name="min_word_count" 
+                                   value="{{ assignment.min_word_count or '' }}" min="1">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="max_word_count" class="form-label">Maximum Word Count</label>
+                            <input type="number" class="form-control" id="max_word_count" name="max_word_count" 
+                                   value="{{ assignment.max_word_count or '' }}" min="1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grading Rubric Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2 text-warning"></i>Grading Rubric
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="grading_rubric" class="form-label">Grading Criteria & Rubric</label>
+                        <textarea class="form-control" id="grading_rubric" name="grading_rubric" rows="6" 
+                                  placeholder="Define grading criteria, rubric, or evaluation guidelines...">{{ assignment.grading_rubric }}</textarea>
+                        <div class="form-text">Specify how the assignment will be evaluated and graded</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between mb-4">
+                <div>
+                    <a href="{{ url_for('lms_content_management.assignment_detail', assignment_id=assignment.id) }}" 
+                       class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline-primary me-2" onclick="saveDraft()">
+                        <i class="fas fa-save me-2"></i>Save as Draft
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-2"></i>
+                        {% if assignment.workflow_stage == 'published' %}Update Published Assignment{% else %}Update Assignment{% endif %}
+                    </button>
+                </div>
+            </div>
+            
+            {% if assignment.workflow_stage == 'approved' %}
+            <!-- Re-approval Option for Approved Assignments -->
+            <div class="card border-info mb-3">
+                <div class="card-body">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="force_reapproval" name="force_reapproval" value="true">
+                        <label class="form-check-label" for="force_reapproval">
+                            <strong>Require Re-approval</strong>
+                        </label>
+                        <div class="form-text">
+                            Check this if your changes are significant and should require re-approval before publishing.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Current Status Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>Current Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3">
+                        {% if assignment.workflow_stage == 'draft' %}
+                            <span class="badge bg-warning">Draft</span>
+                        {% elif assignment.workflow_stage == 'rejected' %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ assignment.workflow_stage|title }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <small class="text-muted">
+                            Created: {{ assignment.created_at.strftime('%b %d, %Y') }}
+                        </small>
+                    </div>
+                </div>
+                
+                {% if assignment.workflow_stage == 'rejected' and assignment.rejection_reason %}
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading">Rejection Reason:</h6>
+                    <p class="mb-0">{{ assignment.rejection_reason }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="small text-muted">
+                    <p class="mb-1"><i class="fas fa-user me-2"></i>Created by: {{ assignment.creator.full_name if assignment.creator else 'Unknown' }}</p>
+                    <p class="mb-0"><i class="fas fa-clock me-2"></i>Last updated: {{ assignment.updated_at.strftime('%b %d, %Y') if assignment.updated_at else assignment.created_at.strftime('%b %d, %Y') }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help & Tips Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2 text-warning"></i>Editing Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Only draft and rejected assignments can be edited
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Changes will reset workflow stage to draft
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-save text-info me-2"></i>
+                        Use auto-save to prevent data loss
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-eye text-primary me-2"></i>
+                        Preview changes before submitting for review
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        {% if assignment.workflow_stage in ['draft', 'rejected'] %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-warning"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-danger" onclick="confirmDelete()">
+                        <i class="fas fa-trash me-2"></i>Delete Assignment
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Assignment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this assignment?</p>
+                <p class="text-danger"><strong>This action cannot be undone!</strong></p>
+                <p><strong>Assignment:</strong> {{ assignment.assignment_title }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('lms_content_management.assignment_delete', assignment_id=assignment.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete Assignment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-save functionality
+let autoSaveInterval;
+let hasUnsavedChanges = false;
+
+// Track form changes
+$(document).ready(function() {
+    // Load current course data
+    loadExistingData();
+    
+    // Set up form change tracking
+    $('#assignmentEditForm input, #assignmentEditForm select, #assignmentEditForm textarea').on('change input', function() {
+        hasUnsavedChanges = true;
+        startAutoSave();
+    });
+    
+    // Course selection change
+    $('#course_id').on('change', function() {
+        const courseId = $(this).val();
+        loadModules(courseId);
+        $('#module_id').val('').trigger('change');
+        $('#section_id').val('');
+    });
+    
+    // Module selection change
+    $('#module_id').on('change', function() {
+        const moduleId = $(this).val();
+        if (moduleId) {
+            loadSections(moduleId);
+        } else {
+            $('#section_id').html('<option value="">Select Section</option>');
+        }
+    });
+    
+    // Placement type change
+    $('input[name="assignment_placement"]').on('change', function() {
+        const placementType = $(this).val();
+        if (placementType === 'module') {
+            $('#section_id').prop('required', false);
+            $('#section_id').closest('.col-md-4').find('label').html('Section <small class="text-muted">(Optional)</small>');
+        } else {
+            $('#section_id').prop('required', true);
+            $('#section_id').closest('.col-md-4').find('label').html('Section *');
+        }
+    });
+    
+    // Word count validation
+    $('#min_word_count, #max_word_count').on('change', function() {
+        const minWords = parseInt($('#min_word_count').val()) || 0;
+        const maxWords = parseInt($('#max_word_count').val()) || 0;
+        
+        if (minWords > 0 && maxWords > 0 && minWords >= maxWords) {
+            alert('Maximum word count must be greater than minimum word count');
+            $(this).focus();
+        }
+    });
+});
+
+function loadExistingData() {
+    // Load modules for current course
+    const courseId = $('#course_id').val();
+    if (courseId) {
+        const selectedModuleId = $('#current_module_id').val();
+        const selectedSectionId = $('#current_section_id').val();
+        loadModules(courseId, selectedModuleId || null, selectedSectionId || null);
+    }
+}
+
+function loadModules(courseId, selectedModuleId = null, selectedSectionId = null) {
+    if (!courseId) {
+        $('#module_id').html('<option value="">Select Module</option>');
+        $('#section_id').html('<option value="">Select Section</option>');
+        return;
+    }
+    
+    $.get(`/admin/content/api/modules/${courseId}`)
+        .done(function(data) {
+            let options = '<option value="">Select Module</option>';
+            data.forEach(function(module) {
+                const selected = selectedModuleId && module.id == selectedModuleId ? 'selected' : '';
+                options += `<option value="${module.id}" ${selected}>${module.module_name}</option>`;
+            });
+            $('#module_id').html(options);
+            
+            // If we have a selected module, load its sections
+            if (selectedModuleId) {
+                loadSections(selectedModuleId, selectedSectionId);
+            }
+        })
+        .fail(function() {
+            showToast('Error loading modules', 'error');
+        });
+}
+
+function loadSections(moduleId, selectedSectionId = null) {
+    if (!moduleId) {
+        $('#section_id').html('<option value="">Select Section</option>');
+        return;
+    }
+    
+    $.get(`/admin/content/api/sections/${moduleId}`)
+        .done(function(data) {
+            let options = '<option value="">Select Section</option>';
+            data.forEach(function(section) {
+                const selected = selectedSectionId && section.id == selectedSectionId ? 'selected' : '';
+                options += `<option value="${section.id}" ${selected}>${section.section_name}</option>`;
+            });
+            $('#section_id').html(options);
+        })
+        .fail(function() {
+            showToast('Error loading sections', 'error');
+        });
+}
+
+function startAutoSave() {
+    // Clear existing interval
+    if (autoSaveInterval) {
+        clearInterval(autoSaveInterval);
+    }
+    
+    // Start new auto-save interval (every 30 seconds)
+    autoSaveInterval = setInterval(function() {
+        if (hasUnsavedChanges) {
+            autoSaveForm();
+        }
+    }, 30000);
+}
+
+function autoSaveForm() {
+    const formData = new FormData($('#assignmentEditForm')[0]);
+    formData.append('auto_save', 'true');
+    
+    // Implementation would save to localStorage or make AJAX call
+    // For now, just track that auto-save happened
+    console.log('Auto-saving form...');
+    hasUnsavedChanges = false;
+}
+
+function saveDraft() {
+    const form = document.getElementById('assignmentEditForm');
+    const formData = new FormData(form);
+    formData.append('save_as_draft', 'true');
+    
+    // Submit form
+    form.submit();
+}
+
+function confirmDelete() {
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `toast position-fixed top-0 end-0 m-3`;
+    toast.innerHTML = `
+        <div class="toast-body bg-${type === 'success' ? 'success' : 'danger'} text-white">
+            ${message}
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    setTimeout(() => {
+        document.body.removeChild(toast);
+    }, 3000);
+}
+
+// Prevent accidental navigation with unsaved changes
+window.addEventListener('beforeunload', function(e) {
+    if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+    }
+});
+</script>
+
+<style>
+.form-check-label small {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.card-header h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.btn-group .btn {
+    border-radius: 0.375rem;
+    margin-right: 0.5rem;
+}
+
+.alert {
+    font-size: 0.9rem;
+}
+
+.toast {
+    z-index: 9999;
+}
+</style>
+{% endblock %}

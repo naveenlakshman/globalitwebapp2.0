@@ -1,0 +1,11 @@
+student_id,amount,payment_date,payment_method,status,transaction_id,installment_number,notes
+"ST001",5000,"2024-01-10","Cash","Completed","TXN001",1,"Initial payment - Registration"
+"ST001",10000,"2024-02-10","UPI","Completed","TXN002",2,"Second installment"
+"ST002",7500,"2024-01-10","Card","Completed","TXN003",1,"Partial payment"
+"ST002",7500,"2024-02-15","Bank Transfer","Completed","TXN004",2,"Final payment"
+"ST003",15000,"2024-01-28","UPI","Completed","TXN005",1,"Full payment"
+"ST004",20000,"2024-01-30","Card","Completed","TXN006",1,"Advance payment"
+"ST005",12500,"2024-02-25","Cash","Completed","TXN007",1,"First installment"
+"ST005",12500,"2024-03-25","UPI","Completed","TXN008",2,"Final installment"
+"ST006",15000,"2024-03-12","Bank Transfer","Completed","TXN009",1,"Registration payment"
+"ST007",14000,"2024-03-28","Card","Completed","TXN010",1,"Course fee payment"

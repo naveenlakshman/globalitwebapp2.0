@@ -1,0 +1,334 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}Progress Overview - {{ student.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.progress-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.progress-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.module-progress-item {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.module-progress-item:last-child {
+    border-bottom: none;
+}
+
+.circular-progress {
+    width: 80px;
+    height: 80px;
+    position: relative;
+    display: inline-block;
+    margin-right: 1rem;
+}
+
+.circular-progress svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.circular-progress .progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #1e3c72;
+}
+
+.section-progress-bar {
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+}
+
+.section-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-item {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.achievement-badge {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #856404;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.time-breakdown {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Progress Header -->
+<div class="progress-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-2">
+                <i class="fas fa-chart-line me-2"></i>Learning Progress Overview
+            </h1>
+            <p class="mb-0 opacity-75">
+                Track your progress across all modules in {{ course.course_name }}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="circular-progress">
+                <svg>
+                    <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="6"/>
+                    <circle cx="40" cy="40" r="35" fill="none" stroke="white" stroke-width="6" 
+                            stroke-dasharray="{{ (overall_completion/100) * 220 }} 220" stroke-linecap="round"/>
+                </svg>
+                <div class="progress-text text-white">{{ overall_completion|round }}%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overall Stats -->
+<div class="stats-grid">
+    <div class="stat-item">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <i class="fas fa-book"></i>
+        </div>
+        <h3 class="mb-1">{{ progress_data|length }}</h3>
+        <p class="text-muted mb-0">Total Modules</p>
+    </div>
+    
+    <div class="stat-item">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3 class="mb-1">{{ progress_data|selectattr('completed')|list|length }}</h3>
+        <p class="text-muted mb-0">Completed</p>
+    </div>
+    
+    <div class="stat-item">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h3 class="mb-1">{{ (total_time_spent/60)|round }}h</h3>
+        <p class="text-muted mb-0">Time Spent</p>
+    </div>
+    
+    <div class="stat-item">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+            <i class="fas fa-trophy"></i>
+        </div>
+        <h3 class="mb-1">{{ overall_completion|round }}%</h3>
+        <p class="text-muted mb-0">Overall Progress</p>
+    </div>
+</div>
+
+<!-- Achievement Section -->
+{% if overall_completion >= 25 %}
+<div class="text-center mb-4">
+    {% if overall_completion >= 100 %}
+        <span class="achievement-badge">
+            <i class="fas fa-crown me-1"></i>Course Champion
+        </span>
+    {% elif overall_completion >= 75 %}
+        <span class="achievement-badge">
+            <i class="fas fa-star me-1"></i>Advanced Learner
+        </span>
+    {% elif overall_completion >= 50 %}
+        <span class="achievement-badge">
+            <i class="fas fa-medal me-1"></i>Progress Maker
+        </span>
+    {% elif overall_completion >= 25 %}
+        <span class="achievement-badge">
+            <i class="fas fa-rocket me-1"></i>Getting Started
+        </span>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Module Progress Details -->
+<div class="progress-card">
+    <div class="p-3 border-bottom">
+        <h4><i class="fas fa-list me-2"></i>Module Progress Details</h4>
+    </div>
+    
+    {% for module_data in progress_data %}
+    <div class="module-progress-item">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center">
+                    <div class="circular-progress me-3">
+                        <svg>
+                            <circle cx="40" cy="40" r="35" fill="none" stroke="#e9ecef" stroke-width="6"/>
+                            <circle cx="40" cy="40" r="35" fill="none" 
+                                    stroke="{{ '#28a745' if module_data.completed else '#ffc107' }}" 
+                                    stroke-width="6" 
+                                    stroke-dasharray="{{ (module_data.progress/100) * 220 }} 220" 
+                                    stroke-linecap="round"/>
+                        </svg>
+                        <div class="progress-text">{{ module_data.progress }}%</div>
+                    </div>
+                    <div>
+                        <h5 class="mb-1">{{ module_data.module.module_name }}</h5>
+                        <p class="text-muted mb-2">{{ module_data.sections|length }} sections</p>
+                        
+                        <!-- Time Breakdown -->
+                        <div class="time-breakdown">
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Time Spent</small>
+                                    <div>{{ (module_data.time_spent/60)|round(1) }}h</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Status</small>
+                                    <div>
+                                        {% if module_data.completed %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif module_data.progress > 0 %}
+                                            <span class="badge bg-warning">In Progress</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Not Started</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-end">
+                    <a href="{{ url_for('lms.module_content', module_id=module_data.module.id) }}" 
+                       class="btn btn-sm {{ 'btn-success' if module_data.completed else ('btn-warning' if module_data.progress > 0 else 'btn-primary') }}">
+                        {% if module_data.completed %}
+                            <i class="fas fa-eye me-1"></i>Review
+                        {% elif module_data.progress > 0 %}
+                            <i class="fas fa-play me-1"></i>Continue
+                        {% else %}
+                            <i class="fas fa-play me-1"></i>Start
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section Progress -->
+        {% if module_data.sections %}
+        <div class="mt-3">
+            <h6 class="mb-2">Section Progress:</h6>
+            {% for section_data in module_data.sections %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                        <span class="small">{{ section_data.section.section_name }}</span>
+                        <span class="small text-muted">{{ section_data.progress }}%</span>
+                    </div>
+                    <div class="section-progress-bar">
+                        <div class="section-progress-fill" style="width: {{ section_data.progress }}%"></div>
+                    </div>
+                </div>
+                <div class="ms-2">
+                    {% if section_data.completed %}
+                        <i class="fas fa-check-circle text-success"></i>
+                    {% elif section_data.progress > 0 %}
+                        <i class="fas fa-play-circle text-warning"></i>
+                    {% else %}
+                        <i class="fas fa-circle text-muted"></i>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Actions -->
+<div class="text-center">
+    <div class="d-flex gap-3 justify-content-center">
+        <a href="{{ url_for('lms.student_dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+        <a href="{{ url_for('lms.course_content', course_id=course.id) }}" class="btn btn-success">
+            <i class="fas fa-play me-2"></i>Continue Learning
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate progress bars
+    const progressBars = document.querySelectorAll('.section-progress-fill');
+    progressBars.forEach((bar, index) => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 200 + (index * 100));
+    });
+
+    // Animate circular progress
+    const circles = document.querySelectorAll('.circular-progress circle:last-child');
+    circles.forEach((circle, index) => {
+        const dashArray = circle.getAttribute('stroke-dasharray');
+        circle.setAttribute('stroke-dasharray', '0 220');
+        setTimeout(() => {
+            circle.setAttribute('stroke-dasharray', dashArray);
+        }, 500 + (index * 200));
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Overdue Invoices Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-exclamation-triangle text-warning"></i> Overdue Invoices Report</h2>
+                <a href="{{ url_for('invoices.list_invoices') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Invoices
+                </a>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">{{ overdue_data|length }}</h5>
+                            <p class="card-text">Overdue Installments</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">₹{{ "{:,.2f}".format(overdue_data|map(attribute='installment.balance_amount')|sum) }}</h5>
+                            <p class="card-text">Total Overdue Amount</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">{{ overdue_data|map(attribute='student')|unique|list|length }}</h5>
+                            <p class="card-text">Students with Overdue</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-secondary">{{ due_date|format_date_indian }}</h5>
+                            <p class="card-text">Report Date</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overdue Details -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul"></i> Overdue Installments Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if overdue_data %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Invoice #</th>
+                                    <th>Course</th>
+                                    <th>Installment #</th>
+                                    <th>Due Date</th>
+                                    <th>Days Overdue</th>
+                                    <th>Amount</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in overdue_data %}
+                                <tr class="{% if item.days_overdue > 30 %}table-danger{% elif item.days_overdue > 7 %}table-warning{% endif %}">
+                                    <td>
+                                        <div>
+                                            <strong>{{ item.student.full_name }}</strong><br>
+                                            <small class="text-muted">ID: {{ item.student.student_id }}</small><br>
+                                            <small class="text-muted">📞 {{ item.student.phone_number }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong>INV-{{ item.invoice.id }}</strong>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ item.invoice.course.course_name if item.invoice.course else 'N/A' }}</strong><br>
+                                            <small class="text-muted">{{ item.invoice.course.duration if item.invoice.course else 'N/A' }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">#{{ item.installment.installment_number }}</span>
+                                    </td>
+                                    <td>
+                                        <strong class="text-danger">{{ due_date|format_date_indian }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if item.days_overdue > 30 %}bg-danger{% elif item.days_overdue > 7 %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ item.days_overdue }} days
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">₹{{ "{:,.2f}".format(item.installment.amount) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-danger">₹{{ "{:,.2f}".format(item.installment.balance_amount or item.installment.amount) }}</span>
+                                    </td>
+                                    <td>
+                                        {% if item.installment.status == 'partial' %}
+                                        <span class="badge bg-warning">Partially Paid</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('invoices.view_invoice', invoice_id=item.invoice.id) }}" 
+                                               class="btn btn-outline-primary" title="View Invoice">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('installments.payment_form', installment_id=item.installment.id) }}" 
+                                               class="btn btn-outline-success" title="Record Payment">
+                                                <i class="bi bi-credit-card"></i>
+                                            </a>
+                                            <a href="tel:{{ item.student.phone_number }}" 
+                                               class="btn btn-outline-info" title="Call Student">
+                                                <i class="bi bi-telephone"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">No overdue installments found. Great job!</p>
+                        <a href="{{ url_for('invoices.list_invoices') }}" class="btn btn-primary">
+                            <i class="bi bi-arrow-left"></i> Back to Invoices
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.table-danger {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.table-warning {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+</style>
+{% endblock %}

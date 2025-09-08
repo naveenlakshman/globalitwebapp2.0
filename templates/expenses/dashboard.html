@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% block title %}Expense Management Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary">
+                        <i class="fas fa-receipt me-2"></i>Expense Management
+                    </h2>
+                    <p class="text-secondary mb-0">Track and manage business expenses</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('expenses.add_expense') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add New Expense
+                    </a>
+                    <a href="{{ url_for('expenses.expense_reports') }}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar me-1"></i>Reports
+                    </a>
+                    {% if session.role in ['admin', 'franchise_owner'] %}
+                    <a href="{{ url_for('expenses.expense_audit') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-clipboard-list me-1"></i>Audit Trail
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">
+                                Total Expenses
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">₹{{ "{:,.2f}".format(total_expenses) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-money-bill-wave fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">
+                                Paid Expenses
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-success">₹{{ "{:,.2f}".format(paid_expenses) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+                                Pending Expenses
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-warning">₹{{ "{:,.2f}".format(pending_expenses) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-danger text-uppercase mb-1">
+                                Overdue Items
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-danger">{{ overdue_expenses|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Recent Expenses -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-primary">Recent Expenses</h6>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" 
+                                data-bs-toggle="dropdown">
+                            Filter: {{ date_filter.replace('_', ' ').title() }}
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?date_filter=today">Today</a></li>
+                            <li><a class="dropdown-item" href="?date_filter=this_week">This Week</a></li>
+                            <li><a class="dropdown-item" href="?date_filter=this_month">This Month</a></li>
+                            <li><a class="dropdown-item" href="?date_filter=last_month">Last Month</a></li>
+                            <li><a class="dropdown-item" href="?date_filter=this_year">This Year</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_expenses %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Expense ID</th>
+                                        <th>Date</th>
+                                        <th>Category</th>
+                                        <th>Description</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for expense in recent_expenses %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('expenses.view_expense', expense_id=expense.expense_id) }}" 
+                                               class="text-decoration-none">
+                                                {{ expense.expense_id }}
+                                            </a>
+                                        </td>
+                                        <td>{{ expense.expense_date|format_date_indian }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ expense.expense_category }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="text-truncate" style="max-width: 200px;">
+                                                {{ expense.description }}
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>{{ expense.formatted_total_amount }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if expense.payment_status == 'Paid' %}
+                                                <span class="badge bg-success">Paid</span>
+                                            {% elif expense.payment_status == 'Partially Paid' %}
+                                                <span class="badge bg-warning">Partially Paid</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Unpaid</span>
+                                            {% endif %}
+                                            
+                                            {% if expense.is_overdue %}
+                                                <span class="badge bg-danger ms-1">Overdue</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('expenses.view_expense', expense_id=expense.expense_id) }}" 
+                                                   class="btn btn-outline-info" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('expenses.edit_expense', expense_id=expense.expense_id) }}" 
+                                                   class="btn btn-outline-warning" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No expenses found</h5>
+                            <p class="text-muted">Start by adding your first expense record.</p>
+                            <a href="{{ url_for('expenses.add_expense') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Add Expense
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Category Breakdown -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">Category Breakdown</h6>
+                </div>
+                <div class="card-body">
+                    {% if category_stats %}
+                        {% for category, stats in category_stats.items() %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <strong>{{ category }}</strong>
+                                <br>
+                                <small class="text-muted">{{ stats.count }} items</small>
+                            </div>
+                            <div class="text-end">
+                                <strong>₹{{ "{:,.2f}".format(stats.amount) }}</strong>
+                            </div>
+                        </div>
+                        <div class="progress mb-3" style="height: 8px;">
+                            {% set percentage = (stats.amount / total_expenses * 100) if total_expenses > 0 else 0 %}
+                            <div class="progress-bar" style="width: {{ percentage }}%"></div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No category data available</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Overdue Expenses -->
+            {% if overdue_expenses %}
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-danger text-white">
+                    <h6 class="m-0 fw-bold">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Overdue Expenses
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for expense in overdue_expenses[:5] %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <a href="{{ url_for('expenses.view_expense', expense_id=expense.expense_id) }}" 
+                               class="text-decoration-none">
+                                <strong>{{ expense.expense_id }}</strong>
+                            </a>
+                            <br>
+                            <small class="text-muted">{{ expense.description[:30] }}...</small>
+                        </div>
+                        <div class="text-end">
+                            <strong class="text-danger">{{ expense.formatted_total_amount }}</strong>
+                            <br>
+                            <small class="text-muted">{{ expense.expense_date|format_date_indian }}</small>
+                        </div>
+                    </div>
+                    <hr>
+                    {% endfor %}
+                    
+                    {% if overdue_expenses|length > 5 %}
+                    <div class="text-center">
+                        <small class="text-muted">
+                            And {{ overdue_expenses|length - 5 }} more overdue items...
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+.border-left-danger {
+    border-left: 0.25rem solid #e74a3b !important;
+}
+.progress-bar {
+    background: linear-gradient(90deg, #4e73df, #1cc88a);
+}
+</style>
+{% endblock %}

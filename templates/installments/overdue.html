@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Overdue Installments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-exclamation-triangle-fill text-danger"></i> Overdue Installments</h2>
+                <div>
+                    <a href="{{ url_for('installments.due_today') }}" class="btn btn-outline-warning me-2">
+                        <i class="bi bi-calendar-event"></i> Due Today
+                    </a>
+                    <a href="{{ url_for('installments.list_installments') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to All Installments
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle-fill text-danger"></i> Overdue Installments
+                        <span class="badge bg-danger">{{ overdue_data|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if overdue_data %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-danger">
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Invoice</th>
+                                    <th>Installment #</th>
+                                    <th>Due Date</th>
+                                    <th>Days Overdue</th>
+                                    <th>Amount Due</th>
+                                    <th>Contact</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for installment, invoice, student in overdue_data %}
+                                <tr class="table-danger">
+                                    <td>
+                                        <div>
+                                            <strong>{{ student.full_name }}</strong><br>
+                                            <small class="text-muted">ID: {{ student.student_id }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong>INV-{{ invoice.id }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger">#{{ installment.installment_number }}</span>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {% if installment.due_date %}
+                                                {{ installment.due_date.strftime('%d-%m-%Y') }}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if installment.due_date and today %}
+                                            {% set days_overdue = (today - installment.due_date).days %}
+                                            <span class="badge bg-dark">{{ days_overdue }} days</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong class="text-danger">₹{{ "{:,.2f}".format(installment.balance_amount or installment.amount) }}</strong>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {% if student.mobile %}
+                                                <i class="bi bi-telephone"></i> {{ student.mobile }}<br>
+                                            {% endif %}
+                                            {% if student.email %}
+                                                <i class="bi bi-envelope"></i> {{ student.email }}
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('installments.payment_form', installment_id=installment.id) }}" 
+                                               class="btn btn-success btn-sm" title="Record Payment">
+                                                <i class="bi bi-currency-rupee"></i>
+                                            </a>
+                                            <a href="{{ url_for('installments.view_installment', installment_id=installment.id) }}" 
+                                               class="btn btn-info btn-sm" title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if student.mobile %}
+                                            <button class="btn btn-warning btn-sm" 
+                                                    onclick="sendReminder({{ installment.id }}, '{{ student.mobile }}', '{{ student.full_name }}')"
+                                                    title="Send SMS Reminder">
+                                                <i class="bi bi-chat-text"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h4 class="text-success">Great! No overdue installments.</h4>
+                        <p class="text-muted">All payments are up to date.</p>
+                        <a href="{{ url_for('installments.due_today') }}" class="btn btn-outline-warning">
+                            <i class="bi bi-calendar-event"></i> View Due Today
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function sendReminder(installmentId, phone, studentName) {
+    if (confirm(`Send payment reminder to ${studentName} at ${phone}?`)) {
+        // You can implement SMS reminder functionality here
+        fetch(`/installments/${installmentId}/send-reminder`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+            },
+            body: JSON.stringify({
+                phone: phone,
+                student_name: studentName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Reminder sent successfully!');
+            } else {
+                alert('Error sending reminder: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error sending reminder. Please try again.');
+        });
+    }
+}
+</script>
+
+<style>
+.table-danger {
+    --bs-table-bg: #f8d7da;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

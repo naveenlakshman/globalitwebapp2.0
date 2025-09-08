@@ -1,0 +1,9 @@
+.top-nav{
+  background:var(--bg-primary); padding:var(--space-sm) var(--space-xl); box-shadow:var(--shadow-sm);
+  display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gray-200); min-height:60px
+}
+.user-menu{display:flex; align-items:center; gap:var(--space-sm)}
+.user-avatar{
+  width:35px; height:35px; border-radius:50%; background:var(--gradient-primary); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-weight:var(--font-bold); font-size:var(--text-sm)
+}

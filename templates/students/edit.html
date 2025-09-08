@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Student - {{ student.full_name }} - Global IT{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="card shadow">
+      <div class="card-header bg-warning text-white">
+        <h4 class="mb-0"><i class="fas fa-user-edit"></i> Edit Student - {{ student.full_name }}</h4>
+        <p class="mb-0 mt-1">Student ID: {{ student.student_id }} | Branch: {{ branch_name }}</p>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('students.edit_student', student_id=student.student_id) }}" id="editStudentForm">
+          
+          <!-- Personal Information Section -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <h5 class="text-primary border-bottom pb-2"><i class="fas fa-user"></i> Personal Information</h5>
+            </div>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label"><strong>Full Name</strong> <span class="text-danger">*</span></label>
+              <input type="text" name="full_name" class="form-control" required 
+                     value="{{ student.full_name }}" placeholder="Enter full name">
+            </div>
+            
+            <div class="col-md-3">
+              <label class="form-label"><strong>Gender</strong> <span class="text-danger">*</span></label>
+              <select name="gender" class="form-select" required>
+                <option value="Male" {% if student.gender == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if student.gender == 'Female' %}selected{% endif %}>Female</option>
+                <option value="Other" {% if student.gender == 'Other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+            
+            <div class="col-md-3">
+              <label class="form-label"><strong>Date of Birth</strong></label>
+              <input type="date" name="dob" class="form-control" 
+                     value="{{ student.dob.strftime('%Y-%m-%d') if student.dob else '' }}">
+            </div>
+          </div>
+
+          <!-- Contact Information Section -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <h5 class="text-primary border-bottom pb-2"><i class="fas fa-phone"></i> Contact Information</h5>
+            </div>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label"><strong>Mobile Number</strong> <span class="text-danger">*</span></label>
+              <input type="tel" name="mobile" class="form-control" required 
+                     value="{{ student.mobile }}" placeholder="Enter mobile number">
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label"><strong>Email Address</strong></label>
+              <input type="email" name="email" class="form-control" 
+                     value="{{ student.email or '' }}" placeholder="Enter email address">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-12">
+              <label class="form-label"><strong>Address</strong></label>
+              <textarea name="address" class="form-control" rows="3" 
+                        placeholder="Enter full address">{{ student.address or '' }}</textarea>
+            </div>
+          </div>
+
+          <!-- Guardian Information Section -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <h5 class="text-primary border-bottom pb-2"><i class="fas fa-user-friends"></i> Guardian Information</h5>
+            </div>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label"><strong>Guardian Name</strong></label>
+              <input type="text" name="guardian_name" class="form-control" 
+                     value="{{ student.guardian_name or '' }}" placeholder="Enter guardian name">
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label"><strong>Guardian Mobile</strong></label>
+              <input type="tel" name="guardian_mobile" class="form-control" 
+                     value="{{ student.guardian_mobile or '' }}" placeholder="Enter guardian mobile">
+            </div>
+          </div>
+
+          <!-- Academic Information Section -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <h5 class="text-primary border-bottom pb-2"><i class="fas fa-graduation-cap"></i> Academic Information</h5>
+            </div>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label"><strong>Qualification</strong></label>
+              <input type="text" name="qualification" class="form-control" 
+                     value="{{ student.qualification or '' }}" placeholder="Highest qualification">
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label"><strong>Student Status</strong> <span class="text-danger">*</span></label>
+              <select name="status" class="form-select" required>
+                <option value="Active" {% if student.status == 'Active' %}selected{% endif %}>Active - Currently enrolled and attending classes</option>
+                <option value="Hold" {% if student.status == 'Hold' %}selected{% endif %}>Hold - Temporarily paused (fees pending, personal reasons, etc.)</option>
+                <option value="Inactive" {% if student.status == 'Inactive' %}selected{% endif %}>Inactive - Not attending for a longer period</option>
+                <option value="Dropout" {% if student.status == 'Dropout' %}selected{% endif %}>Dropout - Officially left/discontinued</option>
+                <option value="Completed" {% if student.status == 'Completed' %}selected{% endif %}>Completed - Successfully finished the course</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label"><strong>Batch</strong></label>
+              <select name="batch_id" class="form-select">
+                <option value="">No Batch Assigned</option>
+                {% for batch in batches %}
+                <option value="{{ batch.id }}" 
+                        {% if batch.id == student.batch_id %}selected{% endif %}>
+                  {{ batch.name }} - {{ batch.course_name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label"><strong>Student Status</strong> <span class="text-danger">*</span></label>
+              <select name="status" class="form-select" required>
+                <option value="Active" {% if student.status == 'Active' %}selected{% endif %}>
+                  Active - Currently enrolled and attending classes
+                </option>
+                <option value="Hold" {% if student.status == 'Hold' %}selected{% endif %}>
+                  Hold - Temporarily paused (fees pending, personal reasons, etc.)
+                </option>
+                <option value="Inactive" {% if student.status == 'Inactive' %}selected{% endif %}>
+                  Inactive - Not attending for a longer period
+                </option>
+                <option value="Dropout" {% if student.status == 'Dropout' %}selected{% endif %}>
+                  Dropout - Officially left/discontinued
+                </option>
+                <option value="Completed" {% if student.status == 'Completed' %}selected{% endif %}>
+                  Completed - Successfully finished the course
+                </option>
+              </select>
+              <small class="form-text text-muted">Current enrollment status of the student</small>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label"><strong>Admission Mode</strong></label>
+              <select name="admission_mode" class="form-select">
+                <option value="">Select Mode</option>
+                <option value="Online" {% if student.admission_mode == 'Online' %}selected{% endif %}>Online</option>
+                <option value="Offline" {% if student.admission_mode == 'Offline' %}selected{% endif %}>Offline</option>
+                <option value="Phone" {% if student.admission_mode == 'Phone' %}selected{% endif %}>Phone</option>
+              </select>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label"><strong>Referred By</strong></label>
+              <input type="text" name="referred_by" class="form-control" 
+                     value="{{ student.referred_by or '' }}" placeholder="Referral source">
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="row">
+            <div class="col-12">
+              <hr>
+              <div class="d-flex justify-content-between">
+                <div>
+                  <a href="{{ url_for('students.view_student', student_id=student.student_id) }}" 
+                     class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to View
+                  </a>
+                </div>
+                <div>
+                  <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-save"></i> Update Student
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.getElementById('editStudentForm');
+    
+    form.addEventListener('submit', function(e) {
+        const mobile = document.querySelector('input[name="mobile"]').value;
+        
+        // Basic mobile validation
+        if (mobile && (mobile.length < 10 || mobile.length > 15)) {
+            e.preventDefault();
+            alert('Please enter a valid mobile number (10-15 digits)');
+            return false;
+        }
+    });
+});
+</script>
+
+{% endblock %}

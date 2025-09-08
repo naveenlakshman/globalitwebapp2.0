@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Installment Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-calendar-check"></i> Installment Details</h2>
+                <div>
+                    <!-- Print and PDF Actions -->
+                    <a href="{{ url_for('installments.print_installment', installment_id=installment.id) }}" 
+                       class="btn btn-info me-2" target="_blank">
+                        <i class="bi bi-printer"></i> Print Installment
+                    </a>
+                    <a href="{{ url_for('installments.download_installment_pdf', installment_id=installment.id) }}" 
+                       class="btn btn-success me-2">
+                        <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                    </a>
+                    
+                    {% if installment.status != 'paid' %}
+                    <a href="{{ url_for('installments.payment_form', installment_id=installment.id) }}" class="btn btn-warning me-2">
+                        <i class="bi bi-credit-card"></i> Record Payment
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('invoices.view_invoice', invoice_id=invoice.id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Invoice
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <!-- Installment Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Installment Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Installment Number:</strong> {{ installment.installment_number }}</p>
+                                    <p><strong>Due Date:</strong> 
+                                        <span class="{% if installment.due_date < today and installment.status != 'paid' %}text-danger{% endif %}">
+                                            {{ installment.due_date|format_date_indian }}
+                                            {% if installment.due_date < today and installment.status != 'paid' %}
+                                                <i class="bi bi-exclamation-triangle text-danger" title="Overdue"></i>
+                                            {% endif %}
+                                        </span>
+                                    </p>
+                                    <p><strong>Amount:</strong> ₹{{ "{:,.2f}".format(installment.amount) }}</p>
+                                    <p><strong>Paid Amount:</strong> ₹{{ "{:,.2f}".format(installment.paid_amount or 0) }}</p>
+                                    <p><strong>Balance Amount:</strong> ₹{{ "{:,.2f}".format(installment.balance_amount or installment.amount) }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Status:</strong> 
+                                        {% if installment.status == 'paid' %}
+                                            <span class="badge bg-success">Paid</span>
+                                        {% elif installment.status == 'partial' %}
+                                            <span class="badge bg-warning">Partially Paid</span>
+                                        {% elif installment.due_date < today %}
+                                            <span class="badge bg-danger">Overdue</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Pending</span>
+                                        {% endif %}
+                                    </p>
+                                    {% if installment.notes %}
+                                    <p><strong>Notes:</strong> {{ installment.notes }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment History -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Payment History</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if payments %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Amount</th>
+                                                <th>Method</th>
+                                                <th>UTR/Ref</th>
+                                                <th>Notes</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for payment in payments %}
+                                            <tr>
+                                                <td>{{ payment.paid_on.strftime('%d %b %Y %I:%M %p') }}</td>
+                                                <td>₹{{ "{:,.2f}".format(payment.amount) }}</td>
+                                                <td>{{ payment.mode }}</td>
+                                                <td>{{ payment.utr_number or '-' }}</td>
+                                                <td>{{ payment.notes or '-' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-credit-card" style="font-size: 3rem;"></i>
+                                    <p class="mt-2">No payments recorded yet</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <!-- Student Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-person"></i> Student Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Name:</strong> {{ student.full_name }}</p>
+                            <p><strong>Student ID:</strong> {{ student.student_id }}</p>
+                            <p><strong>Phone:</strong> {{ student.phone_number }}</p>
+                            <p><strong>Email:</strong> {{ student.email }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Information -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-receipt"></i> Invoice Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Invoice #:</strong> {{ invoice.id }}</p>
+                            <p><strong>Enrollment Date:</strong> {{ installment.due_date|format_date_indian }}</p>
+                            <p><strong>Total Amount:</strong> ₹{{ "{:,.2f}".format(invoice.total_amount) }}</p>
+                            <p><strong>Paid Amount:</strong> ₹{{ "{:,.2f}".format(invoice.paid_amount) }}</p>
+                            <p><strong>Due Amount:</strong> ₹{{ "{:,.2f}".format(invoice.due_amount) }}</p>
+                            <p><strong>Course:</strong> {{ invoice.course.course_name if invoice.course else 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

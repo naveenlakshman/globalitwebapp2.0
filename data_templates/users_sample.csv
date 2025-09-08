@@ -1,0 +1,11 @@
+username,password,full_name,role,branch_id
+"super_admin","admin123","System Administrator","super_admin",
+"blr_admin","blr123","Bangalore Branch Admin","branch_admin","1"
+"mum_admin","mum123","Mumbai Branch Admin","branch_admin","2"
+"del_admin","del123","Delhi Branch Admin","branch_admin","3"
+"trainer_rk","trainer123","Rajesh Kumar","trainer","1"
+"trainer_ps","trainer123","Priya Sharma","trainer","2"
+"trainer_as","trainer123","Amit Singh","trainer","3"
+"counselor_dn","counselor123","Deepika Nair","counselor","4"
+"counselor_rt","counselor123","Ravi Teja","counselor","5"
+"accountant_main","acc123","Finance Manager","accountant","1"

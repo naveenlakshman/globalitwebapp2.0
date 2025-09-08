@@ -1,0 +1,277 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}Learning Management System - {{ student.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.lms-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.progress-circle {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    display: inline-block;
+}
+
+.progress-circle svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.progress-circle .progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: white;
+}
+
+.module-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.module-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.module-header {
+    padding: 1.5rem;
+}
+
+.module-progress {
+    background: #e9ecef;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.module-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 4px;
+    transition: width 1s ease;
+}
+
+.start-learning-btn {
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.start-learning-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    color: white;
+}
+
+.stats-row {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.continue-btn {
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.continue-btn:hover {
+    color: white;
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Simplified LMS Header -->
+<div class="lms-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-2">
+                <i class="fas fa-graduation-cap me-2"></i>Learning Dashboard
+            </h1>
+            <p class="mb-0 opacity-75">
+                Welcome back, {{ student.full_name }}!
+            </p>
+            {% if course %}
+            <p class="mb-0 mt-1">
+                <i class="fas fa-book me-2"></i>{{ course.course_name }}
+            </p>
+            {% endif %}
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="progress-circle">
+                <svg>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="6"/>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="white" stroke-width="6" 
+                            stroke-dasharray="{{ (overall_progress/100) * 251 }} 251" stroke-linecap="round"/>
+                </svg>
+                <div class="progress-text">{{ overall_progress|round }}%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not course %}
+<!-- No Course Assigned -->
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <h4><i class="fas fa-info-circle me-2"></i>No Course Assigned</h4>
+            <p>You don't have any course assigned yet. Please contact your administrator to get enrolled in a course.</p>
+        </div>
+    </div>
+</div>
+{% else %}
+
+<!-- Simplified Stats -->
+<div class="stats-row">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number text-primary">{{ total_modules }}</div>
+                <div class="text-muted">Total Modules</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number text-success">{{ completed_modules }}</div>
+                <div class="text-muted">Completed</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number text-warning">{{ (total_modules - completed_modules) }}</div>
+                <div class="text-muted">Remaining</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number text-info">{{ overall_progress|round }}%</div>
+                <div class="text-muted">Overall Progress</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Course Modules - Simplified -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="fas fa-book-open me-2"></i>Course Modules</h3>
+    {% if course %}
+    <a href="{{ url_for('student_portal.course_player', course_id=course.id) }}" class="start-learning-btn">
+        <i class="fas fa-play me-2"></i>Start Learning
+    </a>
+    {% endif %}
+</div>
+
+{% if modules %}
+    {% for module in modules %}
+    <div class="module-card">
+        <div class="module-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5 class="mb-2">
+                        <i class="fas fa-puzzle-piece me-2 text-primary"></i>{{ module.module_name }}
+                    </h5>
+                    {% if module.module_description %}
+                    <p class="text-muted mb-2">{{ module.module_description[:150] }}{% if module.module_description|length > 150 %}...{% endif %}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="mb-2">
+                        <span class="badge bg-primary me-1">{{ module.get_total_sections() }} Sections</span>
+                        {% if module.estimated_duration_hours %}
+                        <span class="badge bg-info">{{ module.estimated_duration_hours }}h</span>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('lms.module_content', module_id=module.id) }}" class="continue-btn">
+                        {% if module.get_progress_for_student(student.student_id) > 0 %}
+                            Continue <i class="fas fa-arrow-right ms-1"></i>
+                        {% else %}
+                            Start <i class="fas fa-play ms-1"></i>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+            <div class="module-progress">
+                <div class="module-progress-fill" style="width: {{ module.get_progress_for_student(student.student_id) }}%"></div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    <i class="fas fa-chart-line me-1"></i>Progress: {{ module.get_progress_for_student(student.student_id) }}%
+                </small>
+                {% if module.is_mandatory %}
+                <small class="badge bg-warning">Required</small>
+                {% else %}
+                <small class="badge bg-secondary">Optional</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        No modules available for this course yet. Check back later!
+    </div>
+{% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Progress animation
+document.addEventListener('DOMContentLoaded', function() {
+    const progressBars = document.querySelectorAll('.module-progress-fill');
+    progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 800);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block title %}SMS Templates - Global IT Education{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">SMS Templates</h1>
+                    <p class="text-muted">Manage SMS message templates for automation</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('sms.sms_dashboard') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTemplateModal">
+                        <i class="fas fa-plus me-2"></i>Create Template
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-alt me-2"></i>Custom Templates
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if templates %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Content Preview</th>
+                                    <th>Variables</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for template in templates %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ template.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ template.message_type.title() }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 250px;" title="{{ template.content }}">
+                                            {{ template.content }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if template.variables %}
+                                            <small class="text-muted">{{ template.variables }}</small>
+                                        {% else %}
+                                            <small class="text-muted">None</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if template.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ template.created_at|format_datetime('%m/%d/%Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary edit-template-btn" 
+                                                    data-template-id="{{ template.id }}"
+                                                    data-template-name="{{ template.name }}"
+                                                    data-template-content="{{ template.content }}"
+                                                    data-template-category="{{ template.message_type }}"
+                                                    data-template-variables="{{ template.variables or '' }}"
+                                                    data-template-active="{{ template.is_active }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <a href="{{ url_for('sms.edit_template', template_id=template.id) }}" 
+                                               class="btn btn-outline-warning">
+                                                <i class="fas fa-toggle-{{ 'off' if template.is_active else 'on' }}"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No custom templates created yet</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTemplateModal">
+                            Create Your First Template
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Predefined Templates -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-star me-2"></i>Predefined Templates
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for template_key, template_data in predefined_templates.items() %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ template_key.replace('_', ' ').title() }}</h6>
+                                    <p class="card-text small">{{ template_data.template }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="text-muted">Variables: 
+                                                {% for var in template_data.variables %}
+                                                    <code>{{ var }}</code>{% if not loop.last %}, {% endif %}
+                                                {% endfor %}
+                                            </small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                onclick="useTemplate('{{ template_data.template }}')">
+                                            Use Template
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Template Modal -->
+<div class="modal fade" id="createTemplateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create SMS Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('sms.create_template') }}" method="POST">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="templateName" class="form-label">Template Name</label>
+                                <input type="text" class="form-control" id="templateName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="templateCategory" class="form-label">Category</label>
+                                <select class="form-select" id="templateCategory" name="message_type" required>
+                                    <option value="">Select Category</option>
+                                    <option value="payment">Payment</option>
+                                    <option value="attendance">Attendance</option>
+                                    <option value="general">General</option>
+                                    <option value="promotional">Promotional</option>
+                                    <option value="reminder">Reminder</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="templateContent" class="form-label">Message Content</label>
+                        <textarea class="form-control" id="templateContent" name="content" rows="4" 
+                                  placeholder="Enter your SMS message content..." required></textarea>
+                        <div class="form-text">
+                            Use variables like {student_name}, {amount}, {date} etc. for dynamic content
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="templateVariables" class="form-label">Variables (comma-separated)</label>
+                        <input type="text" class="form-control" id="templateVariables" name="variables" 
+                               placeholder="student_name, amount, date">
+                        <div class="form-text">
+                            List the variables used in your template content
+                        </div>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="templateActive" name="is_active" checked>
+                        <label class="form-check-label" for="templateActive">
+                            Active (template can be used immediately)
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Template Modal -->
+<div class="modal fade" id="editTemplateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit SMS Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editTemplateForm" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="editTemplateId" name="template_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editTemplateName" class="form-label">Template Name</label>
+                                <input type="text" class="form-control" id="editTemplateName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editTemplateCategory" class="form-label">Category</label>
+                                <select class="form-select" id="editTemplateCategory" name="message_type" required>
+                                    <option value="payment">Payment</option>
+                                    <option value="attendance">Attendance</option>
+                                    <option value="general">General</option>
+                                    <option value="promotional">Promotional</option>
+                                    <option value="reminder">Reminder</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editTemplateContent" class="form-label">Message Content</label>
+                        <textarea class="form-control" id="editTemplateContent" name="content" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editTemplateVariables" class="form-label">Variables (comma-separated)</label>
+                        <input type="text" class="form-control" id="editTemplateVariables" name="variables">
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="editTemplateActive" name="is_active">
+                        <label class="form-check-label" for="editTemplateActive">
+                            Active
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Event delegation for edit template buttons
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.edit-template-btn')) {
+            const btn = e.target.closest('.edit-template-btn');
+            const id = btn.dataset.templateId;
+            const name = btn.dataset.templateName;
+            const content = btn.dataset.templateContent;
+            const category = btn.dataset.templateCategory;
+            const variables = btn.dataset.templateVariables;
+            const isActive = btn.dataset.templateActive === 'True';
+            
+            editTemplate(id, name, content, category, variables, isActive);
+        }
+    });
+});
+
+function editTemplate(id, name, content, category, variables, isActive) {
+    document.getElementById('editTemplateId').value = id;
+    document.getElementById('editTemplateName').value = name;
+    document.getElementById('editTemplateContent').value = content;
+    document.getElementById('editTemplateCategory').value = category;
+    document.getElementById('editTemplateVariables').value = variables || '';
+    document.getElementById('editTemplateActive').checked = isActive;
+    
+    // Set form action
+    document.getElementById('editTemplateForm').action = `/sms/templates/${id}/edit`;
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('editTemplateModal')).show();
+}
+
+function useTemplate(content) {
+    // Copy template content to clipboard
+    navigator.clipboard.writeText(content).then(function() {
+        // Show success message
+        const toast = document.createElement('div');
+        toast.className = 'toast position-fixed top-0 end-0 m-3';
+        toast.innerHTML = `
+            <div class="toast-body bg-success text-white">
+                Template copied to clipboard!
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 3000);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,677 @@
+{% extends "base.html" %}
+{% block title %}Staff Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff-management.css') }}">
+<!-- Cache buster: 2025-08-19-18:40 -->
+{% endblock %}
+
+{% block content %}
+<!-- Debug: Template version 2025-08-19-18:40 - WORKING VERSION -->
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary">
+                        <i class="fas fa-users-cog me-2"></i>Staff Management
+                    </h2>
+                    <p class="text-muted mb-0">Manage trainers, managers, and other staff members</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('staff.create_staff') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add New Staff
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Staff
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ staff_members|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Trainers
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ staff_members | selectattr('user.role', 'equalto', 'trainer') | list | length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Managers
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ staff_members | selectattr('user.role', 'equalto', 'branch_manager') | list | length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-tie fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Support Staff
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ staff_members | selectattr('user.role', 'equalto', 'staff') | list | length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hands-helping fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>Staff Members
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if staff_members %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="staffTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Staff Details</th>
+                            <th>Username</th>
+                            <th>Role & Designation</th>
+                            <th>Contact Info</th>
+                            <th>Assigned Branches</th>
+                            <th>Joining Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for staff in staff_members %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if staff.user.staff_profile and staff.user.staff_profile.profile_photo %}
+                                        <img src="{{ url_for('static', filename=staff.user.staff_profile.profile_photo) }}" 
+                                             alt="Profile" class="rounded-circle me-2" width="40" height="40">
+                                    {% else %}
+                                        <div class="avatar me-2">
+                                            <span class="avatar-initial rounded-circle bg-primary text-white">
+                                                {{ (staff.user.full_name or staff.user.username)[:1].upper() }}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ staff.user.full_name or staff.user.username }}</strong>
+                                        {% if staff.user.staff_profile and staff.user.staff_profile.employee_id %}
+                                            <br><small class="text-muted">ID: {{ staff.user.staff_profile.employee_id }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ staff.user.username }}</span>
+                            </td>
+                            <td>
+                                {% if staff.user.role == 'trainer' %}
+                                    <span class="badge bg-success">Trainer</span>
+                                {% elif staff.user.role == 'branch_manager' %}
+                                    <span class="badge bg-primary">Branch Manager</span>
+                                {% elif staff.user.role == 'staff' %}
+                                    <span class="badge bg-warning">Support Staff</span>
+                                {% elif staff.user.role == 'franchise' or staff.user.role == 'franchise_owner' %}
+                                    <span class="badge bg-danger">Franchise Owner</span>
+                                {% elif staff.user.role == 'regional_manager' %}
+                                    <span class="badge bg-info">Regional Manager</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ staff.user.role.title() }}</span>
+                                {% endif %}
+                                {% if staff.user.staff_profile and staff.user.staff_profile.designation %}
+                                    <br><small class="text-muted">{{ staff.user.staff_profile.designation }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if staff.user.staff_profile %}
+                                    {% if staff.user.staff_profile.primary_mobile %}
+                                        <div><i class="fas fa-phone text-muted me-1"></i>{{ staff.user.staff_profile.primary_mobile }}</div>
+                                    {% endif %}
+                                    {% if staff.user.staff_profile.personal_email %}
+                                        <div><i class="fas fa-envelope text-muted me-1"></i>{{ staff.user.staff_profile.personal_email }}</div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">No contact info</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if staff.branches %}
+                                    {% for branch in staff.branches %}
+                                        <span class="badge bg-outline-primary me-1">{{ branch }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted">No branches assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if staff.user.staff_profile and staff.user.staff_profile.joining_date %}
+                                    <small class="text-muted">
+                                        {{ staff.user.staff_profile.joining_date.strftime('%b %d, %Y') }}
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted">
+                                        {{ staff.user.created_at.strftime('%b %d, %Y') if staff.user.created_at else 'N/A' }}
+                                    </small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('staff.view_staff', user_id=staff.user.id) }}" 
+                                       class="btn btn-sm btn-outline-success" title="View Full Profile">
+                                        <i class="fas fa-id-card"></i>
+                                    </a>
+                                    
+                                    {% if staff.user.id != session.user_id %}
+                                        <a href="{{ url_for('staff.edit_staff', user_id=staff.user.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" title="Edit Staff">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    {% endif %}
+                                    
+                                    {% set can_delete = false %}
+                                    {% if staff.user.id != session.user_id %}
+                                        {% if session.role == 'admin' %}
+                                            {% set can_delete = true %}
+                                        {% elif session.role in ['franchise', 'franchise_owner'] %}
+                                            {% if staff.user.role in ['trainer', 'branch_manager', 'staff'] %}
+                                                {% set can_delete = true %}
+                                            {% endif %}
+                                        {% elif session.role == 'regional_manager' %}
+                                            {% if staff.user.role in ['trainer', 'branch_manager', 'staff', 'regional_manager'] %}
+                                                {% set can_delete = true %}
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                                    
+                                    {% if can_delete %}
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-btn" 
+                                                data-user-id="{{ staff.user.id }}" 
+                                                data-user-name="{{ staff.user.full_name or staff.user.username }}"
+                                                onclick="handleDeleteClick(this)"
+                                                title="Delete Staff">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    {% else %}
+                                        {% if staff.user.id == session.user_id %}
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                    disabled title="Cannot delete yourself">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        {% elif staff.user.role in ['franchise', 'franchise_owner', 'admin'] and session.role != 'admin' %}
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                    disabled title="Insufficient permissions">
+                                                <i class="fas fa-lock"></i>
+                                            </button>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                <h5 class="text-muted">No Staff Members Found</h5>
+                <p class="text-muted">Add new staff members to get started.</p>
+                <a href="{{ url_for('staff.create_staff') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Add First Staff Member
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to <strong>permanently delete</strong> <strong id="deleteUserName"></strong>?</p>
+                <p class="text-danger"><i class="fas fa-warning me-1"></i><strong>This action is IRREVERSIBLE!</strong></p>
+                <p class="text-muted">This will permanently:</p>
+                <ul class="text-muted">
+                    <li>Delete the user account and all associated data</li>
+                    <li>Remove all branch assignments</li>
+                    <li>Delete staff profile information</li>
+                    <li>Cannot be undone</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelBtn">Cancel</button>
+                <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i>Delete Permanently
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variable to store current user ID for deletion
+let currentDeleteUserId = null;
+let currentDeleteUserName = null;
+let deleteModal = null;
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing staff page...');
+    
+    // Initialize Bootstrap modal
+    const modalElement = document.getElementById('deleteModal');
+    if (modalElement) {
+        deleteModal = new bootstrap.Modal(modalElement, {
+            backdrop: true,
+            keyboard: true,
+            focus: true
+        });
+        console.log('Modal initialized successfully');
+        
+        // Handle modal events
+        modalElement.addEventListener('shown.bs.modal', function() {
+            console.log('Modal shown');
+            // Focus on cancel button by default for safety
+            document.getElementById('cancelBtn').focus();
+        });
+        
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            console.log('Modal hidden');
+            // Reset user data
+            currentDeleteUserId = null;
+            currentDeleteUserName = null;
+        });
+    } else {
+        console.error('Modal element not found');
+    }
+    
+    // Initialize DataTable if jQuery is available
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        try {
+            $('#staffTable').DataTable({
+                responsive: true,
+                pageLength: 25,
+                order: [[0, 'asc']],
+                columnDefs: [
+                    { orderable: false, targets: [-1] } // Disable sorting on Actions column
+                ]
+            });
+            console.log('DataTable initialized successfully');
+        } catch (error) {
+            console.error('Error initializing DataTable:', error);
+        }
+    }
+    
+    // Add event listeners for modal buttons
+    setupModalEventListeners();
+    
+    // Handle delete button clicks with event delegation
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Delete button clicked');
+            
+            const button = e.target.closest('.delete-btn');
+            const userId = button.getAttribute('data-user-id');
+            const userName = button.getAttribute('data-user-name');
+            
+            console.log('User ID:', userId, 'User Name:', userName);
+            
+            if (userId && userName) {
+                showDeleteConfirmation(userId, userName);
+            } else {
+                console.error('Missing user ID or name:', {userId, userName});
+                alert('Error: Missing user information. Please refresh the page and try again.');
+            }
+        }
+    });
+});
+
+function setupModalEventListeners() {
+    // Handle cancel button
+    const cancelBtn = document.getElementById('cancelBtn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function(e) {
+            console.log('Cancel button clicked');
+            e.preventDefault();
+            hideModal();
+        });
+    }
+    
+    // Handle confirm delete button
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function(e) {
+            console.log('Confirm delete button clicked');
+            e.preventDefault();
+            e.stopPropagation();
+            executeDelete();
+        });
+    }
+    
+    // Handle close button (X)
+    const closeBtn = document.querySelector('#deleteModal .btn-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            console.log('Close button (X) clicked');
+            e.preventDefault();
+            hideModal();
+        });
+    }
+}
+
+// Show delete confirmation modal
+function showDeleteConfirmation(userId, userName) {
+    console.log('showDeleteConfirmation called with:', {userId, userName});
+    
+    // Store user data
+    currentDeleteUserId = userId;
+    currentDeleteUserName = userName;
+    
+    // Update modal content
+    const userNameElement = document.getElementById('deleteUserName');
+    if (userNameElement) {
+        userNameElement.textContent = userName;
+    }
+    
+    // Show the modal
+    if (deleteModal) {
+        console.log('Showing modal for user:', userId);
+        deleteModal.show();
+    } else {
+        console.error('Modal not initialized');
+        alert('Error: Modal not available. Please refresh the page and try again.');
+    }
+}
+
+// Hide modal
+function hideModal() {
+    console.log('hideModal called');
+    if (deleteModal) {
+        deleteModal.hide();
+    }
+}
+
+// Execute the deletion
+function executeDelete() {
+    console.log('executeDelete called');
+    console.log('Current delete user ID:', currentDeleteUserId);
+    
+    if (!currentDeleteUserId) {
+        console.error('No user ID stored for deletion');
+        alert('Error: No user selected for deletion. Please try again.');
+        return;
+    }
+    
+    console.log('Proceeding with deletion for user:', currentDeleteUserId);
+    
+    // Show loading state
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Deleting...';
+    
+    // Disable cancel button too
+    const cancelBtn = document.getElementById('cancelBtn');
+    cancelBtn.disabled = true;
+    
+    // Use fetch API for the deletion
+    fetch(`/staff/delete/${currentDeleteUserId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Deletion response:', data);
+        
+        // Hide modal first
+        hideModal();
+        
+        // Show result message
+        if (data.success) {
+            showAlert(`Staff member "${currentDeleteUserName}" has been deleted successfully!`, 'success');
+            // Reload the page to update the staff list
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showAlert(data.message || 'Failed to delete staff member', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Deletion failed:', error);
+        hideModal();
+        showAlert('Failed to delete staff member. Please try again.', 'danger');
+    })
+    .finally(() => {
+        // Restore button states
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
+        cancelBtn.disabled = false;
+    });
+}
+
+// Legacy function for direct onclick (keeping for compatibility)
+function handleDeleteClick(button) {
+    console.log('handleDeleteClick called (legacy function)');
+    const userId = button.getAttribute('data-user-id');
+    const userName = button.getAttribute('data-user-name');
+    console.log('Direct onclick - User ID:', userId, 'User Name:', userName);
+    showDeleteConfirmation(userId, userName);
+}
+
+// Legacy function (keeping for compatibility)
+function handleConfirmDelete() {
+    console.log('handleConfirmDelete called (legacy function)');
+    executeDelete();
+}
+
+function showAlert(message, type) {
+    console.log('Showing alert:', {message, type});
+    
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    // Remove existing alerts
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // Add new alert at the top of the page
+    const container = document.querySelector('main .container-fluid') || document.querySelector('.container-fluid');
+    if (container) {
+        container.insertAdjacentHTML('afterbegin', alertHtml);
+        // Auto-scroll to top to show the alert
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        // Fallback to simple alert
+        alert(message);
+    }
+}
+</script>
+
+<style>
+.avatar {
+    width: 40px;
+    height: 40px;
+}
+
+.avatar-initial {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.875rem;
+}
+
+.card.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.card.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.card.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+
+.card.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.badge.bg-outline-primary {
+    color: #4e73df;
+    border: 1px solid #4e73df;
+    background-color: transparent;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Modal fixes */
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal {
+    z-index: 1050;
+}
+
+.modal-dialog {
+    pointer-events: auto;
+}
+
+.modal-content {
+    pointer-events: auto;
+}
+
+.modal-header, .modal-body, .modal-footer {
+    pointer-events: auto;
+}
+
+.btn {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+/* Ensure delete buttons are properly styled and clickable */
+.delete-btn {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.delete-btn:hover {
+    transform: scale(1.05);
+    transition: transform 0.1s ease;
+}
+
+/* Modal button fixes */
+.modal-footer .btn {
+    min-width: 100px;
+    margin: 0 5px;
+}
+
+#confirmDeleteBtn {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
+}
+
+#confirmDeleteBtn:hover {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+}
+
+#cancelBtn {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: white !important;
+}
+
+#cancelBtn:hover {
+    background-color: #5a6268 !important;
+    border-color: #545b62 !important;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Course Modules - {{ course.course_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('lms.admin_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('courses.list_courses') }}">Courses</a></li>
+                    <li class="breadcrumb-item active">{{ course.course_name }} - Modules</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Course Modules</h2>
+                    <h5 class="text-muted">{{ course.course_name }}</h5>
+                    <p class="text-muted">{{ course.course_description }}</p>
+                </div>
+                <a href="{{ url_for('courses.create_module_form', course_id=course.id) }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add New Module
+                </a>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Course Stats -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>{{ modules|length }}</h5>
+                            <p class="mb-0">Total Modules</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5>{{ modules|selectattr('is_mandatory')|list|length }}</h5>
+                            <p class="mb-0">Mandatory Modules</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>{{ modules|rejectattr('is_mandatory')|list|length }}</h5>
+                            <p class="mb-0">Optional Modules</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modules List -->
+            {% if modules %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Course Modules</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Order</th>
+                                        <th>Module Name</th>
+                                        <th>Description</th>
+                                        <th>Duration</th>
+                                        <th>Type</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for module in modules %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ module.module_order }}</span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ module.module_name }}</strong>
+                                            {% if module.is_mandatory %}
+                                                <span class="badge bg-warning ms-1">Mandatory</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if module.module_description %}
+                                                {{ module.module_description[:100] }}{% if module.module_description|length > 100 %}...{% endif %}
+                                            {% else %}
+                                                <em class="text-muted">No description</em>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if module.estimated_duration_hours %}
+                                                {{ module.estimated_duration_hours }} hrs
+                                            {% else %}
+                                                <em class="text-muted">Not set</em>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if module.is_mandatory %}
+                                                <span class="badge bg-danger">Mandatory</span>
+                                            {% else %}
+                                                <span class="badge bg-info">Optional</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('courses.module_sections', module_id=module.id) }}" 
+                                                   class="btn btn-outline-primary" title="View Sections">
+                                                    <i class="fas fa-list"></i> Sections
+                                                </a>
+                                                <a href="{{ url_for('courses.edit_module_form', module_id=module.id) }}" 
+                                                   class="btn btn-outline-secondary" title="Edit Module">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button class="btn btn-outline-danger" title="Delete Module" 
+                                                        onclick="confirmDelete('{{ module.module_name }}', '{{ module.id }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="py-5">
+                            <i class="fas fa-puzzle-piece fa-3x text-muted mb-3"></i>
+                            <h5>No Modules Found</h5>
+                            <p class="text-muted">This course doesn't have any modules yet.</p>
+                            <a href="{{ url_for('courses.create_module_form', course_id=course.id) }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create First Module
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the module "<span id="moduleNameToDelete"></span>"?</p>
+                <p class="text-warning"><strong>Warning:</strong> This will also delete all sections and content within this module.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-danger">Delete Module</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the module "<strong><span id="moduleNameToDelete"></span></strong>"?</p>
+                <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> This action will also delete all sections and content within this module and cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete Module
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(moduleName, moduleId) {
+    document.getElementById('moduleNameToDelete').textContent = moduleName;
+    document.getElementById('deleteForm').action = '/courses/modules/' + moduleId + '/delete';
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

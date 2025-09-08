@@ -1,0 +1,11 @@
+course_name,course_code,duration,fee,category,description,duration_in_hours,duration_in_days,registration_fee,material_fee,certification_fee
+"Certificate in Computer Office Management","CCOM","3 Months",15000,"Office Suite","Complete computer office management course covering MS Office, internet basics, and office automation",120,90,1000,500,2000
+"Python Full Stack Development","PYTHON","6 Months",35000,"Programming","Comprehensive Python web development course with Django, Flask, and database integration",240,180,2000,1500,3000
+"Digital Marketing Mastery","DM","4 Months",25000,"Digital Marketing","Complete digital marketing course including SEO, social media, PPC, and analytics",160,120,1500,1000,2500
+"Java Programming Fundamentals","JAVA","5 Months",30000,"Programming","Core Java programming with object-oriented concepts and project development",200,150,1800,1200,2800
+"Web Development with React","REACT","4 Months",28000,"Web Development","Modern web development using React.js, JavaScript ES6, and responsive design",180,120,1600,1100,2600
+"Data Science with Python","DS","6 Months",40000,"Data Science","Data analysis, machine learning, and visualization using Python and its libraries",250,180,2200,1800,3500
+"Graphic Design Professional","GD","3 Months",18000,"Graphic Design","Adobe Creative Suite training for professional graphic design and branding",100,90,1200,800,2200
+"Digital Marketing & SEO","SEO","2 Months",12000,"Digital Marketing","Search engine optimization and digital marketing fundamentals",80,60,800,400,1500
+"Hardware & Networking","HW","4 Months",22000,"Hardware","Computer hardware assembly, troubleshooting, and network administration",150,120,1400,1000,2400
+"Mobile App Development","MOBILE","5 Months",32000,"Mobile Development","Android and iOS app development using Flutter and React Native",220,150,1900,1400,3000

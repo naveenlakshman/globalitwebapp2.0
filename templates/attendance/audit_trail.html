@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block page_title %}Attendance Audit Trail - {{ batch.name }}{% endblock %}
+
+{% block content %}
+<div class="attendance-dashboard">
+    <!-- Audit Header -->
+    <div class="attendance-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1>
+                    <i class="fas fa-history"></i>
+                    Attendance Audit Trail
+                </h1>
+                <div class="batch-info">
+                    <strong>{{ batch.name }}</strong> | {{ batch.course_name }} | {{ batch.branch.branch_name if batch.branch else 'No Branch' }}
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('attendance.mark_attendance_page', batch_id=batch.id) }}" 
+                   class="btn btn-light">
+                    <i class="fas fa-calendar-check me-1"></i>
+                    Mark Attendance
+                </a>
+                <a href="{{ url_for('batches.view_batch', batch_id=batch.id) }}" 
+                   class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Batch
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Statistics -->
+    <div class="attendance-stats">
+        <div class="attendance-stat-card">
+            <div class="attendance-stat-header total">
+                <h6>Total Changes</h6>
+                <i class="fas fa-edit stat-icon"></i>
+            </div>
+            <div class="attendance-stat-body">
+                <div class="attendance-stat-number">{{ audit_records.total }}</div>
+                <div class="attendance-stat-label">Audit Records</div>
+            </div>
+        </div>
+
+        <div class="attendance-stat-card">
+            <div class="attendance-stat-header present">
+                <h6>Creates</h6>
+                <i class="fas fa-plus-circle stat-icon"></i>
+            </div>
+            <div class="attendance-stat-body">
+                <div class="attendance-stat-number">
+                    {{ audit_records.items | selectattr('action_type', 'equalto', 'CREATE') | list | length }}
+                </div>
+                <div class="attendance-stat-label">New Records</div>
+            </div>
+        </div>
+
+        <div class="attendance-stat-card">
+            <div class="attendance-stat-header late">
+                <h6>Updates</h6>
+                <i class="fas fa-edit stat-icon"></i>
+            </div>
+            <div class="attendance-stat-body">
+                <div class="attendance-stat-number">
+                    {{ audit_records.items | selectattr('action_type', 'equalto', 'UPDATE') | list | length }}
+                </div>
+                <div class="attendance-stat-label">Modifications</div>
+            </div>
+        </div>
+
+        <div class="attendance-stat-card">
+            <div class="attendance-stat-header absent">
+                <h6>Students</h6>
+                <i class="fas fa-users stat-icon"></i>
+            </div>
+            <div class="attendance-stat-body">
+                <div class="attendance-stat-number">{{ students | length }}</div>
+                <div class="attendance-stat-label">In Batch</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Trail -->
+    <div class="audit-trail-container">
+        <div class="audit-trail-header">
+            <h6>
+                <i class="fas fa-list"></i>
+                Audit Trail Records
+            </h6>
+            <span class="badge badge-light">Page {{ audit_records.page }} of {{ audit_records.pages }}</span>
+        </div>
+
+        {% if audit_records.items %}
+        <div class="audit-trail-entries">
+            {% for record in audit_records.items %}
+            <div class="audit-entry">
+                <div class="audit-entry-content">
+                    <div class="audit-entry-meta">
+                        <strong>{{ users.get(record.changed_by).full_name if users.get(record.changed_by) else 'Unknown User' }}</strong>
+                        <span class="text-muted">•</span>
+                        <span class="text-muted">{{ record.changed_at|format_datetime_indian if record.changed_at else 'Unknown Date' }}</span>
+                        <span class="text-muted">•</span>
+                        <span class="text-muted">IP: {{ record.ip_address or 'Unknown' }}</span>
+                    </div>
+                    
+                    <div class="audit-entry-changes">
+                        <strong>Student:</strong> {{ record.student_id }}
+                        <span class="text-muted">•</span>
+                        <strong>Date:</strong> {{ record.attendance_date }}
+                        
+                        {% if record.field_changed %}
+                        <br>
+                        <strong>Changed:</strong> {{ record.field_changed }}
+                        <span class="text-muted">from</span> "<em>{{ record.old_value or 'empty' }}</em>"
+                        <span class="text-muted">to</span> "<em>{{ record.new_value or 'empty' }}</em>"
+                        {% endif %}
+                    </div>
+                    
+                    {% if record.change_reason %}
+                    <div class="audit-entry-reason">
+                        <i class="fas fa-comment"></i>
+                        {{ record.change_reason }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="audit-action-badge audit-action-{{ record.action_type.lower() }}">
+                    {{ record.action_type }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if audit_records.pages > 1 %}
+        <div class="attendance-table-footer">
+            <nav aria-label="Audit trail pagination">
+                <ul class="pagination justify-content-center">
+                    {% if audit_records.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('attendance.view_attendance_audit', batch_id=batch.id, page=audit_records.prev_num) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in audit_records.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != audit_records.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('attendance.view_attendance_audit', batch_id=batch.id, page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if audit_records.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('attendance.view_attendance_audit', batch_id=batch.id, page=audit_records.next_num) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="audit-trail-entries">
+            <div class="text-center py-5">
+                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Audit Records Found</h5>
+                <p class="text-muted">No attendance changes have been logged for this batch yet.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

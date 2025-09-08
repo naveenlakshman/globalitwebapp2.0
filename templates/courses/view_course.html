@@ -1,0 +1,432 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.course_name }} - Course Details{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/course-management.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="course-view-container">
+    <div class="container-fluid">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb course-breadcrumb">
+                                <li class="breadcrumb-item">
+                                    <a href="{{ url_for('courses.list_courses') }}">
+                                        <i class="bi bi-mortarboard"></i> Courses
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">{{ course.course_name }}</li>
+                            </ol>
+                        </nav>
+                        <h1 class="course-title">
+                            {% if course.is_featured %}
+                            <i class="bi bi-star-fill text-warning me-2"></i>
+                            {% endif %}
+                            {% if course.is_popular %}
+                            <i class="bi bi-fire text-danger me-2"></i>
+                            {% endif %}
+                            {{ course.course_name }}
+                            <span class="badge course-badge ms-2 {{ 'bg-success' if course.status == 'Active' else 'bg-secondary' }}">
+                                {{ course.status }}
+                            </span>
+                        </h1>
+                        <p class="course-subtitle">
+                            <i class="bi bi-tag me-1"></i> {{ course.course_code }} | 
+                            <i class="bi bi-folder me-1"></i> {{ course.category }} |
+                            <i class="bi bi-speedometer2 me-1"></i> {{ course.difficulty_level }}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        {% if session.role == 'admin' %}
+                        <div class="btn-group" role="group" aria-label="Course management actions">
+                            <a href="{{ url_for('courses.edit_course_form', course_id=course.id) }}" 
+                               class="btn btn-outline-primary btn-course"
+                               aria-label="Edit course {{ course.course_name }}">
+                                <i class="bi bi-pencil me-1" aria-hidden="true"></i> Edit Course
+                            </a>
+                            <button type="button" 
+                                    class="btn btn-outline-{{ 'warning' if course.status == 'Active' else 'success' }} btn-course"
+                                    onclick="toggleCourseStatus({{ course.id }})"
+                                    aria-label="{{ 'Deactivate' if course.status == 'Active' else 'Activate' }} course {{ course.course_name }}">
+                                <i class="bi bi-toggle-{{ 'on' if course.status == 'Active' else 'off' }} me-1" aria-hidden="true"></i>
+                                {{ 'Deactivate' if course.status == 'Active' else 'Activate' }}
+                            </button>
+                            {% if course.status != 'Archived' and stats.active_batches == 0 %}
+                            <button type="button" 
+                                    class="btn btn-outline-danger btn-course" 
+                                    onclick="archiveCourse({{ course.id }})"
+                                    aria-label="Archive course {{ course.course_name }}">
+                                <i class="bi bi-archive me-1" aria-hidden="true"></i> Archive
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stats-card primary" role="region" aria-label="Total enrollments statistic">
+                    <div class="stats-number" aria-label="{{ stats.total_enrollments }} total enrollments">{{ stats.total_enrollments }}</div>
+                    <div class="stats-label">Total Enrollments</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stats-card success" role="region" aria-label="Active batches statistic">
+                    <div class="stats-number" aria-label="{{ stats.active_batches }} active batches">{{ stats.active_batches }}</div>
+                    <div class="stats-label">Active Batches</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stats-card info" role="region" aria-label="Total revenue statistic">
+                    <div class="stats-number" aria-label="₹{{ '{:,.0f}'.format(stats.total_revenue) }} total revenue">₹{{ "{:,.0f}".format(stats.total_revenue) }}</div>
+                    <div class="stats-label">Total Revenue</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stats-card warning" role="region" aria-label="Course fee statistic">
+                    <div class="stats-number" aria-label="₹{{ '{:,.0f}'.format(course.fee) }} course fee">₹{{ "{:,.0f}".format(course.fee) }}</div>
+                    <div class="stats-label">Course Fee</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main Course Information -->
+            <div class="col-lg-8">
+                <!-- Course Overview -->
+                <div class="course-card content-section">
+                    <div class="card-header">
+                        <h5><i class="bi bi-info-circle"></i> Course Overview</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if course.description %}
+                        <div class="course-description">{{ course.description }}</div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <dl class="course-details">
+                                    <dt>Duration:</dt>
+                                    <dd>{{ course.duration }}</dd>
+                                    
+                                    {% if course.duration_in_hours %}
+                                    <dt>Total Hours:</dt>
+                                    <dd>{{ course.duration_in_hours }} hours</dd>
+                                    {% endif %}
+
+                                    {% if course.duration_in_days %}
+                                    <dt>Total Days:</dt>
+                                    <dd>{{ course.duration_in_days }} days</dd>
+                                    {% endif %}
+
+                                    <dt>Delivery Mode:</dt>
+                                    <dd>{{ course.delivery_mode }}</dd>
+
+                                    <dt>Batch Size:</dt>
+                                    <dd>{{ course.batch_size_min }} - {{ course.batch_size_max }} students</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <dl class="course-details">
+                                    <dt>Course Fee:</dt>
+                                    <dd class="fw-bold">₹{{ "{:,.0f}".format(course.fee) }}</dd>
+
+                                    {% if course.registration_fee > 0 %}
+                                    <dt>Registration:</dt>
+                                    <dd>₹{{ "{:,.0f}".format(course.registration_fee) }}</dd>
+                                    {% endif %}
+
+                                    {% if course.material_fee > 0 %}
+                                    <dt>Material Fee:</dt>
+                                    <dd>₹{{ "{:,.0f}".format(course.material_fee) }}</dd>
+                                    {% endif %}
+
+                                    {% if course.certification_fee > 0 %}
+                                    <dt>Certificate:</dt>
+                                    <dd>₹{{ "{:,.0f}".format(course.certification_fee) }}</dd>
+                                    {% endif %}
+
+                                    {% if course.typical_schedule %}
+                                    <dt>Schedule:</dt>
+                                    <dd>{{ course.typical_schedule }}</dd>
+                                    {% endif %}
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Outline -->
+                {% if course.course_outline %}
+                <div class="course-card content-section">
+                    <div class="card-header">
+                        <h5><i class="bi bi-list-check"></i> Course Outline</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="section-content">
+                            {{ course.course_outline|safe|nl2br }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Learning Outcomes -->
+                {% if course.learning_outcomes %}
+                <div class="course-card content-section">
+                    <div class="card-header">
+                        <h5><i class="bi bi-trophy"></i> Learning Outcomes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="section-content">
+                            {{ course.learning_outcomes|safe|nl2br }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Recent Enrollments -->
+                {% if stats.recent_enrollments %}
+                <div class="course-card content-section">
+                    <div class="card-header">
+                        <h5><i class="bi bi-clock-history"></i> Recent Enrollments</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table course-table" role="table" aria-label="Recent course enrollments">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Student</th>
+                                        <th scope="col">Mobile</th>
+                                        <th scope="col">Admission Date</th>
+                                        <th scope="col">Batch</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in stats.recent_enrollments %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('students.view_student', student_id=student.student_id) }}" 
+                                               class="text-decoration-none"
+                                               aria-label="View student {{ student.full_name }}">
+                                                {{ student.full_name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ student.mobile }}</td>
+                                        <td>{{ student.admission_date.strftime('%d %b %Y') if student.admission_date else 'N/A' }}</td>
+                                        <td>
+                                            {% if student.batch_id %}
+                                            <a href="{{ url_for('batches.view_batch', batch_id=student.batch_id) }}" 
+                                               class="text-decoration-none"
+                                               aria-label="View batch {{ student.batch_id }}">
+                                                Batch #{{ student.batch_id }}
+                                            </a>
+                                            {% else %}
+                                            <span class="text-muted">Not Assigned</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar Information -->
+            <div class="col-lg-4">
+                <!-- Course Details -->
+                <div class="course-card content-section">
+                    <div class="card-header">
+                        <h6><i class="bi bi-gear"></i> Course Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Prerequisites -->
+                        {% if course.prerequisites %}
+                        <div class="mb-3">
+                            <h6 class="text-primary">Prerequisites</h6>
+                            <p class="small">{{ course.prerequisites }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Software Requirements -->
+                        {% if course.software_requirements %}
+                        <div class="mb-3">
+                            <h6 class="text-info">Software Requirements</h6>
+                            <p class="small">{{ course.software_requirements }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Target Audience -->
+                        {% if course.target_audience %}
+                        <div class="mb-3">
+                            <h6 class="text-success">Target Audience</h6>
+                            <p class="small">{{ course.target_audience }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Career Opportunities -->
+                        {% if course.career_opportunities %}
+                        <div class="mb-3">
+                            <h6 class="text-warning">Career Opportunities</h6>
+                            <p class="small">{{ course.career_opportunities }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Features -->
+                        <div class="course-features">
+                            {% if course.has_certification %}
+                            <div class="feature-item mb-2">
+                                <i class="bi bi-award text-success"></i>
+                                <span>Certificate Provided</span>
+                                {% if course.certification_body %}
+                                <small class="d-block text-muted ms-4">by {{ course.certification_body }}</small>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            {% if course.flexible_timing %}
+                            <div class="feature-item mb-2">
+                                <i class="bi bi-clock text-info"></i>
+                                <span>Flexible Timing</span>
+                            </div>
+                            {% endif %}
+
+                            {% if course.assessment_type %}
+                            <div class="feature-item mb-2">
+                                <i class="bi bi-clipboard-check text-primary"></i>
+                                <span>Assessment: {{ course.assessment_type }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if course.passing_criteria %}
+                            <div class="feature-item mb-2">
+                                <i class="bi bi-check-circle text-success"></i>
+                                <span>{{ course.passing_criteria }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Information -->
+                {% if course.early_bird_discount > 0 or course.group_discount > 0 %}
+                <div class="course-card content-section">
+                    <div class="card-header">
+                        <h6><i class="bi bi-percent"></i> Discounts & Offers</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if course.early_bird_discount > 0 %}
+                        <div class="feature-item mb-2">
+                            <i class="bi bi-lightning text-warning"></i>
+                            <span>Early Bird: {{ course.early_bird_discount }}% off</span>
+                        </div>
+                        {% endif %}
+
+                        {% if course.group_discount > 0 %}
+                        <div class="feature-item mb-2">
+                            <i class="bi bi-people text-info"></i>
+                            <span>Group Enrollment: {{ course.group_discount }}% off</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Active Batches -->
+                {% if stats.active_batches_list %}
+                <div class="course-card content-section">
+                    <div class="card-header">
+                        <h6><i class="bi bi-collection"></i> Active Batches</h6>
+                    </div>
+                    <div class="card-body">
+                        {% for batch in stats.active_batches_list %}
+                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded">
+                            <div>
+                                <a href="{{ url_for('batches.view_batch', batch_id=batch.id) }}" class="fw-medium text-decoration-none">
+                                    {{ batch.name }}
+                                </a>
+                                <small class="d-block text-muted">
+                                    {{ batch.start_date if batch.start_date else 'Start date TBD' }}
+                                </small>
+                            </div>
+                            <span class="badge course-badge {{ 'bg-success' if batch.status == 'Active' else 'bg-info' }}">
+                                {{ batch.status }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Course Metadata -->
+                <div class="course-card">
+                    <div class="card-header">
+                        <h6><i class="bi bi-info"></i> Metadata</h6>
+                    </div>
+                    <div class="card-body">
+                        <small class="text-muted">
+                            <div class="mb-1">
+                                <strong>Created:</strong> {{ course.created_at|format_datetime if course.created_at else 'N/A' }}
+                            </div>
+                            <div class="mb-1">
+                                <strong>Updated:</strong> {{ course.updated_at|format_datetime if course.updated_at else 'N/A' }}
+                            </div>
+                            <div class="mb-1">
+                                <strong>Display Order:</strong> {{ course.display_order }}
+                            </div>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleCourseStatus(courseId) {
+    if (confirm('Are you sure you want to change the course status?')) {
+        fetch(`/courses/${courseId}/toggle-status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error updating course status');
+        });
+    }
+}
+
+function archiveCourse(courseId) {
+    if (confirm('Are you sure you want to archive this course? This action cannot be easily undone.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/courses/${courseId}/archive`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

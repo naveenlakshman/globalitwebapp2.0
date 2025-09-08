@@ -1,0 +1,5 @@
+/* finance.css */
+.finance-tiles{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:var(--space-lg)}
+.finance-tile{background:#fff; border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:var(--space-lg); box-shadow:var(--shadow-sm)}
+.finance-tile .label{color:var(--text-muted); font-size:var(--text-sm)}
+.finance-tile .value{font-size:var(--text-xl); font-weight:var(--font-semibold); color:var(--brand-primary)}

@@ -1,0 +1,302 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Edit Document - {{ document.document_title }}{% endblock %}
+{% block page_icon %}fas fa-edit{% endblock %}
+{% block page_title %}Edit Document{% endblock %}
+{% block page_description %}Update document information and settings{% endblock %}
+
+{% block header_actions %}
+<div class="btn-group">
+    <a href="{{ url_for('lms_content_management.document_detail', document_id=document.id) }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Details
+    </a>
+    <a href="{{ url_for('lms_content_management.document_list') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-list me-2"></i>All Documents
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Edit Document Information</h5>
+                <span class="badge bg-warning">{{ document.workflow_stage.title() }}</span>
+            </div>
+            <div class="card-body">
+                {% if document.rejection_reason %}
+                <div class="alert alert-danger">
+                    <h6>Rejection Reason:</h6>
+                    <p class="mb-0">{{ document.rejection_reason }}</p>
+                </div>
+                {% endif %}
+
+                <form id="documentEditForm" method="POST" action="{{ url_for('lms_content_management.document_edit_process', document_id=document.id) }}">
+                    <!-- Document Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="course_id" class="form-label">Course *</label>
+                            <select id="course_id" name="course_id" class="form-select" required>
+                                <option value="">Select Course</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}" {{ 'selected' if course.id == document.course_id else '' }}>
+                                    {{ course.course_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="module_id" class="form-label">Module *</label>
+                            <select id="module_id" name="module_id" class="form-select" required>
+                                <option value="">Select Module</option>
+                                <!-- Modules will be loaded via JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="section_id" class="form-label">Section *</label>
+                            <select id="section_id" name="section_id" class="form-select" required>
+                                <option value="">Select Section</option>
+                                <!-- Sections will be loaded via JavaScript -->
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="access_level" class="form-label">Access Level</label>
+                            <select id="access_level" name="access_level" class="form-select">
+                                <option value="student" {{ 'selected' if document.access_level == 'student' else '' }}>Student</option>
+                                <option value="premium" {{ 'selected' if document.access_level == 'premium' else '' }}>Premium</option>
+                                <option value="instructor" {{ 'selected' if document.access_level == 'instructor' else '' }}>Instructor</option>
+                                <option value="admin" {{ 'selected' if document.access_level == 'admin' else '' }}>Admin</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="document_title" class="form-label">Document Title *</label>
+                        <input type="text" id="document_title" name="document_title" class="form-control" 
+                               value="{{ document.document_title }}" maxlength="200" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="document_description" class="form-label">Description</label>
+                        <textarea id="document_description" name="document_description" class="form-control" 
+                                  rows="4" maxlength="500">{{ document.document_description or '' }}</textarea>
+                        <div class="form-text">Provide a brief description of the document content</div>
+                    </div>
+
+                    <!-- Document Settings -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Document Settings</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_downloadable" name="is_downloadable" 
+                                               {{ 'checked' if document.is_downloadable else '' }}>
+                                        <label class="form-check-label" for="is_downloadable">
+                                            Allow Download
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="watermark_enabled" name="watermark_enabled"
+                                               {{ 'checked' if document.watermark_applied else '' }}>
+                                        <label class="form-check-label" for="watermark_enabled">
+                                            Apply Watermark
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="copy_protection" name="copy_protection"
+                                               {{ 'checked' if document.copy_protection_applied else '' }}>
+                                        <label class="form-check-label" for="copy_protection">
+                                            Copy Protection
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="print_protection" name="print_protection"
+                                               {{ 'checked' if document.print_protection_applied else '' }}>
+                                        <label class="form-check-label" for="print_protection">
+                                            Print Protection
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="view_only_mode" name="view_only_mode"
+                                               {{ 'checked' if document.view_only_mode else '' }}>
+                                        <label class="form-check-label" for="view_only_mode">
+                                            View Only Mode
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="requires_video_completion" name="requires_video_completion"
+                                               {{ 'checked' if document.requires_video_completion else '' }}>
+                                        <label class="form-check-label" for="requires_video_completion">
+                                            Requires Video Completion
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Notes -->
+                    <div class="mb-4">
+                        <label for="upload_notes" class="form-label">Upload Notes</label>
+                        <textarea id="upload_notes" name="upload_notes" class="form-control" 
+                                  rows="3" maxlength="500">{{ document.upload_notes or '' }}</textarea>
+                        <div class="form-text">Add any notes about this document upload</div>
+                    </div>
+
+                    <!-- Current File Information -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Current File Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <strong>Original Filename:</strong><br>
+                                        <span class="text-muted">{{ document.original_filename }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>File Size:</strong><br>
+                                        <span class="text-muted">{{ document.get_upload_size_formatted() }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <strong>File Format:</strong><br>
+                                        <span class="text-muted">{{ document.file_format.upper() if document.file_format else 'Unknown' }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Upload Status:</strong><br>
+                                        <span class="badge bg-info">{{ document.upload_status.title() }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('lms_content_management.document_detail', document_id=document.id) }}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedModuleId = {{ document.module_id }};
+    let selectedSectionId = {{ document.section_id }};
+
+    // Load modules when course is selected
+    document.getElementById('course_id').addEventListener('change', function() {
+        const courseId = this.value;
+        const moduleSelect = document.getElementById('module_id');
+        const sectionSelect = document.getElementById('section_id');
+        
+        // Reset dependent selects
+        moduleSelect.innerHTML = '<option value="">Select Module</option>';
+        sectionSelect.innerHTML = '<option value="">Select Section</option>';
+        moduleSelect.disabled = !courseId;
+        sectionSelect.disabled = true;
+        
+        if (courseId) {
+            fetch(`/courses/api/modules/${courseId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.modules) {
+                        data.modules.forEach(module => {
+                            const option = document.createElement('option');
+                            option.value = module.id;
+                            option.textContent = module.name;
+                            if (module.id === selectedModuleId) {
+                                option.selected = true;
+                            }
+                            moduleSelect.appendChild(option);
+                        });
+                        moduleSelect.disabled = false;
+                        
+                        // Trigger module change if we have a selected module
+                        if (selectedModuleId) {
+                            moduleSelect.dispatchEvent(new Event('change'));
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading modules:', error);
+                    showToast('Error loading modules', 'error');
+                });
+        }
+    });
+
+    // Load sections when module is selected
+    document.getElementById('module_id').addEventListener('change', function() {
+        const moduleId = this.value;
+        const sectionSelect = document.getElementById('section_id');
+        
+        sectionSelect.innerHTML = '<option value="">Select Section</option>';
+        sectionSelect.disabled = !moduleId;
+        
+        if (moduleId) {
+            fetch(`/courses/api/sections/${moduleId}?type=document`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.sections) {
+                        data.sections.forEach(section => {
+                            const option = document.createElement('option');
+                            option.value = section.id;
+                            option.textContent = section.name;
+                            if (section.id === selectedSectionId) {
+                                option.selected = true;
+                            }
+                            sectionSelect.appendChild(option);
+                        });
+                        sectionSelect.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading sections:', error);
+                    showToast('Error loading sections', 'error');
+                });
+        }
+    });
+
+    // Initialize by triggering course change
+    document.addEventListener('DOMContentLoaded', function() {
+        const courseSelect = document.getElementById('course_id');
+        if (courseSelect.value) {
+            courseSelect.dispatchEvent(new Event('change'));
+        }
+    });
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 350px;';
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 5000);
+    }
+</script>
+{% endblock %}

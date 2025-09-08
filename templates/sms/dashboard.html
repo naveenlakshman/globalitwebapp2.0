@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}SMS Automation Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">SMS Automation Dashboard</h2>
+                    <p class="text-muted">Manage SMS communications and automation</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('sms.send_sms_page') }}" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send SMS
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Today's SMS</h5>
+                            <h2 class="mb-0">{{ today_sms }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-sms fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">This Week</h5>
+                            <h2 class="mb-0">{{ week_sms }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Success Rate</h5>
+                            <h2 class="mb-0">{{ success_rate }}%</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Balance</h5>
+                            <h2 class="mb-0">
+                                {% if balance_info.success %}
+                                    ₹{{ balance_info.balance }}
+                                {% else %}
+                                    <small>Error</small>
+                                {% endif %}
+                            </h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-wallet fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions and Overview -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <!-- Recent SMS Activity -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent SMS Activity</h5>
+                    <a href="{{ url_for('sms.sms_logs') }}" class="btn btn-outline-primary btn-sm">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_logs %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Phone</th>
+                                    <th>Message</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_logs %}
+                                <tr>
+                                    <td>
+                                        <small>{{ log.sent_at|format_datetime('%m/%d %H:%M') }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="font-monospace">{{ log.phone_number }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-truncate d-inline-block" style="max-width: 200px;" 
+                                              title="{{ log.message }}">
+                                            {{ log.message }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-secondary">{{ log.message_type }}</span>
+                                    </td>
+                                    <td>
+                                        {% if log.status == 'sent' %}
+                                            <span class="badge badge-success">Sent</span>
+                                        {% elif log.status == 'failed' %}
+                                            <span class="badge badge-danger">Failed</span>
+                                        {% else %}
+                                            <span class="badge badge-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No SMS activity yet</p>
+                        <a href="{{ url_for('sms.send_sms_page') }}" class="btn btn-primary">Send Your First SMS</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Quick Stats -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-primary">{{ active_templates }}</h4>
+                                <small class="text-muted">Active Templates</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-success">{{ active_rules }}</h4>
+                                <small class="text-muted">Automation Rules</small>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <h4 class="text-info">{{ total_sms }}</h4>
+                        <small class="text-muted">Total SMS Sent</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('sms.send_sms_page') }}" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Send SMS
+                        </a>
+                        <a href="{{ url_for('sms.sms_templates') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-file-text"></i> Manage Templates
+                        </a>
+                        {% if session.role == 'admin' %}
+                        <a href="{{ url_for('sms.automation_rules') }}" class="btn btn-outline-success">
+                            <i class="fas fa-cogs"></i> Automation Rules
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('sms.sms_logs') }}" class="btn btn-outline-info">
+                            <i class="fas fa-list"></i> View Logs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SMS Usage Chart -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">SMS Usage Trend (Last 7 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="smsChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// SMS Usage Chart
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('{{ url_for("sms.get_sms_stats") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const ctx = document.getElementById('smsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.stats.map(stat => {
+                            const date = new Date(stat.date);
+                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        }).reverse(),
+                        datasets: [{
+                            label: 'SMS Sent',
+                            data: data.stats.map(stat => stat.count).reverse(),
+                            borderColor: '#007bff',
+                            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        })
+        .catch(error => console.error('Error loading SMS stats:', error));
+});
+
+// Auto-refresh balance every 5 minutes
+setInterval(function() {
+    fetch('{{ url_for("sms.get_sms_balance") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('.bg-warning h2').innerHTML = '₹' + data.balance;
+            }
+        })
+        .catch(error => console.error('Error refreshing balance:', error));
+}, 300000); // 5 minutes
+</script>
+
+<!-- Add Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}

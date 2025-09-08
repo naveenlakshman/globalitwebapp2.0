@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Course Management{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/course-management.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-mortarboard text-primary"></i> Course Management
+                    </h2>
+                    <p class="text-muted mb-0">Manage your training institute's course offerings</p>
+                </div>
+                <div>
+                    {% if session.role == 'admin' %}
+                    <a href="{{ url_for('courses.create_course_form') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i> Add New Course
+                    </a>
+                    <a href="{{ url_for('courses.course_analytics') }}" class="btn btn-outline-info">
+                        <i class="bi bi-graph-up"></i> Analytics
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Search Courses</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" name="search" 
+                                       value="{{ search }}" placeholder="Course name, code, or description...">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="category">
+                                <option value="">All Categories</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="Active" {% if status == 'Active' %}selected{% endif %}>Active</option>
+                                <option value="Inactive" {% if status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                                <option value="Draft" {% if status == 'Draft' %}selected{% endif %}>Draft</option>
+                                <option value="Archived" {% if status == 'Archived' %}selected{% endif %}>Archived</option>
+                                <option value="All" {% if status == 'All' %}selected{% endif %}>All</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Sort By</label>
+                            <select class="form-select" name="sort_by">
+                                <option value="display_order" {% if sort_by == 'display_order' %}selected{% endif %}>Display Order</option>
+                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Course Name</option>
+                                <option value="category" {% if sort_by == 'category' %}selected{% endif %}>Category</option>
+                                <option value="fee" {% if sort_by == 'fee' %}selected{% endif %}>Fee (High to Low)</option>
+                                <option value="created" {% if sort_by == 'created' %}selected{% endif %}>Recently Added</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-funnel"></i> Filter
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Courses Grid -->
+    <div class="row">
+        {% for course in courses.items %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card course-card h-100 {% if course.status == 'Inactive' %}opacity-75{% endif %}">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">
+                            {% if course.is_featured %}
+                            <i class="bi bi-star-fill text-warning me-1"></i>
+                            {% endif %}
+                            {% if course.is_popular %}
+                            <i class="bi bi-fire text-danger me-1"></i>
+                            {% endif %}
+                            {{ course.course_name }}
+                        </h6>
+                        <small class="text-muted">{{ course.course_code }}</small>
+                    </div>
+                    <span class="badge bg-{{ 'success' if course.status == 'Active' else 'secondary' }}">
+                        {{ course.status }}
+                    </span>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h6 class="text-primary mb-0">₹{{ "{:,.0f}".format(course.fee) }}</h6>
+                                <small class="text-muted">Course Fee</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h6 class="text-info mb-0">{{ course.duration }}</h6>
+                                <small class="text-muted">Duration</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <h6 class="text-success mb-0">{{ course.category }}</h6>
+                            <small class="text-muted">Category</small>
+                        </div>
+                    </div>
+
+                    {% if course.description %}
+                    <p class="card-text">
+                        {{ course.description[:100] }}{% if course.description|length > 100 %}...{% endif %}
+                    </p>
+                    {% endif %}
+
+                    <div class="row text-center small text-muted mb-3">
+                        <div class="col-6">
+                            <i class="bi bi-people"></i>
+                            {{ course.batch_size_min }}-{{ course.batch_size_max }} students
+                        </div>
+                        <div class="col-6">
+                            <i class="bi bi-laptop"></i>
+                            {{ course.delivery_mode }}
+                        </div>
+                    </div>
+
+                    {% if course.difficulty_level %}
+                    <div class="mb-2">
+                        <span class="badge bg-light text-dark">
+                            <i class="bi bi-speedometer2"></i> {{ course.difficulty_level }}
+                        </span>
+                        {% if course.has_certification %}
+                        <span class="badge bg-info">
+                            <i class="bi bi-award"></i> Certified
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{{ url_for('courses.view_course', course_id=course.id) }}" 
+                               class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                            {% if session.role == 'admin' %}
+                            <a href="{{ url_for('courses.course_modules', course_id=course.id) }}" 
+                               class="btn btn-outline-success">
+                                <i class="bi bi-puzzle"></i> Modules
+                            </a>
+                            <a href="{{ url_for('courses.edit_course_form', course_id=course.id) }}" 
+                               class="btn btn-outline-secondary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">
+                            Order: {{ course.display_order }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-mortarboard text-muted" style="font-size: 4rem;"></i>
+                <h4 class="text-muted mt-3">No Courses Found</h4>
+                <p class="text-muted">
+                    {% if search or category %}
+                    No courses match your search criteria. Try adjusting your filters.
+                    {% else %}
+                    No courses have been created yet.
+                    {% endif %}
+                </p>
+                {% if session.role == 'admin' and not (search or category) %}
+                <a href="{{ url_for('courses.create_course_form') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Create Your First Course
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if courses.pages > 1 %}
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Course pagination">
+                <ul class="pagination justify-content-center">
+                    <!-- Previous Page -->
+                    {% if courses.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('courses.list_courses', 
+                            page=courses.prev_num, search=search, category=category, 
+                            status=status, sort_by=sort_by) }}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                    {% endif %}
+
+                    <!-- Page Numbers -->
+                    {% for page_num in courses.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != courses.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('courses.list_courses', 
+                                    page=page_num, search=search, category=category, 
+                                    status=status, sort_by=sort_by) }}">{{ page_num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Next Page -->
+                    {% if courses.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('courses.list_courses', 
+                            page=courses.next_num, search=search, category=category, 
+                            status=status, sort_by=sort_by) }}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Summary Info -->
+    {% if courses.items %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <small class="text-muted">
+                        Showing {{ courses.items|length }} of {{ courses.total }} courses
+                        (Page {{ courses.page }} of {{ courses.pages }})
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit search form on select change
+    const selects = document.querySelectorAll('select[name="category"], select[name="status"], select[name="sort_by"]');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+
+    // Clear search
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.form.submit();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

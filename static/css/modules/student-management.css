@@ -1,0 +1,1532 @@
+/* Student Management */
+.student-list,.student-profile{background:#fff; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm)}
+.student-list{padding:var(--space-lg)}
+.student-card{border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:var(--space-lg)}
+.student-meta{color:var(--text-muted); font-size:var(--text-sm)}
+
+/* Student Registration Form */
+.student-registration-form {
+  max-width: var(--container-xl);
+  margin: 0 auto;
+}
+
+.student-registration-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: none;
+  overflow: hidden;
+}
+
+.student-registration-header {
+  background: var(--gradient-primary);
+  color: var(--text-white);
+  padding: var(--space-xl);
+}
+
+.student-registration-header h4 {
+  margin: 0;
+  font-weight: var(--font-semibold);
+  font-size: var(--text-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.student-registration-body {
+  padding: var(--space-2xl);
+}
+
+.form-section-title {
+  color: var(--brand-primary);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-sm);
+  border-bottom: 2px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.form-section-title i {
+  color: var(--brand-secondary);
+  font-size: var(--text-base);
+}
+
+.form-section {
+  margin-bottom: var(--space-2xl);
+}
+
+.form-label-required {
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+  font-size: var(--text-sm);
+}
+
+.form-label-required .text-danger {
+  color: var(--brand-danger);
+  margin-left: var(--space-2xs);
+}
+
+.form-help-text {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-2xs);
+  line-height: var(--leading-tight);
+}
+
+.branch-info-alert {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.993), rgb(255, 255, 255));
+  border: 1px solid var(--brand-info);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  transition: var(--transition-base);
+}
+
+.branch-info-alert:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.branch-info-alert i {
+  color: var(--brand-info);
+}
+
+.form-submit-section {
+  border-top: 1px solid var(--gray-200);
+  padding-top: var(--space-xl);
+  margin-top: var(--space-2xl);
+}
+
+.form-submit-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+}
+
+.form-required-note {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.form-required-note .text-danger {
+  color: var(--brand-danger);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+}
+
+.btn-reset {
+  background: var(--bg-primary);
+  border: 1px solid var(--gray-300);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-lg);
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+  transition: var(--transition-base);
+  cursor: pointer;
+}
+
+.btn-reset:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-reset:active {
+  transform: translateY(0);
+}
+
+.btn-submit {
+  background: var(--gradient-success);
+  border: 1px solid var(--brand-success);
+  color: var(--text-white);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-xl);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-base);
+  transition: var(--transition-base);
+  cursor: pointer;
+}
+
+.btn-submit:hover {
+  background: linear-gradient(135deg, #0D9488, #10B981);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+/* Student Edit Form */
+.student-edit-form {
+  max-width: var(--container-xl);
+  margin: 0 auto;
+}
+
+.student-edit-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: none;
+  overflow: hidden;
+}
+
+.student-edit-header {
+  background: var(--gradient-warning);
+  color: var(--text-white);
+  padding: var(--space-xl);
+  border-bottom: 2px solid var(--warning);
+}
+
+.student-edit-header h4 {
+  margin: 0;
+  font-weight: var(--font-semibold);
+  font-size: var(--text-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--text-white);
+}
+
+.student-edit-header p {
+  margin: var(--space-xs) 0 0 0;
+  font-size: var(--text-sm);
+  opacity: 0.9;
+  color: var(--text-white);
+}
+
+.student-edit-body {
+  padding: var(--space-2xl);
+  background: var(--bg-primary);
+}
+
+.edit-form-section-title {
+  color: var(--brand-primary);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-sm);
+  border-bottom: 2px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.edit-form-section-title i {
+  color: var(--brand-secondary);
+  font-size: var(--text-base);
+}
+
+.edit-form-section {
+  margin-bottom: var(--space-2xl);
+}
+
+.edit-form-label {
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+  font-size: var(--text-sm);
+  display: block;
+}
+
+.edit-form-label .text-danger {
+  color: var(--brand-danger);
+  margin-left: var(--space-2xs);
+}
+
+.edit-form-actions {
+  border-top: 1px solid var(--gray-200);
+  padding-top: var(--space-xl);
+  margin-top: var(--space-2xl);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+}
+
+.btn-back {
+  background: var(--bg-primary);
+  border: 1px solid var(--gray-300);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-lg);
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+  transition: var(--transition-base);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.btn-back:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+
+.btn-update {
+  background: var(--gradient-warning);
+  border: 1px solid var(--warning);
+  color: var(--text-white);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-xl);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-base);
+  transition: var(--transition-base);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.btn-update:hover {
+  background: linear-gradient(135deg, #D97706, #F59E0B);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: var(--text-white);
+}
+
+.btn-update:active {
+  transform: translateY(0);
+}
+
+/* Enhanced Form Controls for Edit Form */
+.student-edit-form .form-control,
+.student-edit-form .form-select {
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-sm);
+  transition: var(--transition-base);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.student-edit-form .form-control:focus,
+.student-edit-form .form-select:focus {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+  outline: none;
+}
+
+.student-edit-form textarea.form-control {
+  resize: vertical;
+  min-height: calc(3rem + 2px);
+}
+
+/* Grid spacing improvements */
+.student-edit-form .g-3 > * {
+  padding-right: calc(var(--space-md) * 0.5);
+  padding-left: calc(var(--space-md) * 0.5);
+}
+
+.student-edit-form .row {
+  margin-right: calc(var(--space-md) * -0.5);
+  margin-left: calc(var(--space-md) * -0.5);
+}
+
+/* Responsive Design for Edit Form */
+@media (max-width: 768px) {
+  .student-edit-body {
+    padding: var(--space-xl);
+  }
+  
+  .student-edit-header {
+    padding: var(--space-lg);
+  }
+  
+  .student-edit-header h4 {
+    font-size: var(--text-lg);
+  }
+  
+  .edit-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-md);
+  }
+  
+  .btn-back,
+  .btn-update {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+  
+  .edit-form-section {
+    margin-bottom: var(--space-xl);
+  }
+  
+  .edit-form-section-title {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-md);
+  }
+}
+
+@media (max-width: 576px) {
+  .student-edit-body {
+    padding: var(--space-lg);
+  }
+  
+  .student-edit-header h4 {
+    font-size: var(--text-base);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
+  }
+  
+  .student-edit-header p {
+    font-size: var(--text-xs);
+  }
+  
+  .edit-form-section-title {
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-sm);
+  }
+  
+  .student-edit-form .col-md-3,
+  .student-edit-form .col-md-6 {
+    margin-bottom: var(--space-md);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .student-edit-card {
+    border: 2px solid var(--text-primary);
+  }
+  
+  .student-edit-header {
+    border-bottom: 3px solid var(--warning);
+  }
+  
+  .edit-form-section-title {
+    border-bottom: 3px solid var(--brand-primary);
+  }
+}
+
+/* Dark mode support (if implemented) */
+@media (prefers-color-scheme: dark) {
+  .student-edit-card {
+    background: var(--gray-900);
+    color: var(--gray-100);
+    border: 1px solid var(--gray-700);
+  }
+  
+  .student-edit-body {
+    background: var(--gray-900);
+    color: var(--gray-100);
+  }
+  
+  .student-edit-header {
+    background: linear-gradient(135deg, #B45309, #D97706);
+    color: var(--text-white);
+    border-bottom: 2px solid var(--gray-700);
+  }
+  
+  .edit-form-section-title {
+    color: var(--gray-100);
+    border-bottom: 2px solid var(--gray-700);
+  }
+  
+  .edit-form-section-title i {
+    color: var(--warning);
+  }
+  
+  .edit-form-label,
+  .edit-form-label strong {
+    color: var(--gray-200) !important;
+  }
+  
+  .student-edit-form .form-control,
+  .student-edit-form .form-select {
+    background: var(--gray-800) !important;
+    border: 1px solid var(--gray-600) !important;
+    color: var(--gray-100) !important;
+  }
+  
+  .student-edit-form .form-control:focus,
+  .student-edit-form .form-select:focus {
+    background: var(--gray-700) !important;
+    border-color: var(--warning) !important;
+    color: var(--gray-100) !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+  }
+  
+  .student-edit-form .form-control::placeholder {
+    color: var(--gray-400) !important;
+  }
+  
+  .student-edit-form .form-select option {
+    background: var(--gray-800) !important;
+    color: var(--gray-100) !important;
+  }
+  
+  .btn-back {
+    background: var(--gray-800) !important;
+    border: 1px solid var(--gray-600) !important;
+    color: var(--gray-200) !important;
+  }
+  
+  .btn-back:hover {
+    background: var(--gray-700) !important;
+    border-color: var(--gray-500) !important;
+    color: var(--gray-100) !important;
+  }
+  
+  .btn-update {
+    background: var(--gradient-warning) !important;
+    border: 1px solid var(--warning) !important;
+    color: var(--gray-900) !important;
+    font-weight: var(--font-bold);
+  }
+  
+  .btn-update:hover {
+    background: linear-gradient(135deg, #D97706, #F59E0B) !important;
+    color: var(--gray-900) !important;
+  }
+  
+  .edit-form-actions {
+    border-top: 1px solid var(--gray-700);
+  }
+}
+
+/* Class-based dark mode (can be toggled with JavaScript) */
+.dark-mode .student-edit-card,
+body.dark .student-edit-card {
+  background: var(--gray-900) !important;
+  color: var(--gray-100) !important;
+  border: 1px solid var(--gray-700) !important;
+}
+
+.dark-mode .student-edit-body,
+body.dark .student-edit-body {
+  background: var(--gray-900) !important;
+  color: var(--gray-100) !important;
+}
+
+.dark-mode .student-edit-header,
+body.dark .student-edit-header {
+  background: linear-gradient(135deg, #B45309, #D97706) !important;
+  color: var(--text-white) !important;
+  border-bottom: 2px solid var(--gray-700) !important;
+}
+
+.dark-mode .edit-form-section-title,
+body.dark .edit-form-section-title {
+  color: var(--gray-100) !important;
+  border-bottom: 2px solid var(--gray-700) !important;
+}
+
+.dark-mode .edit-form-section-title i,
+body.dark .edit-form-section-title i {
+  color: var(--warning) !important;
+}
+
+.dark-mode .edit-form-label,
+.dark-mode .edit-form-label strong,
+body.dark .edit-form-label,
+body.dark .edit-form-label strong {
+  color: var(--gray-200) !important;
+}
+
+.dark-mode .student-edit-form .form-control,
+.dark-mode .student-edit-form .form-select,
+body.dark .student-edit-form .form-control,
+body.dark .student-edit-form .form-select {
+  background: var(--gray-800) !important;
+  border: 1px solid var(--gray-600) !important;
+  color: var(--gray-100) !important;
+}
+
+.dark-mode .student-edit-form .form-control:focus,
+.dark-mode .student-edit-form .form-select:focus,
+body.dark .student-edit-form .form-control:focus,
+body.dark .student-edit-form .form-select:focus {
+  background: var(--gray-700) !important;
+  border-color: var(--warning) !important;
+  color: var(--gray-100) !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25) !important;
+}
+
+.dark-mode .student-edit-form .form-control::placeholder,
+body.dark .student-edit-form .form-control::placeholder {
+  color: var(--gray-400) !important;
+}
+
+.dark-mode .student-edit-form .form-select option,
+body.dark .student-edit-form .form-select option {
+  background: var(--gray-800) !important;
+  color: var(--gray-100) !important;
+}
+
+.dark-mode .btn-back,
+body.dark .btn-back {
+  background: var(--gray-800) !important;
+  border: 1px solid var(--gray-600) !important;
+  color: var(--gray-200) !important;
+}
+
+.dark-mode .btn-back:hover,
+body.dark .btn-back:hover {
+  background: var(--gray-700) !important;
+  border-color: var(--gray-500) !important;
+  color: var(--gray-100) !important;
+}
+
+.dark-mode .btn-update,
+body.dark .btn-update {
+  background: var(--gradient-warning) !important;
+  border: 1px solid var(--warning) !important;
+  color: var(--gray-900) !important;
+  font-weight: var(--font-bold) !important;
+}
+
+.dark-mode .btn-update:hover,
+body.dark .btn-update:hover {
+  background: linear-gradient(135deg, #D97706, #F59E0B) !important;
+  color: var(--gray-900) !important;
+}
+
+.dark-mode .edit-form-actions,
+body.dark .edit-form-actions {
+  border-top: 1px solid var(--gray-700) !important;
+}
+
+/* Dark mode text color utilities */
+@media (prefers-color-scheme: dark) {
+  .text-danger {
+    color: #ff6b6b !important;
+  }
+  
+  .text-primary {
+    color: var(--brand-secondary) !important;
+  }
+  
+  .text-muted {
+    color: var(--gray-400) !important;
+  }
+}
+
+.dark-mode .text-danger,
+body.dark .text-danger {
+  color: #ff6b6b !important;
+}
+
+.dark-mode .text-primary,
+body.dark .text-primary {
+  color: var(--brand-secondary) !important;
+}
+
+.dark-mode .text-muted,
+body.dark .text-muted {
+  color: var(--gray-400) !important;
+}
+
+/* Dark mode improvements for form validation */
+.dark-mode .student-edit-form .form-control:invalid,
+body.dark .student-edit-form .form-control:invalid {
+  border-color: #ff6b6b !important;
+}
+
+.dark-mode .student-edit-form .form-control:valid,
+body.dark .student-edit-form .form-control:valid {
+  border-color: var(--success) !important;
+}
+
+/* Better focus indicators for dark mode */
+.dark-mode .student-edit-form .form-control:focus-visible,
+.dark-mode .student-edit-form .form-select:focus-visible,
+body.dark .student-edit-form .form-control:focus-visible,
+body.dark .student-edit-form .form-select:focus-visible {
+  outline: 2px solid var(--warning) !important;
+  outline-offset: 2px !important;
+}
+
+/* Enhanced form field styling */
+.student-edit-form .focused .edit-form-label {
+  color: var(--brand-primary);
+  transform: scale(0.95);
+  transition: var(--transition-base);
+}
+
+.dark-mode .student-edit-form .focused .edit-form-label,
+body.dark .student-edit-form .focused .edit-form-label {
+  color: var(--warning) !important;
+}
+
+/* Better visual hierarchy for form sections */
+.edit-form-section {
+  position: relative;
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.5);
+  transition: var(--transition-base);
+}
+
+.edit-form-section:hover {
+  background: rgba(255, 255, 255, 0.7);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.dark-mode .edit-form-section,
+body.dark .edit-form-section {
+  background: rgba(31, 41, 55, 0.3) !important;
+  border: 1px solid var(--gray-700);
+}
+
+.dark-mode .edit-form-section:hover,
+body.dark .edit-form-section:hover {
+  background: rgba(31, 41, 55, 0.5) !important;
+  border-color: var(--gray-600);
+}
+
+.student-registration-form .form-control:focus,
+.student-registration-form .form-select:focus {
+  border-color: var(--brand-secondary);
+  box-shadow: 0 0 0 3px rgba(56, 113, 193, 0.15);
+  outline: none;
+}
+
+.student-registration-form textarea.form-control {
+  resize: vertical;
+  min-height: calc(2.5rem + 2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .student-registration-body {
+    padding: var(--space-xl);
+  }
+  
+  .student-registration-header {
+    padding: var(--space-lg);
+  }
+  
+  .student-registration-header h4 {
+    font-size: var(--text-lg);
+  }
+  
+  .form-submit-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-md);
+  }
+  
+  .form-actions {
+    justify-content: stretch;
+  }
+  
+  .btn-reset,
+  .btn-submit {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .form-section {
+    margin-bottom: var(--space-xl);
+  }
+}
+
+@media (max-width: 576px) {
+  .student-registration-body {
+    padding: var(--space-lg);
+  }
+  
+  .form-section-title {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-md);
+  }
+}
+
+/* Student List Styles */
+.student-avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  font-size: var(--text-sm);
+  flex-shrink: 0;
+  font-weight: var(--font-semibold);
+}
+
+.student-stats-card {
+  border-left: 4px solid;
+  transition: var(--transition-base);
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.student-stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.student-stats-card .card-body {
+  padding: var(--space-lg);
+}
+
+.student-stats-card .text-xs {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-xs);
+}
+
+.student-stats-card .h5 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  margin-bottom: 0;
+}
+
+.student-stats-card .text-gray-800 {
+  color: var(--text-primary);
+}
+
+.student-stats-card .text-gray-300 {
+  color: var(--gray-300);
+}
+
+.student-stats-card.border-left-primary {
+  border-left-color: var(--brand-primary);
+}
+
+.student-stats-card.border-left-success {
+  border-left-color: var(--success);
+}
+
+.student-stats-card.border-left-info {
+  border-left-color: var(--info);
+}
+
+.student-stats-card.border-left-warning {
+  border-left-color: var(--warning);
+}
+
+/* Enhanced Student List Table Styling */
+.student-list-table {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-200);
+}
+
+.student-list-header {
+  background: var(--gradient-primary);
+  color: var(--text-white);
+  padding: var(--space-lg) var(--space-xl);
+  margin: 0;
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.student-list-header h6 {
+  margin: 0;
+  font-weight: var(--font-semibold);
+  font-size: var(--text-base);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--text-white);
+}
+
+.student-list-table .card-body {
+  padding: 0;
+  background: var(--bg-primary);
+}
+
+.student-list-table .table-responsive {
+  background: var(--bg-primary);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.student-list-table .table {
+  margin-bottom: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.student-list-table .table th {
+  background: var(--gray-100);
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  border-bottom: 2px solid var(--gray-300);
+  padding: var(--space-md) var(--space-lg);
+  text-align: left;
+  vertical-align: middle;
+  border-top: none;
+}
+
+.student-list-table .table td {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: var(--space-md) var(--space-lg);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--gray-200);
+  border-top: none;
+  position: relative;
+}
+
+.student-list-table .table tbody tr {
+  background: var(--bg-primary);
+  border: none;
+}
+
+.student-list-table .table tbody tr:hover {
+  background: var(--gray-50);
+  transition: background-color 0.15s ease;
+}
+
+.student-name-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.student-name-info strong {
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
+}
+
+.student-name-info .text-muted {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.student-contact-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition-base);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.student-contact-link:hover {
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.student-contact-link i {
+  color: var(--text-muted);
+  transition: var(--transition-base);
+}
+
+.student-contact-link:hover i {
+  color: var(--brand-primary);
+}
+
+.student-actions .btn-group .btn {
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--text-xs);
+  transition: var(--transition-base);
+}
+
+.student-actions .btn-group .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.student-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}
+
+.student-empty-state .fa-users {
+  color: var(--gray-300);
+  margin-bottom: var(--space-lg);
+}
+
+.student-empty-state h5 {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+  font-weight: var(--font-semibold);
+}
+
+.student-empty-state p {
+  color: var(--text-muted);
+  margin-bottom: var(--space-xl);
+}
+
+/* Badge Styling for Student List */
+.badge.badge-info {
+  background: var(--info);
+  color: var(--text-white);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+}
+
+.badge.badge-secondary {
+  background: var(--gray-500);
+  color: var(--text-white);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+}
+
+.badge.badge-success {
+  background: var(--success);
+  color: var(--text-white);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+}
+
+/* Text color utilities using design tokens */
+.text-primary {
+  color: var(--brand-primary) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.text-warning {
+  color: var(--warning) !important;
+}
+
+.text-success {
+  color: var(--success) !important;
+}
+
+.text-info {
+  color: var(--info) !important;
+}
+
+.text-danger {
+  color: var(--brand-danger) !important;
+}
+
+.text-white {
+  color: var(--text-white) !important;
+}
+
+/* Ensure proper contrast for edit form elements */
+.student-edit-form .text-primary {
+  color: var(--brand-primary) !important;
+}
+
+.student-edit-form .text-muted {
+  color: var(--text-muted) !important;
+}
+
+.student-edit-form .text-danger {
+  color: var(--brand-danger) !important;
+}
+
+.student-edit-form strong {
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+}
+
+.student-edit-form .form-control::placeholder,
+.student-edit-form .form-select option {
+  color: var(--text-muted);
+}
+
+.student-edit-form .form-control:focus::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Student table specific text styling */
+.student-list-table .table td,
+.student-list-table .table th {
+  color: var(--text-primary) !important;
+}
+
+.student-list-table .table td strong {
+  color: var(--text-primary) !important;
+  font-weight: var(--font-semibold);
+}
+
+.student-list-table .table td .text-primary {
+  color: var(--brand-primary) !important;
+}
+
+.student-list-table .table td .text-muted {
+  color: var(--text-muted) !important;
+}
+
+.student-list-table .table td small.text-muted {
+  color: var(--text-muted) !important;
+  font-size: var(--text-xs);
+}
+
+/* DataTable responsive improvements */
+.student-list-table .dataTables_wrapper {
+  padding: var(--space-lg);
+  background: var(--bg-primary);
+}
+
+.student-list-table .dataTables_filter {
+  margin-bottom: var(--space-lg);
+}
+
+.student-list-table .dataTables_filter label {
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
+}
+
+.student-list-table .dataTables_filter input {
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  margin-left: var(--space-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.student-list-table .dataTables_filter input:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(44, 56, 146, 0.1);
+  outline: none;
+}
+
+.student-list-table .dataTables_info,
+.student-list-table .dataTables_paginate {
+  margin-top: var(--space-lg);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.student-list-table .dataTables_paginate .paginate_button {
+  color: var(--text-primary) !important;
+  background: var(--bg-primary) !important;
+  border: 1px solid var(--gray-300) !important;
+  border-radius: var(--radius-sm);
+  margin: 0 2px;
+  padding: var(--space-xs) var(--space-sm) !important;
+}
+
+.student-list-table .dataTables_paginate .paginate_button:hover {
+  background: var(--gray-100) !important;
+  border-color: var(--gray-400) !important;
+  color: var(--text-primary) !important;
+}
+
+.student-list-table .dataTables_paginate .paginate_button.current {
+  background: var(--brand-primary) !important;
+  border-color: var(--brand-primary) !important;
+  color: var(--text-white) !important;
+}
+
+.student-list-table .dataTables_length label,
+.student-list-table .dataTables_length select {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+.student-list-table .dataTables_length select {
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+}
+
+/* Mobile responsiveness for student table */
+@media (max-width: 768px) {
+  .student-name-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
+  }
+  
+  .student-avatar-placeholder {
+    width: 24px;
+    height: 24px;
+    font-size: var(--text-xs);
+  }
+  
+  .student-actions .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+  
+  .student-stats-card .card-body {
+    padding: var(--space-md);
+  }
+  
+  .student-stats-card .h5 {
+    font-size: var(--text-xl);
+  }
+}
+
+/* Global table overrides for better visibility */
+.student-list-table .table,
+.student-list-table .table th,
+.student-list-table .table td {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+}
+
+.student-list-table .table thead th {
+  background-color: var(--gray-100) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--gray-300) !important;
+}
+
+.student-list-table .table tbody tr:nth-child(odd) {
+  background-color: var(--bg-primary) !important;
+}
+
+.student-list-table .table tbody tr:nth-child(even) {
+  background-color: var(--gray-50) !important;
+}
+
+.student-list-table .table tbody tr:hover {
+  background-color: var(--gray-100) !important;
+}
+
+/* Ensure all text elements are visible */
+.student-list-table * {
+  color: var(--text-primary) !important;
+}
+
+.student-list-table .text-muted {
+  color: var(--text-muted) !important;
+}
+
+.student-list-table .text-primary {
+  color: var(--brand-primary) !important;
+}
+
+.student-list-table strong {
+  color: var(--text-primary) !important;
+  font-weight: var(--font-semibold) !important;
+}
+
+.student-list-table a {
+  color: var(--brand-primary) !important;
+}
+
+.student-list-table a:hover {
+  color: var(--brand-secondary) !important;
+}
+
+/* Student View Page Styles */
+.student-view-container {
+  max-width: var(--container-xl);
+  margin: 0 auto;
+}
+
+.student-view-header {
+  background: var(--gradient-primary);
+  color: var(--text-white);
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--space-xl);
+}
+
+.student-view-header h1 {
+  margin: 0;
+  font-weight: var(--font-semibold);
+  font-size: var(--text-2xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.student-view-header .text-muted {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-size: var(--text-sm);
+  margin-top: var(--space-xs);
+}
+
+.student-view-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.student-info-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: none;
+  overflow: hidden;
+  margin-bottom: var(--space-xl);
+}
+
+.student-info-header {
+  background: var(--gradient-secondary);
+  color: var(--text-white);
+  padding: var(--space-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-info-header h6 {
+  margin: 0;
+  font-weight: var(--font-semibold);
+  font-size: var(--text-base);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.student-info-body {
+  padding: var(--space-xl);
+  background: var(--bg-primary);
+}
+
+.student-detail-item {
+  margin-bottom: var(--space-lg);
+}
+
+.student-detail-label {
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-xs);
+  display: block;
+}
+
+.student-detail-value {
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  margin: 0;
+}
+
+.student-detail-value a {
+  color: var(--brand-primary);
+  text-decoration: none;
+  transition: var(--transition-base);
+}
+
+.student-detail-value a:hover {
+  color: var(--brand-secondary);
+  text-decoration: none;
+}
+
+.student-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  gap: var(--space-xs);
+}
+
+.student-badge.badge-primary {
+  background: var(--brand-primary);
+  color: var(--text-white);
+}
+
+.student-badge.badge-success {
+  background: var(--success);
+  color: var(--text-white);
+}
+
+.student-badge.badge-info {
+  background: var(--info);
+  color: var(--text-white);
+}
+
+.student-badge.badge-secondary {
+  background: var(--gray-500);
+  color: var(--text-white);
+}
+
+.student-photo-container {
+  text-align: center;
+  padding: var(--space-md);
+}
+
+.student-photo {
+  max-width: 120px;
+  max-height: 120px;
+  border-radius: var(--radius-lg);
+  border: 3px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.student-actions-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: none;
+  overflow: hidden;
+}
+
+.student-actions-header {
+  background: var(--gradient-success);
+  color: var(--text-white);
+  padding: var(--space-lg);
+}
+
+.student-actions-header h6 {
+  margin: 0;
+  font-weight: var(--font-semibold);
+  font-size: var(--text-base);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.student-actions-body {
+  padding: var(--space-xl);
+  background: var(--bg-primary);
+}
+
+.student-action-buttons {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.btn-student-action {
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+  transition: var(--transition-base);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.btn-student-action:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+
+.btn-student-action.btn-edit {
+  background: var(--gradient-warning);
+  color: var(--text-white);
+}
+
+.btn-student-action.btn-edit:hover {
+  background: linear-gradient(135deg, #D97706, #F59E0B);
+  color: var(--text-white);
+}
+
+.btn-student-action.btn-payments {
+  background: var(--gradient-success);
+  color: var(--text-white);
+}
+
+.btn-student-action.btn-payments:hover {
+  background: linear-gradient(135deg, #059669, #10B981);
+  color: var(--text-white);
+}
+
+.btn-student-action.btn-sms {
+  background: var(--gradient-info);
+  color: var(--text-white);
+}
+
+.btn-student-action.btn-sms:hover {
+  background: linear-gradient(135deg, #0EA5E9, #3B82F6);
+  color: var(--text-white);
+}
+
+.btn-student-action.btn-email {
+  background: var(--gray-600);
+  color: var(--text-white);
+}
+
+.btn-student-action.btn-email:hover {
+  background: var(--gray-700);
+  color: var(--text-white);
+}
+
+.btn-student-action.btn-call {
+  background: var(--gradient-primary);
+  color: var(--text-white);
+}
+
+.btn-student-action.btn-call:hover {
+  background: linear-gradient(135deg, #1E3A8A, #2563EB);
+  color: var(--text-white);
+}
+
+.btn-student-action.btn-back {
+  background: var(--bg-primary);
+  border: 1px solid var(--gray-300);
+  color: var(--text-secondary);
+}
+
+.btn-student-action.btn-back:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+  color: var(--text-primary);
+}
+
+/* Dark mode support for student view */
+body.dark .student-info-card,
+.dark-mode .student-info-card {
+  background: var(--gray-800);
+}
+
+body.dark .student-info-body,
+.dark-mode .student-info-body {
+  background: var(--gray-800);
+}
+
+body.dark .student-actions-card,
+.dark-mode .student-actions-card {
+  background: var(--gray-800);
+}
+
+body.dark .student-actions-body,
+.dark-mode .student-actions-body {
+  background: var(--gray-800);
+}
+
+body.dark .btn-student-action.btn-back,
+.dark-mode .btn-student-action.btn-back {
+  background: var(--gray-700);
+  border-color: var(--gray-600);
+  color: var(--text-white);
+}
+
+body.dark .btn-student-action.btn-back:hover,
+.dark-mode .btn-student-action.btn-back:hover {
+  background: var(--gray-600);
+  border-color: var(--gray-500);
+  color: var(--text-white);
+}
+
+body.dark .student-photo,
+.dark-mode .student-photo {
+  border-color: var(--gray-600);
+}

@@ -1,0 +1,5 @@
+/* invoice-management.css */
+.invoice-card{background:#fff; border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:var(--space-lg); box-shadow:var(--shadow-sm)}
+.invoice-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-lg)}
+.invoice-total{font-size:var(--text-2xl); font-weight:var(--font-bold); color:var(--brand-primary)}
+.invoice-table{composes: table-clean}

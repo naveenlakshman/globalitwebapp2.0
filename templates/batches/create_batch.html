@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Batch{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-plus text-primary me-2"></i>Create New Batch
+        </h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('batches.list_batches') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Batches
+            </a>
+        </div>
+    </div>
+
+    <!-- Create Batch Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-layer-group me-2"></i>Batch Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('batches.create_batch') }}" id="createBatchForm">
+                        <div class="row">
+                            <!-- Batch Name -->
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Batch Name *
+                                </label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       placeholder="e.g., Morning Batch, Evening Batch" required>
+                                <div class="form-text">Choose a descriptive name for the batch</div>
+                            </div>
+
+                            <!-- Course Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label for="course_id" class="form-label">
+                                    <i class="fas fa-book me-1"></i>Course *
+                                </label>
+                                <select class="form-select" id="course_id" name="course_id" required>
+                                    <option value="">Select a course</option>
+                                    {% for course in courses %}
+                                    <option value="{{ course.id }}">{{ course.course_name }} ({{ course.duration }})</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Select the course this batch will cover</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Branch Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label for="branch_id" class="form-label">
+                                    <i class="fas fa-building me-1"></i>Branch *
+                                </label>
+                                <select class="form-select" id="branch_id" name="branch_id" required>
+                                    <option value="">Select Branch</option>
+                                    {% for branch in branches %}
+                                    <option value="{{ branch.id }}">{{ branch.branch_name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Select the branch where this batch will be conducted</div>
+                            </div>
+
+                            <!-- Batch Check-in Time -->
+                            <div class="col-md-6 mb-3">
+                                <label for="checkin_time" class="form-label">
+                                    <i class="fas fa-clock me-1"></i>Check-in Time *
+                                </label>
+                                <input type="time" class="form-control" id="checkin_time" name="checkin_time" required>
+                                <div class="form-text">When do students check-in for class?</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Batch Check-out Time -->
+                            <div class="col-md-6 mb-3">
+                                <label for="checkout_time" class="form-label">
+                                    <i class="fas fa-clock me-1"></i>Check-out Time *
+                                </label>
+                                <input type="time" class="form-control" id="checkout_time" name="checkout_time" required>
+                                <div class="form-text">When do students check-out from class?</div>
+                            </div>
+
+                            <!-- Legacy Timing Field (Optional) -->
+                            <div class="col-md-6 mb-3">
+                                <label for="timing" class="form-label">
+                                    <i class="fas fa-info-circle me-1"></i>Additional Timing Notes
+                                </label>
+                                <input type="text" class="form-control" id="timing" name="timing" 
+                                       placeholder="e.g., Break: 10:30-10:45 AM">
+                                <div class="form-text">Optional notes about breaks, lunch, etc.</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Start Date -->
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>Start Date *
+                                </label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                                <div class="form-text">When will this batch begin?</div>
+                            </div>
+
+                            <!-- End Date -->
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">
+                                    <i class="fas fa-calendar-check me-1"></i>End Date
+                                </label>
+                                <input type="date" class="form-control" id="end_date" name="end_date">
+                                <div class="form-text">Expected completion date (optional)</div>
+                            </div>
+                        </div>
+
+                        <!-- Trainer Assignment Section -->
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-chalkboard-teacher me-2"></i>Trainer Assignment
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Primary Trainer -->
+                            <div class="col-md-6 mb-3">
+                                <label for="primary_trainer_id" class="form-label">
+                                    <i class="fas fa-user-tie me-1"></i>Primary Trainer
+                                </label>
+                                <select class="form-select" id="primary_trainer_id" name="primary_trainer_id">
+                                    <option value="">Select Primary Trainer</option>
+                                    <!-- Will be populated via JavaScript based on branch selection -->
+                                </select>
+                                <div class="form-text">Main instructor for this batch</div>
+                            </div>
+
+                            <!-- Assistant Trainer -->
+                            <div class="col-md-6 mb-3">
+                                <label for="assistant_trainer_id" class="form-label">
+                                    <i class="fas fa-user-friends me-1"></i>Assistant Trainer
+                                </label>
+                                <select class="form-select" id="assistant_trainer_id" name="assistant_trainer_id">
+                                    <option value="">Select Assistant Trainer (Optional)</option>
+                                    <!-- Will be populated via JavaScript based on branch selection -->
+                                </select>
+                                <div class="form-text">Support instructor (optional)</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Trainer Notes -->
+                            <div class="col-12 mb-3">
+                                <label for="trainer_notes" class="form-label">
+                                    <i class="fas fa-sticky-note me-1"></i>Trainer Assignment Notes
+                                </label>
+                                <textarea class="form-control" id="trainer_notes" name="trainer_notes" rows="2" 
+                                          placeholder="Any specific instructions or notes for the trainers..."></textarea>
+                                <div class="form-text">Optional notes about trainer responsibilities</div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row mt-4">
+                            <div class="col-12 text-end">
+                                <button type="button" class="btn btn-secondary me-2" onclick="window.history.back()">
+                                    <i class="fas fa-times me-1"></i>Cancel
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Create Batch
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guidelines Card -->
+    <div class="row mt-4">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <h6 class="text-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>Batch Creation Guidelines
+                    </h6>
+                    <ul class="mb-0 text-sm">
+                        <li><strong>Batch Name:</strong> Use descriptive names like "Morning Web Dev" or "Evening Python"</li>
+                        <li><strong>Course Name:</strong> Be specific about the course content and level</li>
+                        <li><strong>Check-in/Check-out Times:</strong> Set precise times for attendance tracking</li>
+                        <li><strong>Timing Notes:</strong> Optional field for breaks, lunch, or special instructions</li>
+                        <li><strong>Dates:</strong> Start date is required, end date helps with planning</li>
+                        <li><strong>Branch:</strong> You can only create batches for branches you have access to</li>
+                        <li><strong>Trainers:</strong> Assign trainers during creation or add them later</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('createBatchForm');
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const checkinTimeInput = document.getElementById('checkin_time');
+    const checkoutTimeInput = document.getElementById('checkout_time');
+    const branchSelect = document.getElementById('branch_id');
+    const primaryTrainerSelect = document.getElementById('primary_trainer_id');
+    const assistantTrainerSelect = document.getElementById('assistant_trainer_id');
+    
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    startDateInput.min = today;
+    
+    // Update end date minimum when start date changes
+    startDateInput.addEventListener('change', function() {
+        endDateInput.min = this.value;
+        if (endDateInput.value && endDateInput.value < this.value) {
+            endDateInput.value = '';
+        }
+    });
+    
+    // Validate check-out time is after check-in time
+    checkoutTimeInput.addEventListener('change', function() {
+        const checkinTime = checkinTimeInput.value;
+        const checkoutTime = this.value;
+        
+        if (checkinTime && checkoutTime && checkoutTime <= checkinTime) {
+            alert('Check-out time must be after check-in time');
+            this.value = '';
+        }
+    });
+    
+    checkinTimeInput.addEventListener('change', function() {
+        const checkinTime = this.value;
+        const checkoutTime = checkoutTimeInput.value;
+        
+        if (checkinTime && checkoutTime && checkoutTime <= checkinTime) {
+            alert('Check-out time must be after check-in time');
+            checkoutTimeInput.value = '';
+        }
+    });
+    
+    // Load trainers when branch is selected
+    branchSelect.addEventListener('change', function() {
+        const branchId = this.value;
+        loadTrainers(branchId);
+    });
+    
+    function loadTrainers(branchId) {
+        // Clear current options
+        primaryTrainerSelect.innerHTML = '<option value="">Select Primary Trainer</option>';
+        assistantTrainerSelect.innerHTML = '<option value="">Select Assistant Trainer (Optional)</option>';
+        
+        if (!branchId) return;
+        
+        // Show loading
+        primaryTrainerSelect.innerHTML = '<option value="">Loading trainers...</option>';
+        assistantTrainerSelect.innerHTML = '<option value="">Loading trainers...</option>';
+        
+        // Fetch trainers for this branch
+        fetch(`/batches/api/trainers/branch/${branchId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Clear loading options
+                primaryTrainerSelect.innerHTML = '<option value="">Select Primary Trainer</option>';
+                assistantTrainerSelect.innerHTML = '<option value="">Select Assistant Trainer (Optional)</option>';
+                
+                if (data.success && data.trainers.length > 0) {
+                    data.trainers.forEach(trainer => {
+                        const option1 = new Option(`${trainer.full_name} (${trainer.username})`, trainer.id);
+                        const option2 = new Option(`${trainer.full_name} (${trainer.username})`, trainer.id);
+                        primaryTrainerSelect.add(option1);
+                        assistantTrainerSelect.add(option2);
+                    });
+                } else {
+                    primaryTrainerSelect.innerHTML = '<option value="">No trainers available in this branch</option>';
+                    assistantTrainerSelect.innerHTML = '<option value="">No trainers available in this branch</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading trainers:', error);
+                primaryTrainerSelect.innerHTML = '<option value="">Error loading trainers</option>';
+                assistantTrainerSelect.innerHTML = '<option value="">Error loading trainers</option>';
+            });
+    }
+    
+    // Prevent selecting same trainer for both roles
+    primaryTrainerSelect.addEventListener('change', function() {
+        const selectedTrainer = this.value;
+        Array.from(assistantTrainerSelect.options).forEach(option => {
+            if (option.value === selectedTrainer && selectedTrainer !== '') {
+                option.disabled = true;
+            } else {
+                option.disabled = false;
+            }
+        });
+        
+        // Clear assistant trainer if same as primary
+        if (assistantTrainerSelect.value === selectedTrainer && selectedTrainer !== '') {
+            assistantTrainerSelect.value = '';
+        }
+    });
+    
+    assistantTrainerSelect.addEventListener('change', function() {
+        const selectedTrainer = this.value;
+        Array.from(primaryTrainerSelect.options).forEach(option => {
+            if (option.value === selectedTrainer && selectedTrainer !== '') {
+                option.disabled = true;
+            } else {
+                option.disabled = false;
+            }
+        });
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const courseId = document.getElementById('course_id').value;
+        const branchId = document.getElementById('branch_id').value;
+        const startDate = document.getElementById('start_date').value;
+        const checkinTime = document.getElementById('checkin_time').value;
+        const checkoutTime = document.getElementById('checkout_time').value;
+        
+        if (!name || !courseId || !branchId || !startDate || !checkinTime || !checkoutTime) {
+            e.preventDefault();
+            alert('Please fill in all required fields (marked with *)');
+            return false;
+        }
+        
+        // Validate check-out time is after check-in time
+        if (checkoutTime <= checkinTime) {
+            e.preventDefault();
+            alert('Check-out time must be after check-in time');
+            return false;
+        }
+        
+        // Validate end date is after start date
+        const endDate = document.getElementById('end_date').value;
+        if (endDate && endDate < startDate) {
+            e.preventDefault();
+            alert('End date must be after start date');
+            return false;
+        }
+        
+        // Validate trainer selection (at least primary trainer recommended)
+        const primaryTrainer = document.getElementById('primary_trainer_id').value;
+        if (!primaryTrainer) {
+            const confirmWithoutTrainer = confirm('No primary trainer selected. Are you sure you want to create this batch without assigning a trainer? You can assign trainers later.');
+            if (!confirmWithoutTrainer) {
+                e.preventDefault();
+                return false;
+            }
+        }
+        
+        return true;
+    });
+    
+    // Load trainers if branch is pre-selected
+    if (branchSelect.value) {
+        loadTrainers(branchSelect.value);
+    }
+});
+</script>
+
+<style>
+.border-left-info {
+    border-left: 4px solid #36b9cc !important;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #5a5c69;
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: #858796;
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+</style>
+{% endblock %}

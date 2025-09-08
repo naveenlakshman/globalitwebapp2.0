@@ -1,0 +1,6 @@
+branch_name,branch_code,address,city,state,phone,email,manager_name,manager_phone,branch_type,status,gst_number,pan_number
+"Global IT - Bangalore Main","BLR001","123 MG Road, Brigade Road, Bangalore","Bangalore","Karnataka","9876543210","bangalore@globalit.edu","Rajesh Kumar","9876543210","Corporate","Active","29ABCDE1234F1Z5","ABCDE1234F"
+"Global IT - Mumbai Franchise","MUM001","456 Linking Road, Bandra West, Mumbai","Mumbai","Maharashtra","9876543211","mumbai@globalit.edu","Priya Sharma","9876543211","Franchise","Active","27FGHIJ5678K2A3","FGHIJ5678K"
+"Global IT - Delhi Branch","DEL001","789 Connaught Place, New Delhi","New Delhi","Delhi","9876543212","delhi@globalit.edu","Amit Singh","9876543212","Franchise","Active","07KLMNO9012L3B4","KLMNO9012L"
+"Global IT - Chennai Center","CHE001","321 Anna Salai, T.Nagar, Chennai","Chennai","Tamil Nadu","9876543213","chennai@globalit.edu","Deepika Nair","9876543213","Franchise","Active","33PQRST3456M4C5","PQRST3456M"
+"Global IT - Hyderabad Hub","HYD001","654 Jubilee Hills, Hyderabad","Hyderabad","Telangana","9876543214","hyderabad@globalit.edu","Ravi Teja","9876543214","Franchise","Active","36UVWXY7890N5D6","UVWXY7890N"

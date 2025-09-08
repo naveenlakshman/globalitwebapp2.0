@@ -1,0 +1,947 @@
+{% extends "base.html" %}
+{% block title %}Lead List - Global IT Education{% endblock %}
+{% block page_title %}Lead Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/lead-management.css') }}">
+<style>
+  /* Enhanced Delete Modal Styles */
+  #deleteLeadModal .modal-dialog {
+    max-width: 500px;
+  }
+  
+  #deleteLeadModal .form-control,
+  #deleteLeadModal .form-select {
+    position: relative;
+    z-index: 1060;
+    pointer-events: auto !important;
+    background-color: white !important;
+    border: 1px solid #ced4da !important;
+  }
+  
+  #deleteLeadModal .form-control:focus,
+  #deleteLeadModal .form-select:focus {
+    border-color: #86b7fe !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    outline: 0 !important;
+  }
+  
+  #deleteLeadModal .form-check-input {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1060;
+  }
+  
+  #deleteLeadModal .modal-body {
+    position: relative;
+    z-index: 1050;
+  }
+  
+  /* Ensure dropdown options are visible */
+  #deleteLeadModal .form-select option {
+    background-color: white;
+    color: black;
+  }
+  
+  /* Debug styles - remove after testing */
+  #deleteLeadModal .form-control:hover,
+  #deleteLeadModal .form-select:hover {
+    border-color: #ff0000 !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lead-list-container compact">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1><i class="fas fa-users"></i> Lead Management</h1>
+    <p>Manage and track your leads effectively</p>
+  </div>
+
+  <!-- Stats Cards - Compact -->
+  <div class="row mb-2">
+    <div class="col-md-3 col-sm-6 mb-1">
+      <div class="stats-card">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon me-2">
+            <i class="fas fa-users fa-lg text-primary"></i>
+          </div>
+          <div>
+            <h4 class="mb-0" id="totalLeads">{{ leads.total if leads else 0 }}</h4>
+            <small class="text-muted">Total Leads</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-2">
+      <div class="stats-card">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon me-2">
+            <i class="fas fa-clock fa-lg text-warning"></i>
+          </div>
+          <div>
+            <h4 class="mb-0" id="openLeads">{{ open_count if open_count is defined else 0 }}</h4>
+            <small class="text-muted">Open Leads</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-1">
+      <div class="stats-card">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon me-2">
+            <i class="fas fa-check-circle fa-lg text-success"></i>
+          </div>
+          <div>
+            <h4 class="mb-0" id="convertedLeads">{{ converted_count if converted_count is defined else 0 }}</h4>
+            <small class="text-muted">Converted</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-1">
+      <div class="stats-card">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon me-2">
+            <i class="fas fa-fire fa-lg text-danger"></i>
+          </div>
+          <div>
+            <h4 class="mb-0" id="hotLeads">{{ hot_count if hot_count is defined else 0 }}</h4>
+            <small class="text-muted">Hot Leads</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="filter-section">
+    <h5><i class="fas fa-filter"></i> Search & Filters</h5>
+
+    <form id="leadFilterForm" method="GET" action="{{ url_for('leads.lead_list') }}">
+      <div class="row g-3">
+        <!-- Search Box -->
+        <div class="col-md-4">
+          <label class="form-label">Search Leads</label>
+          <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="form-control" name="search"
+                   value="{{ request.args.get('search', '') }}"
+                   placeholder="Search by name, mobile, email, lead #">
+          </div>
+        </div>
+
+        <!-- Date Range -->
+        <div class="col-md-2">
+          <label class="form-label">Date From</label>
+          <input type="date" class="form-control" name="date_from"
+                 value="{{ request.args.get('date_from', '') }}">
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Date To</label>
+          <input type="date" class="form-control" name="date_to"
+                 value="{{ request.args.get('date_to', '') }}">
+        </div>
+
+        <!-- Lead Status -->
+        <div class="col-md-2">
+          <label class="form-label">Lead Status</label>
+          <select class="form-select" name="status">
+            <option value="">All Status</option>
+            <option value="Open" {% if request.args.get('status') == 'Open' %}selected{% endif %}>Open</option>
+            <option value="In Progress" {% if request.args.get('status') == 'In Progress' %}selected{% endif %}>In Progress</option>
+            <option value="Follow-up Scheduled" {% if request.args.get('status') == 'Follow-up Scheduled' %}selected{% endif %}>Follow-up Scheduled</option>
+            <option value="Demo Scheduled" {% if request.args.get('status') == 'Demo Scheduled' %}selected{% endif %}>Demo Scheduled</option>
+            <option value="Converted" {% if request.args.get('status') == 'Converted' %}selected{% endif %}>Converted</option>
+            <option value="Not Interested" {% if request.args.get('status') == 'Not Interested' %}selected{% endif %}>Not Interested</option>
+          </select>
+        </div>
+
+        <!-- Lead Stage -->
+        <div class="col-md-2">
+          <label class="form-label">Lead Stage</label>
+          <select class="form-select" name="stage">
+            <option value="">All Stages</option>
+            <option value="New" {% if request.args.get('stage') == 'New' %}selected{% endif %}>New</option>
+            <option value="Contacted" {% if request.args.get('stage') == 'Contacted' %}selected{% endif %}>Contacted</option>
+            <option value="Qualified" {% if request.args.get('stage') == 'Qualified' %}selected{% endif %}>Qualified</option>
+            <option value="Demo" {% if request.args.get('stage') == 'Demo' %}selected{% endif %}>Demo</option>
+            <option value="Proposal" {% if request.args.get('stage') == 'Proposal' %}selected{% endif %}>Proposal</option>
+            <option value="Negotiation" {% if request.args.get('stage') == 'Negotiation' %}selected{% endif %}>Negotiation</option>
+            <option value="Closed Won" {% if request.args.get('stage') == 'Closed Won' %}selected{% endif %}>Closed Won</option>
+            <option value="Closed Lost" {% if request.args.get('stage') == 'Closed Lost' %}selected{% endif %}>Closed Lost</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-2">
+        <!-- Priority -->
+        <div class="col-md-2">
+          <label class="form-label">Priority</label>
+          <select class="form-select" name="priority">
+            <option value="">All Priority</option>
+            <option value="Hot" {% if request.args.get('priority') == 'Hot' %}selected{% endif %}>🔥 Hot</option>
+            <option value="High" {% if request.args.get('priority') == 'High' %}selected{% endif %}>🔴 High</option>
+            <option value="Medium" {% if request.args.get('priority') == 'Medium' %}selected{% endif %}>🟡 Medium</option>
+            <option value="Low" {% if request.args.get('priority') == 'Low' %}selected{% endif %}>🔵 Low</option>
+          </select>
+        </div>
+
+        <!-- Source -->
+        <div class="col-md-2">
+          <label class="form-label">Lead Source</label>
+          <select class="form-select" name="source">
+            <option value="">All Sources</option>
+            <option value="Walk-in" {% if request.args.get('source') == 'Walk-in' %}selected{% endif %}>Walk-in</option>
+            <option value="Referral" {% if request.args.get('source') == 'Referral' %}selected{% endif %}>Referral</option>
+            <option value="Phone" {% if request.args.get('source') == 'Phone' %}selected{% endif %}>Phone</option>
+            <option value="Instagram" {% if request.args.get('source') == 'Instagram' %}selected{% endif %}>Instagram</option>
+            <option value="Facebook" {% if request.args.get('source') == 'Facebook' %}selected{% endif %}>Facebook</option>
+            <option value="Google" {% if request.args.get('source') == 'Google' %}selected{% endif %}>Google</option>
+            <option value="College Visit" {% if request.args.get('source') == 'College Visit' %}selected{% endif %}>College Visit</option>
+            <option value="Other" {% if request.args.get('source') == 'Other' %}selected{% endif %}>Other</option>
+          </select>
+        </div>
+
+        {% if users %}
+        <!-- Assigned To -->
+        <div class="col-md-2">
+          <label class="form-label">Assigned To</label>
+          <select class="form-select" name="assigned_to">
+            <option value="">All Users</option>
+            <option value="unassigned" {% if request.args.get('assigned_to') == 'unassigned' %}selected{% endif %}>Unassigned</option>
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if request.args.get('assigned_to') == user.id|string %}selected{% endif %}>
+              {{ user.full_name or user.username }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="col-md-6 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i> Apply Filters
+          </button>
+          <a href="{{ url_for('leads.lead_list') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-refresh"></i> Clear
+          </a>
+          <button type="button" class="btn btn-outline-info" onclick="exportLeads()">
+            <i class="fas fa-download"></i> Export
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Quick Filters -->
+    <div class="quick-filters">
+      <div class="d-flex flex-wrap">
+        <span class="me-3 align-self-center text-muted">Quick Filters:</span>
+        <button type="button" class="btn btn-outline-primary quick-filter-btn" onclick="quickFilter('status', 'Open')">
+          🔵 Open Leads
+        </button>
+        <button type="button" class="btn btn-outline-warning quick-filter-btn" onclick="quickFilter('priority', 'Hot')">
+          🔥 Hot Priority
+        </button>
+        <button type="button" class="btn btn-outline-info quick-filter-btn" onclick="quickFilter('status', 'Follow-up Scheduled')">
+          📅 Follow-up Scheduled
+        </button>
+        <button type="button" class="btn btn-outline-success quick-filter-btn" onclick="quickFilter('status', 'Demo Scheduled')">
+          🎯 Demo Scheduled
+        </button>
+        <button type="button" class="btn btn-outline-secondary quick-filter-btn" onclick="quickFilter('assigned_to', 'unassigned')">
+          👤 Unassigned
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leads Table -->
+  <div class="leads-table-container position-relative" id="leadsTableContainer">
+    <div class="table-header">
+      <h5 class="table-title">
+        <i class="fas fa-list"></i> Leads List
+        <span class="badge bg-primary ms-2">
+          {{ leads.total if leads else 0 }} leads
+        </span>
+      </h5>
+      <div class="table-actions">
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-cog"></i> Actions
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="refreshData()">
+              <i class="fas fa-refresh"></i> Refresh
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="exportLeads()">
+              <i class="fas fa-download"></i> Export All
+            </a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('leads.leads_import_get') if 'leads_import_get' else '#' }}">
+              <i class="fas fa-upload"></i> Import Leads
+            </a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {% if leads and leads.items %}
+    <div class="table-responsive">
+      <table class="leads-table">
+        <thead>
+          <tr>
+            <th>Lead #</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Course Interest</th>
+            <th>Status</th>
+            <th>Stage</th>
+            <th>Priority</th>
+            <th>Source</th>
+            <th>Assigned To</th>
+            <th>Next Follow-up</th>
+            <th>Created Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lead in leads.items %}
+          <tr>
+            <td>
+              <a href="{{ url_for('leads.lead_detail', lead_id=lead.id) }}" class="lead-id">
+                {{ lead.lead_sl_number }}
+              </a>
+            </td>
+            <td>
+              <div>
+                <strong>{{ lead.name }}</strong>
+                {% if lead.qualification %}
+                  <br><small class="text-muted">{{ lead.qualification }}</small>
+                {% endif %}
+              </div>
+            </td>
+            <td>
+              <div class="contact-info">
+                <a href="tel:{{ lead.mobile }}" class="contact-link">
+                  <i class="fas fa-phone"></i> {{ lead.mobile }}
+                </a>
+                {% if lead.email %}
+                <a href="mailto:{{ lead.email }}" class="contact-link">
+                  <i class="fas fa-envelope"></i> {{ lead.email }}
+                </a>
+                {% endif %}
+              </div>
+            </td>
+            <td>{{ lead.course_interest or '-' }}</td>
+            <td>
+              <span class="status-badge status-{{ lead.lead_status|lower|replace(' ', '-') }}">
+                {% if lead.lead_status == 'Open' %}🔵
+                {% elif lead.lead_status == 'In Progress' %}🔄
+                {% elif lead.lead_status == 'Follow-up Scheduled' %}📅
+                {% elif lead.lead_status == 'Demo Scheduled' %}🎯
+                {% elif lead.lead_status == 'Converted' %}✅
+                {% elif lead.lead_status == 'Not Interested' %}❌
+                {% endif %}
+                {{ lead.lead_status }}
+              </span>
+            </td>
+            <td><span class="badge bg-light text-dark">{{ lead.lead_stage or 'New' }}</span></td>
+            <td>
+              <span class="priority-badge priority-{{ lead.priority|lower }}">
+                {% if lead.priority == 'Hot' %}🔥
+                {% elif lead.priority == 'High' %}🔴
+                {% elif lead.priority == 'Medium' %}🟡
+                {% elif lead.priority == 'Low' %}🔵
+                {% endif %}
+                {{ lead.priority }}
+              </span>
+            </td>
+            <td>{{ lead.lead_source or '-' }}</td>
+            <td>
+              {% if lead.assigned_to %}
+                <span class="text-primary">
+                  <i class="fas fa-user"></i> {{ lead.assigned_to.full_name or lead.assigned_to.username }}
+                </span>
+              {% else %}
+                <span class="text-muted">
+                  <i class="fas fa-user-slash"></i> Unassigned
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              {% if lead.next_follow_up_at %}
+                <span class="text-info">
+                  <i class="fas fa-calendar"></i>
+                  {{ lead.next_follow_up_at.strftime('%d/%m/%Y') if lead.next_follow_up_at else '-' }}
+                </span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              <small class="text-muted">
+                {{ lead.lead_generation_date.strftime('%d/%m/%Y') if lead.lead_generation_date
+                   else lead.created_at.strftime('%d/%m/%Y') if lead.created_at else '-' }}
+              </small>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <a href="{{ url_for('leads.lead_detail', lead_id=lead.id) }}"
+                   class="action-btn btn-view" title="View Details">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('leads.lead_edit', lead_id=lead.id) }}"
+                   class="action-btn btn-edit" title="Edit Lead">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <button type="button" class="action-btn btn-delete"
+                        data-lead-id="{{ lead.id }}" onclick="deleteLead(this.dataset.leadId)" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if leads.pages > 1 %}
+    <div class="pagination-container">
+      <nav aria-label="Leads pagination">
+        <ul class="pagination">
+          {% if leads.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('leads.lead_list', page=leads.prev_num, **request.args) }}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+
+          {% for page_num in leads.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+              {% if page_num != leads.page %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('leads.lead_list', page=page_num, **request.args) }}">{{ page_num }}</a>
+              </li>
+              {% else %}
+              <li class="page-item active">
+                <span class="page-link">{{ page_num }}</span>
+              </li>
+              {% endif %}
+            {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">…</span>
+            </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if leads.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('leads.lead_list', page=leads.next_num, **request.args) }}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+
+    <div class="text-center text-muted mt-3">
+      <small>
+        Showing {{ leads.items|length }} of {{ leads.total }} leads
+        (Page {{ leads.page }} of {{ leads.pages }})
+      </small>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+      <i class="fas fa-users"></i>
+      <h4>No Leads Found</h4>
+      <p class="text-muted">
+        {% if request.args %}
+          No leads match your current filters. Try adjusting your search criteria.
+        {% else %}
+          You haven't created any leads yet. Start by adding your first lead.
+        {% endif %}
+      </p>
+      <div class="mt-3">
+        <a href="{{ url_for('leads.lead_create_new') }}" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Create First Lead
+        </a>
+        {% if request.args %}
+        <a href="{{ url_for('leads.lead_list') }}" class="btn btn-outline-secondary ms-2">
+          <i class="fas fa-refresh"></i> Clear Filters
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const filterForm = document.getElementById('leadFilterForm');
+  const searchInput = document.querySelector('input[name="search"]');
+  let searchTimeout;
+
+  filterForm.addEventListener('change', function(e) {
+    if (e.target.tagName === 'SELECT') {
+      showLoading();
+      this.submit();
+    }
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        showLoading();
+        filterForm.submit();
+      }, 500);
+    });
+  }
+
+  document.querySelectorAll('input[type="date"]').forEach(input => {
+    input.addEventListener('change', function() {
+      showLoading();
+      filterForm.submit();
+    });
+  });
+
+  updateQuickFilterButtons();
+});
+
+function quickFilter(filterName, filterValue) {
+  const form = document.getElementById('leadFilterForm');
+  const filterElement = form.querySelector(`[name="${filterName}"]`);
+  if (filterElement) {
+    filterElement.value = filterValue;
+    showLoading();
+    form.submit();
+  }
+}
+
+function updateQuickFilterButtons() {
+  const urlParams = new URLSearchParams(window.location.search);
+  document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+    const onclick = btn.getAttribute('onclick');
+    if (onclick) {
+      const match = onclick.match(/quickFilter\('(\w+)', '([^']+)'\)/);
+      if (match) {
+        const [, filterName, filterValue] = match;
+        if (urlParams.get(filterName) === filterValue) {
+          btn.classList.add('active');
+        }
+      }
+    }
+  });
+}
+
+function showLoading() {
+  const container = document.getElementById('leadsTableContainer');
+  if (!document.querySelector('.loading-overlay')) {
+    const overlay = document.createElement('div');
+    overlay.className = 'loading-overlay';
+    overlay.innerHTML = '<i class="fas fa-spinner fa-spin loading-spinner"></i>';
+    container.appendChild(overlay);
+  }
+}
+
+function refreshData() {
+  showLoading();
+  window.location.reload();
+}
+
+function exportLeads() {
+  const urlParams = new URLSearchParams(window.location.search);
+  urlParams.set('export', 'csv');
+  window.open(`{{ url_for('leads.lead_list') }}?${urlParams.toString()}`, '_blank');
+}
+
+function deleteLead(leadId) {
+  const leadRow = document.querySelector(`button[data-lead-id="${leadId}"]`).closest('tr');
+  const leadName = leadRow.querySelector('strong').textContent;
+  const leadNumber = leadRow.querySelector('.lead-id').textContent;
+  
+  showDeleteConfirmationModal(leadId, leadName, leadNumber);
+}
+
+function showDeleteConfirmationModal(leadId, leadName, leadNumber) {
+  // Update modal content
+  document.getElementById('modalLeadNumber').textContent = leadNumber;
+  document.getElementById('modalLeadName').textContent = leadName;
+  
+  // Reset form
+  document.getElementById('deleteLeadForm').reset();
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="deleteLeadModalLabel">
+              <i class="fas fa-exclamation-triangle me-2"></i>Confirm Lead Deletion
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-warning">
+              <i class="fas fa-warning me-2"></i>
+              <strong>Warning:</strong> This is a soft delete - lead will be marked as deleted but preserved for audit purposes.
+            </div>
+            
+            <div class="mb-3">
+              <h6>Lead Details:</h6>
+              <ul class="list-unstyled">
+                <li><strong>Lead #:</strong> ${leadNumber}</li>
+                <li><strong>Name:</strong> ${leadName}</li>
+              </ul>
+            </div>
+
+            <div class="mb-3">
+              <label for="deleteReason" class="form-label">
+                <strong>Reason for deletion *</strong>
+              </label>
+              <select class="form-select" id="deleteReason" required>
+                <option value="">Select a reason...</option>
+                <option value="duplicate_lead">Duplicate Lead</option>
+                <option value="spam_invalid">Spam/Invalid Lead</option>
+                <option value="test_data">Test Data</option>
+                <option value="data_cleanup">Data Cleanup</option>
+                <option value="gdpr_request">GDPR/Privacy Request</option>
+                <option value="convert_error">Conversion Error</option>
+                <option value="other">Other (specify below)</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="deleteNotes" class="form-label">Additional Notes (Optional)</label>
+              <textarea class="form-control" id="deleteNotes" rows="3" 
+                        placeholder="Provide additional context for this deletion..."></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="deleteConfirmation" class="form-label">
+                <strong>Type "DELETE" to confirm *</strong>
+              </label>
+              <input type="text" class="form-control" id="deleteConfirmation" 
+                     placeholder="Type DELETE in uppercase" 
+                     autocomplete="off">
+              <div class="form-text text-danger">
+                You must type exactly "DELETE" (in uppercase) to enable the delete button.
+              </div>
+            </div>
+
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="deleteAcknowledge">
+              <label class="form-check-label text-danger" for="deleteAcknowledge">
+                I understand that this action will soft-delete the lead (preserves audit trail).
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times me-1"></i>Cancel
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
+              <i class="fas fa-trash me-1"></i>Soft Delete Lead
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Remove existing modal if any
+  const existingModal = document.getElementById('deleteLeadModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  // Add modal to body
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  
+  // Wait for DOM insertion before getting elements
+  setTimeout(() => {
+    // Get modal elements
+    const modal = new bootstrap.Modal(document.getElementById('deleteLeadModal'));
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const reasonSelect = document.getElementById('deleteReason');
+    const confirmationInput = document.getElementById('deleteConfirmation');
+    const acknowledgeCheck = document.getElementById('deleteAcknowledge');
+
+    // Debug: Log elements to ensure they exist
+    console.log('Modal elements:', {
+      modal: modal,
+      confirmBtn: confirmBtn,
+      reasonSelect: reasonSelect,
+      confirmationInput: confirmationInput,
+      acknowledgeCheck: acknowledgeCheck
+    });
+
+    // Validation function
+    function validateForm() {
+      const reasonSelectElement = document.querySelector('#deleteLeadModal #deleteReason');
+      const confirmationInputElement = document.querySelector('#deleteLeadModal #deleteConfirmation');
+      const acknowledgeCheckElement = document.querySelector('#deleteLeadModal #deleteAcknowledge');
+      
+      const hasReason = reasonSelectElement && reasonSelectElement.value !== '';
+      const hasCorrectText = confirmationInputElement && confirmationInputElement.value === 'DELETE';
+      const hasAcknowledged = acknowledgeCheckElement && acknowledgeCheckElement.checked;
+      
+      console.log('Validation check:', { 
+        hasReason, 
+        hasCorrectText, 
+        hasAcknowledged,
+        reasonValue: reasonSelectElement?.value,
+        confirmationValue: confirmationInputElement?.value,
+        acknowledgeValue: acknowledgeCheckElement?.checked
+      });
+      
+      if (confirmBtn) {
+        const isValid = hasReason && hasCorrectText && hasAcknowledged;
+        confirmBtn.disabled = !isValid;
+        console.log('Button disabled state:', !isValid);
+      }
+    }
+
+    // Add event listeners with error handling and direct DOM access
+    const reasonSelectElement = document.querySelector('#deleteLeadModal #deleteReason');
+    const confirmationInputElement = document.querySelector('#deleteLeadModal #deleteConfirmation');
+    const acknowledgeCheckElement = document.querySelector('#deleteLeadModal #deleteAcknowledge');
+    
+    console.log('Direct DOM access elements:', {
+      reasonSelectElement,
+      confirmationInputElement,
+      acknowledgeCheckElement
+    });
+    
+    if (reasonSelectElement) {
+      reasonSelectElement.addEventListener('change', function(e) {
+        console.log('Reason changed to:', e.target.value);
+        validateForm();
+      });
+      // Test click event
+      reasonSelectElement.addEventListener('click', function() {
+        console.log('Reason select clicked');
+      });
+      console.log('Added listeners to reason select');
+    } else {
+      console.error('Reason select not found with direct DOM access');
+    }
+    
+    if (confirmationInputElement) {
+      confirmationInputElement.addEventListener('input', function(e) {
+        console.log('Confirmation input changed to:', e.target.value);
+        validateForm();
+      });
+      confirmationInputElement.addEventListener('keyup', function(e) {
+        console.log('Confirmation keyup:', e.target.value);
+        validateForm();
+      });
+      console.log('Added listeners to confirmation input');
+    } else {
+      console.error('Confirmation input not found with direct DOM access');
+    }
+    
+    if (acknowledgeCheckElement) {
+      acknowledgeCheckElement.addEventListener('change', function(e) {
+        console.log('Acknowledge changed to:', e.target.checked);
+        validateForm();
+      });
+      console.log('Added listeners to acknowledge checkbox');
+    } else {
+      console.error('Acknowledge checkbox not found with direct DOM access');
+    }
+
+    // Handle delete confirmation
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', function() {
+        const deleteData = {
+          leadId: leadId,
+          reason: reasonSelect.value,
+          notes: document.getElementById('deleteNotes').value,
+          confirmedBy: 'current_user', // This should be populated from session
+          timestamp: new Date().toISOString()
+        };
+
+        // Show loading state
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Deleting...';
+        confirmBtn.disabled = true;
+
+        // Send delete request
+        fetch(`/leads/${leadId}/delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+          },
+          body: JSON.stringify(deleteData)
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.ok) {
+            modal.hide();
+            // Show success message
+            showSuccessMessage('Lead deleted successfully');
+            // Reload page after short delay
+            setTimeout(() => location.reload(), 1500);
+          } else {
+            throw new Error(data.error || 'Unknown error');
+          }
+        })
+        .catch(error => {
+          // Reset button state
+          confirmBtn.innerHTML = '<i class="fas fa-trash me-1"></i>Soft Delete Lead';
+          confirmBtn.disabled = false;
+          showErrorMessage('Error deleting lead: ' + error.message);
+        });
+      });
+    }
+
+    // Show modal
+    modal.show();
+
+    // Focus on reason select when modal opens
+    const modalElement = document.getElementById('deleteLeadModal');
+    modalElement.addEventListener('shown.bs.modal', function() {
+      if (reasonSelect) {
+        reasonSelect.focus();
+      }
+    });
+
+    // Clean up modal when hidden
+    modalElement.addEventListener('hidden.bs.modal', function() {
+      this.remove();
+    });
+    
+  }, 10); // Small delay to ensure DOM insertion
+}
+
+function showSuccessMessage(message) {
+  const alertHtml = `
+    <div class="alert alert-success alert-dismissible fade show position-fixed" 
+         style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+      <i class="fas fa-check-circle me-2"></i>${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', alertHtml);
+}
+
+function showErrorMessage(message) {
+  const alertHtml = `
+    <div class="alert alert-danger alert-dismissible fade show position-fixed" 
+         style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+      <i class="fas fa-exclamation-circle me-2"></i>${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', alertHtml);
+}
+
+document.querySelectorAll('.leads-table tbody tr').forEach(row => {
+  row.addEventListener('dblclick', function() {
+    const detailLink = this.querySelector('.lead-id');
+    if (detailLink) window.location.href = detailLink.href;
+  });
+});
+
+if ('ontouchstart' in window) {
+  document.querySelectorAll('.action-btn').forEach(btn => {
+    btn.addEventListener('touchstart', function(){ this.style.transform = 'scale(0.95)'; });
+    btn.addEventListener('touchend', function(){ this.style.transform = ''; });
+  });
+}
+</script>
+
+<!-- Static Delete Confirmation Modal -->
+<div class="modal fade" id="deleteLeadModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-exclamation-triangle me-2"></i>Confirm Lead Deletion
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <i class="fas fa-warning me-2"></i>
+          <strong>Warning:</strong> This is a soft delete - lead will be marked as deleted but preserved for audit purposes.
+        </div>
+        
+        <div class="mb-3">
+          <h6>Lead Details:</h6>
+          <ul class="list-unstyled">
+            <li><strong>Lead #:</strong> <span id="modalLeadNumber"></span></li>
+            <li><strong>Name:</strong> <span id="modalLeadName"></span></li>
+          </ul>
+        </div>
+
+        <form id="deleteLeadForm">
+          <div class="mb-3">
+            <label for="deleteReason" class="form-label">
+              <strong>Reason for deletion *</strong>
+            </label>
+            <select class="form-select" id="deleteReason" name="deleteReason" required>
+              <option value="">Select a reason...</option>
+              <option value="duplicate_lead">Duplicate Lead</option>
+              <option value="spam_invalid">Spam/Invalid Lead</option>
+              <option value="test_data">Test Data</option>
+              <option value="data_cleanup">Data Cleanup</option>
+              <option value="gdpr_request">GDPR/Privacy Request</option>
+              <option value="convert_error">Conversion Error</option>
+              <option value="other">Other (specify below)</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="deleteNotes" class="form-label">Additional Notes (Optional)</label>
+            <textarea class="form-control" id="deleteNotes" name="deleteNotes" rows="3" 
+                      placeholder="Provide additional context for this deletion..."></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="deleteConfirmation" class="form-label">
+              <strong>Type "DELETE" to confirm *</strong>
+            </label>
+            <input type="text" class="form-control" id="deleteConfirmation" name="deleteConfirmation"
+                   placeholder="Type DELETE in uppercase" 
+                   autocomplete="off">
+            <div class="form-text text-danger">
+              You must type exactly "DELETE" (in uppercase) to enable the delete button.
+            </div>
+          </div>
+
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="deleteAcknowledge" name="deleteAcknowledge">
+            <label class="form-check-label text-danger" for="deleteAcknowledge">
+              I understand that this action will soft-delete the lead (preserves audit trail).
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteButton" disabled>
+          <i class="fas fa-trash-alt me-2"></i>Delete Lead
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

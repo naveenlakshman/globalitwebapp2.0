@@ -1,0 +1,639 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Upload Video{% endblock %}
+{% block page_icon %}fas fa-upload{% endblock %}
+{% block page_title %}Upload Video{% endblock %}
+{% block page_description %}Upload and configure a new video for the LMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-zone {
+        border: 3px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 60px 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+        border-color: #007bff;
+        background: #e7f3ff;
+    }
+    .upload-preview {
+        display: none;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .file-info {
+        display: flex;
+        align-items-center;
+        gap: 15px;
+    }
+    .upload-progress {
+        display: none;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-video me-2"></i>Upload New Video
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="videoUploadForm" enctype="multipart/form-data">
+                    <!-- Course Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label for="course_id" class="form-label">Course *</label>
+                            <select id="course_id" name="course_id" class="form-select" required>
+                                <option value="">Select Course</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.course_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="module_id" class="form-label">Module *</label>
+                            <select id="module_id" name="module_id" class="form-select" required disabled>
+                                <option value="">Select Module</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="section_id" class="form-label">Section *</label>
+                            <select id="section_id" name="section_id" class="form-select" required disabled>
+                                <option value="">Select Section</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Video Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <label for="video_title" class="form-label">Video Title *</label>
+                            <input type="text" id="video_title" name="video_title" class="form-control" 
+                                   placeholder="Enter video title" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">File Limits</label>
+                            <div class="alert alert-info py-2">
+                                <small>
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Max: {{ max_file_size }}MB<br>
+                                    Formats: {{ allowed_formats|join(', ') }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="video_description" class="form-label">Description</label>
+                        <textarea id="video_description" name="video_description" class="form-control" 
+                                  rows="3" placeholder="Optional video description"></textarea>
+                    </div>
+
+                    <!-- Video Source Selection -->
+                    <div class="mb-4">
+                        <label class="form-label">Video Source *</label>
+                        <ul class="nav nav-tabs" id="videoSourceTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="file-tab" data-bs-toggle="tab" data-bs-target="#file-upload" 
+                                        type="button" role="tab" aria-controls="file-upload" aria-selected="true">
+                                    <i class="fas fa-upload me-2"></i>File Upload
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="youtube-tab" data-bs-toggle="tab" data-bs-target="#youtube-url" 
+                                        type="button" role="tab" aria-controls="youtube-url" aria-selected="false">
+                                    <i class="fab fa-youtube me-2"></i>YouTube URL
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content border border-top-0 p-3" id="videoSourceContent">
+                            <!-- File Upload Tab -->
+                            <div class="tab-pane fade show active" id="file-upload" role="tabpanel" aria-labelledby="file-tab">
+                                <div class="upload-zone" id="uploadZone">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">Drag & Drop Video File Here</h5>
+                                    <p class="text-muted mb-3">or click to browse files</p>
+                                    <input type="file" id="video_file" name="video_file" class="d-none" 
+                                           accept=".mp4,.avi,.mov,.wmv,.flv">
+                                    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('video_file').click()">
+                                        <i class="fas fa-folder-open me-2"></i>Browse Files
+                                    </button>
+                                    <div class="mt-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Max: {{ max_file_size }}MB | Formats: {{ allowed_formats|join(', ') }}
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Upload Preview -->
+                                <div class="upload-preview" id="uploadPreview">
+                                    <div class="file-info">
+                                        <i class="fas fa-video fa-2x text-primary"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1" id="fileName"></h6>
+                                            <div class="d-flex justify-content-between">
+                                                <small class="text-muted" id="fileSize"></small>
+                                                <small class="text-muted" id="fileType"></small>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Upload Progress -->
+                                <div class="upload-progress" id="uploadProgress">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Uploading...</span>
+                                        <span id="progressPercent">0%</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                             id="progressBar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted" id="uploadStatus">Preparing upload...</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- YouTube URL Tab -->
+                            <div class="tab-pane fade" id="youtube-url" role="tabpanel" aria-labelledby="youtube-tab">
+                                <div class="mb-3">
+                                    <label for="youtube_url" class="form-label">YouTube Video URL</label>
+                                    <input type="url" id="youtube_url" name="youtube_url" class="form-control" 
+                                           placeholder="https://www.youtube.com/watch?v=..." 
+                                           pattern="https://www\.youtube\.com/watch\?v=.*|https://youtu\.be/.*">
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Paste the full YouTube video URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+                                    </div>
+                                </div>
+                                
+                                <!-- YouTube Preview -->
+                                <div id="youtubePreview" style="display: none;">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6>YouTube Video Preview</h6>
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <img id="youtubeThumbnail" src="" alt="Video Thumbnail" class="img-fluid rounded">
+                                                </div>
+                                                <div class="col-md-8">
+                                                    <h6 id="youtubeTitle"></h6>
+                                                    <p id="youtubeDescription" class="text-muted small"></p>
+                                                    <div class="d-flex gap-3">
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-clock"></i> <span id="youtubeDuration"></span>
+                                                        </small>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-eye"></i> <span id="youtubeViews"></span>
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Settings -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Upload Settings</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="auto_watermark" checked>
+                                        <label class="form-check-label" for="auto_watermark">
+                                            Apply Watermark
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="drm_protection" checked>
+                                        <label class="form-check-label" for="drm_protection">
+                                            DRM Protection
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="auto_encoding" checked>
+                                        <label class="form-check-label" for="auto_encoding">
+                                            Auto Encoding
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="submit_review">
+                                        <label class="form-check-label" for="submit_review">
+                                            Submit for Review After Upload
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Notes -->
+                    <div class="mb-4">
+                        <label for="upload_notes" class="form-label">Upload Notes</label>
+                        <textarea id="upload_notes" name="upload_notes" class="form-control" 
+                                  rows="2" placeholder="Any special notes about this video"></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('lms_content_management.video_list') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Videos
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="uploadButton">
+                            <i class="fas fa-upload me-2"></i>Upload Video
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedFile = null;
+
+    // Initialize upload zone
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('video_file');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const youtubeUrlInput = document.getElementById('youtube_url');
+    const youtubePreview = document.getElementById('youtubePreview');
+
+    let youtubeVideoData = null;
+
+    // YouTube URL handling
+    youtubeUrlInput.addEventListener('input', function() {
+        const url = this.value.trim();
+        if (url && isValidYouTubeUrl(url)) {
+            fetchYouTubeInfo(url);
+        } else {
+            youtubePreview.style.display = 'none';
+            youtubeVideoData = null;
+        }
+    });
+
+    function isValidYouTubeUrl(url) {
+        const patterns = [
+            /^https:\/\/www\.youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/,
+            /^https:\/\/youtu\.be\/([a-zA-Z0-9_-]+)/
+        ];
+        return patterns.some(pattern => pattern.test(url));
+    }
+
+    function extractYouTubeId(url) {
+        const patterns = [
+            /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/
+        ];
+        for (let pattern of patterns) {
+            const match = url.match(pattern);
+            if (match) return match[1];
+        }
+        return null;
+    }
+
+    function fetchYouTubeInfo(url) {
+        const videoId = extractYouTubeId(url);
+        if (!videoId) return;
+
+        // Show basic preview with thumbnail
+        youtubeVideoData = {
+            url: url,
+            video_id: videoId,
+            title: 'YouTube Video',
+            thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+        };
+
+        document.getElementById('youtubeThumbnail').src = youtubeVideoData.thumbnail;
+        document.getElementById('youtubeTitle').textContent = youtubeVideoData.title;
+        document.getElementById('youtubeDescription').textContent = 'YouTube video content';
+        document.getElementById('youtubeDuration').textContent = 'N/A';
+        document.getElementById('youtubeViews').textContent = 'N/A';
+        
+        youtubePreview.style.display = 'block';
+
+        // Auto-fill video title if empty
+        const titleInput = document.getElementById('video_title');
+        if (!titleInput.value) {
+            titleInput.value = `YouTube Video - ${videoId}`;
+        }
+    }
+
+    // Drag and drop handlers
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+
+    // File input change handler
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+
+    // Handle file selection
+    function handleFileSelect(file) {
+        // Validate file type
+        const allowedTypes = {{ allowed_formats|tojson }};
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedTypes.includes(fileExtension)) {
+            showToast(`Invalid file type. Allowed: ${allowedTypes.join(', ')}`, 'error');
+            return;
+        }
+
+        // Validate file size
+        const maxSize = {{ max_file_size }} * 1024 * 1024; // Convert MB to bytes
+        if (file.size > maxSize) {
+            showToast(`File too large. Maximum size: {{ max_file_size }}MB`, 'error');
+            return;
+        }
+
+        selectedFile = file;
+        
+        // Update preview
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        document.getElementById('fileType').textContent = fileExtension.toUpperCase();
+        
+        // Auto-fill video title if empty
+        const titleInput = document.getElementById('video_title');
+        if (!titleInput.value) {
+            titleInput.value = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+        }
+        
+        uploadZone.style.display = 'none';
+        uploadPreview.style.display = 'block';
+    }
+
+    // Remove selected file
+    function removeFile() {
+        selectedFile = null;
+        fileInput.value = '';
+        uploadZone.style.display = 'block';
+        uploadPreview.style.display = 'none';
+        uploadProgress.style.display = 'none';
+    }
+
+    // Load modules when course is selected
+    document.getElementById('course_id').addEventListener('change', function() {
+        const courseId = this.value;
+        const moduleSelect = document.getElementById('module_id');
+        const sectionSelect = document.getElementById('section_id');
+        
+        // Reset dependent selects
+        moduleSelect.innerHTML = '<option value="">Select Module</option>';
+        sectionSelect.innerHTML = '<option value="">Select Section</option>';
+        moduleSelect.disabled = !courseId;
+        sectionSelect.disabled = true;
+        
+        if (courseId) {
+            fetch(`/courses/api/modules/${courseId}`)
+                .then(response => {
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        if (data.modules && data.modules.length > 0) {
+                            data.modules.forEach(module => {
+                                const option = document.createElement('option');
+                                option.value = module.id;
+                                option.textContent = module.name;
+                                moduleSelect.appendChild(option);
+                            });
+                            moduleSelect.disabled = false;
+                        } else {
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = 'No modules available';
+                            option.disabled = true;
+                            moduleSelect.appendChild(option);
+                        }
+                    } else {
+                        console.error('API returned error:', data.error);
+                        showToast(data.error || 'Error loading modules', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    showToast('Error loading modules', 'error');
+                });
+        }
+    });
+
+    // Load sections when module is selected
+    document.getElementById('module_id').addEventListener('change', function() {
+        const moduleId = this.value;
+        const sectionSelect = document.getElementById('section_id');
+        
+        sectionSelect.innerHTML = '<option value="">Select Section</option>';
+        sectionSelect.disabled = !moduleId;
+        
+        if (moduleId) {
+            fetch(`/courses/api/sections/${moduleId}?type=video`)
+                .then(response => {
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        if (data.sections && data.sections.length > 0) {
+                            data.sections.forEach(section => {
+                                const option = document.createElement('option');
+                                option.value = section.id;
+                                option.textContent = section.name;
+                                sectionSelect.appendChild(option);
+                            });
+                            sectionSelect.disabled = false;
+                        } else {
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = 'No video sections available';
+                            option.disabled = true;
+                            sectionSelect.appendChild(option);
+                        }
+                    } else {
+                        console.error('Sections API returned error:', data.error);
+                        showToast(data.error || 'Error loading sections', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Sections fetch error:', error);
+                    showToast('Error loading sections', 'error');
+                });
+        }
+    });
+
+    // Form submission
+    document.getElementById('videoUploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Check which tab is active
+        const activeTab = document.querySelector('#videoSourceTabs .nav-link.active').id;
+        
+        if (activeTab === 'file-tab') {
+            // File upload
+            if (!selectedFile) {
+                showToast('Please select a video file', 'error');
+                return;
+            }
+            uploadVideoFile();
+        } else if (activeTab === 'youtube-tab') {
+            // YouTube URL
+            const youtubeUrl = document.getElementById('youtube_url').value.trim();
+            if (!youtubeUrl || !isValidYouTubeUrl(youtubeUrl)) {
+                showToast('Please enter a valid YouTube URL', 'error');
+                return;
+            }
+            uploadYouTubeVideo();
+        }
+    });
+
+    function uploadVideoFile() {
+        const formData = new FormData();
+        formData.append('video_file', selectedFile);
+        formData.append('course_id', document.getElementById('course_id').value);
+        formData.append('module_id', document.getElementById('module_id').value);
+        formData.append('section_id', document.getElementById('section_id').value);
+        formData.append('video_title', document.getElementById('video_title').value);
+        formData.append('video_description', document.getElementById('video_description').value);
+        formData.append('upload_notes', document.getElementById('upload_notes').value);
+        formData.append('upload_type', 'file');
+
+        // Show progress
+        uploadPreview.style.display = 'none';
+        uploadProgress.style.display = 'block';
+        document.getElementById('uploadButton').disabled = true;
+
+        // Upload with progress tracking
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                updateProgress(percentComplete, 'Uploading...');
+            }
+        });
+
+        xhr.addEventListener('load', function() {
+            handleUploadResponse(xhr);
+        });
+
+        xhr.addEventListener('error', function() {
+            showToast('Upload failed. Please check your connection.', 'error');
+            document.getElementById('uploadButton').disabled = false;
+        });
+
+        xhr.open('POST', '{{ url_for("lms_content_management.video_upload_process") }}');
+        xhr.send(formData);
+    }
+
+    function uploadYouTubeVideo() {
+        const formData = new FormData();
+        formData.append('youtube_url', document.getElementById('youtube_url').value);
+        formData.append('course_id', document.getElementById('course_id').value);
+        formData.append('module_id', document.getElementById('module_id').value);
+        formData.append('section_id', document.getElementById('section_id').value);
+        formData.append('video_title', document.getElementById('video_title').value);
+        formData.append('video_description', document.getElementById('video_description').value);
+        formData.append('upload_notes', document.getElementById('upload_notes').value);
+        formData.append('upload_type', 'youtube');
+
+        // Show progress
+        youtubePreview.style.display = 'none';
+        uploadProgress.style.display = 'block';
+        updateProgress(50, 'Processing YouTube video...');
+        document.getElementById('uploadButton').disabled = true;
+
+        fetch('{{ url_for("lms_content_management.video_upload_process") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateProgress(100, 'YouTube video added successfully!');
+                showToast('YouTube video added successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = `{{ url_for('lms_content_management.video_list') }}`;
+                }, 2000);
+            } else {
+                showToast(data.error || 'Failed to add YouTube video', 'error');
+                document.getElementById('uploadButton').disabled = false;
+                uploadProgress.style.display = 'none';
+                youtubePreview.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            showToast('Error processing YouTube video', 'error');
+            document.getElementById('uploadButton').disabled = false;
+            uploadProgress.style.display = 'none';
+            youtubePreview.style.display = 'block';
+        });
+    }
+
+    function handleUploadResponse(xhr) {
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.success) {
+                updateProgress(100, 'Upload completed!');
+                showToast('Video uploaded successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = `{{ url_for('lms_content_management.video_list') }}`;
+                }, 2000);
+            } else {
+                showToast(response.error || 'Upload failed', 'error');
+                document.getElementById('uploadButton').disabled = false;
+            }
+        } else {
+            showToast('Upload failed. Please try again.', 'error');
+            document.getElementById('uploadButton').disabled = false;
+        }
+    }
+
+    function updateProgress(percent, status) {
+        document.getElementById('progressBar').style.width = percent + '%';
+        document.getElementById('progressPercent').textContent = Math.round(percent) + '%';
+        document.getElementById('uploadStatus').textContent = status;
+    }
+</script>
+{% endblock %}

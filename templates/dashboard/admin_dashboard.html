@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if session.role == 'regional_manager' %}
+        Regional Manager Dashboard
+    {% else %}
+        Admin Dashboard
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% if session.role == 'regional_manager' %}
+    <h3 class="mb-4">Welcome, {{ session.full_name or 'Regional Manager' }} 👋</h3>
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> 
+        Showing data for your assigned branches: Mumbai and Delhi
+    </div>
+{% else %}
+    <h3 class="mb-4">Welcome, Admin 👋</h3>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-success shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Total Students</h5>
+                <p class="card-text fs-4">{{ total_students or 0 }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Total Courses</h5>
+                <p class="card-text fs-4">{{ total_courses or 0 }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Total Revenue</h5>
+                <p class="card-text fs-4">₹{{ total_revenue or 0 }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Leads</h5>
+                <p class="card-text fs-4">{{ total_leads or 0 }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

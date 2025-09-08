@@ -1,0 +1,351 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Content Dashboard{% endblock %}
+{% block page_icon %}fas fa-tachometer-alt{% endblock %}
+{% block page_title %}Content Management Dashboard{% endblock %}
+{% block page_description %}Overview of content uploads, approvals, and system statistics{% endblock %}
+
+{% block header_actions %}
+<div class="btn-group" role="group">
+    <a href="{{ url_for('lms_content_management.video_upload_form') }}" class="btn btn-primary">
+        <i class="fas fa-upload me-2"></i>Upload Video
+    </a>
+    <a href="{{ url_for('lms_content_management.document_upload_form') }}" class="btn btn-outline-primary">
+        <i class="fas fa-file-upload me-2"></i>Upload Document
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">{{ stats.videos.total }}</h4>
+                        <p class="mb-0">Total Videos</p>
+                    </div>
+                    <div class="display-4 opacity-50">
+                        <i class="fas fa-video"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <span>{{ stats.videos.pending }} Pending</span>
+                <span>{{ stats.videos.processing }} Processing</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">{{ stats.documents.total }}</h4>
+                        <p class="mb-0">Total Documents</p>
+                    </div>
+                    <div class="display-4 opacity-50">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <span>{{ stats.documents.pending }} Pending</span>
+                <span>{{ stats.documents.processing }} Processing</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">{{ stats.quizzes.total }}</h4>
+                        <p class="mb-0">Total Quizzes</p>
+                    </div>
+                    <div class="display-4 opacity-50">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <span>{{ stats.quizzes.draft }} Draft</span>
+                <span>{{ stats.quizzes.published }} Published</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">{{ stats.assignments.total }}</h4>
+                        <p class="mb-0">Total Assignments</p>
+                    </div>
+                    <div class="display-4 opacity-50">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <span>{{ stats.assignments.draft }} Draft</span>
+                <span>{{ stats.assignments.published }} Published</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Videos -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-video me-2 text-primary"></i>Recent Videos
+                </h5>
+                <a href="{{ url_for('lms_content_management.video_list') }}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_videos %}
+                    <div class="list-group list-group-flush">
+                        {% for video in recent_videos %}
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">{{ video.video_title }}</div>
+                                <small class="text-muted">
+                                    {{ video.course.course_name }} • {{ video.get_upload_size_formatted() }}
+                                </small>
+                                <br>
+                                <small class="text-muted">
+                                    Uploaded: {{ video.upload_started_at | format_datetime_indian if video.upload_started_at else 'N/A' }}
+                                </small>
+                            </div>
+                            <span class="workflow-stage stage-{{ video.workflow_stage }}">
+                                {{ video.workflow_stage.title() }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-video fa-3x mb-3 opacity-50"></i>
+                        <p>No videos uploaded yet</p>
+                        <a href="{{ url_for('lms_content_management.video_upload_form') }}" class="btn btn-primary">
+                            Upload First Video
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Documents -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt me-2 text-success"></i>Recent Documents
+                </h5>
+                <a href="{{ url_for('lms_content_management.document_list') }}" class="btn btn-sm btn-outline-success">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_documents %}
+                    <div class="list-group list-group-flush">
+                        {% for document in recent_documents %}
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">{{ document.document_title }}</div>
+                                <small class="text-muted">
+                                    {{ document.course.course_name }} • {{ document.get_upload_size_formatted() }}
+                                </small>
+                                <br>
+                                <small class="text-muted">
+                                    Uploaded: {{ document.upload_started_at | format_datetime_indian if document.upload_started_at else 'N/A' }}
+                                </small>
+                            </div>
+                            <span class="workflow-stage stage-{{ document.workflow_stage }}">
+                                {{ document.workflow_stage.title() }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-file-alt fa-3x mb-3 opacity-50"></i>
+                        <p>No documents uploaded yet</p>
+                        <a href="{{ url_for('lms_content_management.document_upload_form') }}" class="btn btn-success">
+                            Upload First Document
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Approvals -->
+{% if pending_workflows %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2 text-warning"></i>Pending Approvals
+                </h5>
+                <a href="{{ url_for('lms_content_management.workflow_list', stage='review') }}" class="btn btn-sm btn-outline-warning">
+                    View All Workflows
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Content Type</th>
+                                <th>Title</th>
+                                <th>Creator</th>
+                                <th>Created</th>
+                                <th>Priority</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for workflow in pending_workflows %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-{{ 'primary' if workflow.content_type == 'video' else 'success' if workflow.content_type == 'document' else 'warning' }}">
+                                        <i class="fas fa-{{ 'video' if workflow.content_type == 'video' else 'file-alt' if workflow.content_type == 'document' else 'question' if workflow.content_type == 'quiz' else 'tasks' }}"></i>
+                                        {{ workflow.content_type.title() }}
+                                    </span>
+                                </td>
+                                <td class="fw-bold">{{ workflow.current_action or 'Pending Review' }}</td>
+                                <td>{{ workflow.creator.full_name if workflow.creator else 'Unknown' }}</td>
+                                <td>{{ workflow.created_at | format_datetime_indian if workflow.created_at else 'N/A' }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'danger' if workflow.priority == 'urgent' else 'warning' if workflow.priority == 'high' else 'secondary' }}">
+                                        {{ workflow.priority.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-success" onclick="approveContent('{{ workflow.content_type }}', {{ workflow.content_id }})">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="rejectContent('{{ workflow.content_type }}', {{ workflow.content_id }})">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-primary"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('lms_content_management.video_upload_form') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center">
+                            <i class="fas fa-video fa-2x mb-2"></i>
+                            Upload Video
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('lms_content_management.document_upload_form') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center">
+                            <i class="fas fa-file-upload fa-2x mb-2"></i>
+                            Upload Document
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('lms_content_management.quiz_create_form') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center">
+                            <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                            Create Quiz
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('lms_content_management.assignment_create_form') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center">
+                            <i class="fas fa-tasks fa-2x mb-2"></i>
+                            Create Assignment
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function approveContent(contentType, contentId) {
+        if (confirm('Are you sure you want to approve this content?')) {
+            const url = `{{ url_for('lms_content_management.dashboard') }}`.replace('dashboard', `${contentType}s/${contentId}/approve`);
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'comments=Approved from dashboard'
+            }).then(response => {
+                if (response.ok) {
+                    showToast('Content approved successfully!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Failed to approve content', 'error');
+                }
+            });
+        }
+    }
+
+    function rejectContent(contentType, contentId) {
+        const reason = prompt('Please provide a reason for rejection:');
+        if (reason) {
+            const url = `{{ url_for('lms_content_management.dashboard') }}`.replace('dashboard', `${contentType}s/${contentId}/reject`);
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `reason=${encodeURIComponent(reason)}`
+            }).then(response => {
+                if (response.ok) {
+                    showToast('Content rejected successfully!', 'info');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Failed to reject content', 'error');
+                }
+            });
+        }
+    }
+
+    // Auto-refresh dashboard every 30 seconds
+    setInterval(() => {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

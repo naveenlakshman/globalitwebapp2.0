@@ -1,0 +1,172 @@
+{% extends "student_portal/auth/base_auth.html" %}
+
+{% block title %}Logout - Student Portal{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card auth-card shadow-lg border-0">
+                    <div class="card-body p-5">
+                        <!-- Header -->
+                        <div class="auth-header">
+                            <i class="fas fa-sign-out-alt text-warning"></i>
+                            <h3 class="fw-bold text-primary">Confirm Logout</h3>
+                            <p class="text-muted">Student Portal Session</p>
+                        </div>
+
+                        <!-- User Info -->
+                        {% if session.get('student_id') %}
+                        <div class="alert alert-info border-0 mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-circle me-3" style="font-size: 2rem;"></i>
+                                <div>
+                                    <strong>{{ session.get('student_name', 'Student') }}</strong><br>
+                                    <small class="text-muted">ID: {{ session.get('student_id') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Logout Confirmation -->
+                        <div class="text-center mb-4">
+                            <h5>Are you sure you want to logout?</h5>
+                            <p class="text-muted mb-4">
+                                Your learning progress has been saved. You can continue from where you left off when you log back in.
+                            </p>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <form method="POST" action="{{ url_for('student_portal.student_logout_confirm') }}">
+                                    <button type="submit" class="btn btn-danger btn-lg w-100">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Yes, Logout
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{{ url_for('student_portal.dashboard') }}" class="btn btn-secondary btn-lg w-100">
+                                    <i class="fas fa-arrow-left me-2"></i>Cancel
+                                </a>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Quick Access Links -->
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <a href="{{ url_for('student_portal.dashboard') }}" class="text-decoration-none">
+                                    <i class="fas fa-tachometer-alt text-primary mb-1 d-block"></i>
+                                    <small>Dashboard</small>
+                                </a>
+                            </div>
+                            <div class="col-4">
+                                <a href="{{ url_for('student_portal.my_courses') }}" class="text-decoration-none">
+                                    <i class="fas fa-book text-success mb-1 d-block"></i>
+                                    <small>My Courses</small>
+                                </a>
+                            </div>
+                            <div class="col-4">
+                                <a href="{{ url_for('student_portal.my_profile') }}" class="text-decoration-none">
+                                    <i class="fas fa-user text-info mb-1 d-block"></i>
+                                    <small>Profile</small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Information -->
+                <div class="card mt-3 border-0 bg-light bg-opacity-75">
+                    <div class="card-body p-3">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Session: {{ session.get('login_time', 'Unknown') }}
+                                </small>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    Secure Connection
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Section -->
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        Need help? Contact 
+                        <a href="mailto:support@globalit.edu" class="text-primary">support@globalit.edu</a>
+                        or your branch office
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-logout timer (optional - 30 minutes)
+        let logoutTimer;
+        
+        function resetLogoutTimer() {
+            clearTimeout(logoutTimer);
+            logoutTimer = setTimeout(function() {
+                alert('Your session will expire in 2 minutes due to inactivity.');
+                setTimeout(function() {
+                    window.location.href = "{{ url_for('student_portal.student_logout_confirm') }}";
+                }, 120000); // 2 minutes warning
+            }, 1800000); // 30 minutes
+        }
+        
+        // Reset timer on user activity
+        document.addEventListener('mousemove', resetLogoutTimer);
+        document.addEventListener('keypress', resetLogoutTimer);
+        document.addEventListener('click', resetLogoutTimer);
+        
+        // Initialize timer
+        resetLogoutTimer();
+        
+        // Confirmation for logout
+        const logoutForm = document.querySelector('form[action*="logout_confirm"]');
+        if (logoutForm) {
+            logoutForm.addEventListener('submit', function(e) {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging out...';
+                submitBtn.disabled = true;
+            });
+        }
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // ESC key to cancel logout
+            if (e.key === 'Escape') {
+                window.location.href = "{{ url_for('student_portal.dashboard') }}";
+            }
+            // Enter key to confirm logout
+            if (e.key === 'Enter' && e.ctrlKey) {
+                const logoutBtn = document.querySelector('button[type="submit"]');
+                if (logoutBtn) {
+                    logoutBtn.click();
+                }
+            }
+        });
+        
+        // Focus on cancel button by default for safety
+        const cancelBtn = document.querySelector('.btn-secondary');
+        if (cancelBtn) {
+            cancelBtn.focus();
+        }
+    });
+</script>
+{% endblock %}

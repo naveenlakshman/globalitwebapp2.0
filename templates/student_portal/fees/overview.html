@@ -1,0 +1,415 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}Fees & Payments - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<!-- Fees Header -->
+<div class="welcome-header mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-2">
+                <i class="fas fa-credit-card me-2"></i>Fees & Payments
+            </h1>
+            <p class="mb-0 opacity-75">
+                Manage your course fees, payments, and financial records
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="text-white">
+                <i class="fas fa-rupee-sign me-2"></i>₹{{ fee_balance }} Balance Due
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fee Summary Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon fees-icon text-white">
+                <i class="fas fa-rupee-sign"></i>
+            </div>
+            <h3 class="mb-1">₹{{ total_fees }}</h3>
+            <p class="text-muted mb-0">Total Course Fees</p>
+            <small class="text-info">
+                <i class="fas fa-info-circle me-1"></i>Full amount
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon attendance-icon text-white">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="mb-1">₹{{ paid_amount }}</h3>
+            <p class="text-muted mb-0">Amount Paid</p>
+            <small class="text-success">
+                <i class="fas fa-check me-1"></i>{{ payment_progress }}% paid
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon progress-icon text-white">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="mb-1">₹{{ fee_balance }}</h3>
+            <p class="text-muted mb-0">Balance Due</p>
+            <small class="text-{% if fee_balance > 0 %}warning{% else %}success{% endif %}">
+                <i class="fas fa-{% if fee_balance > 0 %}exclamation-triangle{% else %}check-circle{% endif %} me-1"></i>
+                {% if fee_balance > 0 %}Payment pending{% else %}Fully paid{% endif %}
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon courses-icon text-white">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <h3 class="mb-1">{{ next_due_days }}</h3>
+            <p class="text-muted mb-0">Days Until Due</p>
+            <small class="text-warning">
+                <i class="fas fa-calendar me-1"></i>Next payment
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Left Column - Fee Structure and Payments -->
+    <div class="col-lg-8">
+        <!-- Fee Structure -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-list-alt me-2 text-primary"></i>Fee Structure
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fee Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fee in fee_structure %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-{{ fee.icon }} me-2 text-muted"></i>
+                                        <div>
+                                            <h6 class="mb-0">{{ fee.name }}</h6>
+                                            <small class="text-muted">{{ fee.description }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>₹{{ fee.amount }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if fee.status == 'paid' else 'warning' if fee.status == 'partial' else 'danger' }}">
+                                        {{ fee.status.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if fee.due_date %}
+                                        {{ fee.due_date.strftime('%b %d, %Y') }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if fee.status != 'paid' %}
+                                        <button class="btn btn-outline-primary btn-sm" onclick="payFee({{ fee.id }})">
+                                            <i class="fas fa-credit-card me-1"></i>Pay Now
+                                        </button>
+                                    {% else %}
+                                        <span class="text-success small">
+                                            <i class="fas fa-check me-1"></i>Paid
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="student-card">
+            <div class="card-header bg-white border-bottom">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2 text-success"></i>Payment History
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-primary btn-sm" onclick="downloadPaymentHistory()">
+                            <i class="fas fa-download me-1"></i>Download
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if payment_history %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Transaction ID</th>
+                                    <th>Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Status</th>
+                                    <th>Receipt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payment_history %}
+                                <tr>
+                                    <td>{{ payment.date.strftime('%b %d, %Y') }}</td>
+                                    <td>
+                                        <code>{{ payment.utr_number or 'N/A' }}</code>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">₹{{ payment.amount }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-{{ payment.method_icon }} me-1"></i>
+                                            {{ payment.method }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if payment.status == 'success' else 'warning' if payment.status == 'pending' else 'danger' }}">
+                                            {{ payment.status.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('student_portal.download_receipt', payment_id=payment.id) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-download me-1"></i>Receipt
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-receipt text-muted mb-3" style="font-size: 3rem;"></i>
+                        <p class="text-muted">No payment history found</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column - Payment Options and Summary -->
+    <div class="col-lg-4">
+        <!-- Quick Payment -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightning-bolt me-2 text-warning"></i>Quick Payment
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if fee_balance > 0 %}
+                    <div class="payment-options">
+                        <div class="payment-amount mb-3">
+                            <label for="paymentAmount" class="form-label">Payment Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" class="form-control" id="paymentAmount" 
+                                       value="{{ fee_balance }}" min="100" max="{{ fee_balance }}">
+                            </div>
+                            <small class="text-muted">Minimum: ₹100 | Maximum: ₹{{ fee_balance }}</small>
+                        </div>
+                        
+                        <div class="payment-methods mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <button class="btn btn-outline-primary w-100" onclick="payWithMethod('upi')">
+                                        <i class="fab fa-google-pay"></i><br>UPI
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-primary w-100" onclick="payWithMethod('card')">
+                                        <i class="fas fa-credit-card"></i><br>Card
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-primary w-100" onclick="payWithMethod('netbanking')">
+                                        <i class="fas fa-university"></i><br>Banking
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-primary w-100" onclick="payWithMethod('wallet')">
+                                        <i class="fas fa-wallet"></i><br>Wallet
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button class="btn btn-success btn-lg" onclick="processPayment()">
+                                <i class="fas fa-lock me-2"></i>Pay Securely
+                            </button>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle text-success mb-3" style="font-size: 3rem;"></i>
+                        <h6 class="text-success">All Fees Paid!</h6>
+                        <p class="text-muted">You're all caught up with your payments.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Payment Summary -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2 text-info"></i>Payment Progress
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="progress-ring mb-3" data-percentage="{{ payment_progress }}">
+                    <svg width="120" height="120">
+                        <circle cx="60" cy="60" r="50" stroke="#e9ecef" stroke-width="8" fill="none"/>
+                        <circle cx="60" cy="60" r="50" stroke="#28a745" stroke-width="8" fill="none" 
+                                class="progress-ring-circle" stroke-dasharray="314 314" stroke-dashoffset="314"
+                                style="transform: rotate(-90deg); transform-origin: 60px 60px;"/>
+                        <text x="60" y="65" text-anchor="middle" class="progress-text">{{ payment_progress }}%</text>
+                    </svg>
+                </div>
+                <h6>Payment Complete</h6>
+                <p class="text-muted small">₹{{ paid_amount }} of ₹{{ total_fees }} paid</p>
+            </div>
+        </div>
+
+        <!-- Installment Schedule -->
+        <div class="student-card">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-check me-2 text-success"></i>Installment Schedule
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if installment_schedule %}
+                    {% for installment in installment_schedule %}
+                    <div class="installment-item d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                        <div>
+                            <h6 class="mb-0">Installment {{ installment.number }}</h6>
+                            <small class="text-muted">₹{{ installment.amount }}</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="mb-1">
+                                <span class="badge bg-{{ 'success' if installment.status == 'paid' else 'warning' if installment.due_soon else 'secondary' }}">
+                                    {{ installment.status.title() }}
+                                </span>
+                            </div>
+                            <small class="text-muted">{{ installment.due_date.strftime('%b %d') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-calendar-times text-muted mb-2" style="font-size: 2rem;"></i>
+                        <p class="text-muted mb-0">No installment plan</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payment-methods .btn {
+        height: 70px;
+        font-size: 0.8rem;
+    }
+    
+    .payment-methods .btn i {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+    }
+    
+    .installment-item {
+        transition: transform 0.2s ease;
+    }
+    
+    .installment-item:hover {
+        transform: translateX(5px);
+    }
+    
+    .progress-ring circle {
+        transition: stroke-dashoffset 2s ease;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize progress ring
+    document.addEventListener('DOMContentLoaded', function() {
+        const progressRings = document.querySelectorAll('.progress-ring');
+        
+        progressRings.forEach(ring => {
+            const percentage = parseInt(ring.dataset.percentage);
+            const circle = ring.querySelector('.progress-ring-circle');
+            const radius = 50;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (percentage / 100) * circumference;
+            
+            circle.style.strokeDasharray = circumference;
+            circle.style.strokeDashoffset = circumference;
+            
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+            }, 500);
+        });
+    });
+    
+    // Payment functions
+    function payFee(feeId) {
+        alert(`Payment for fee ID ${feeId} will be implemented in Phase 3`);
+    }
+    
+    function payWithMethod(method) {
+        document.querySelectorAll('.payment-methods .btn').forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-primary');
+        });
+        
+        event.target.closest('.btn').classList.remove('btn-outline-primary');
+        event.target.closest('.btn').classList.add('btn-primary');
+    }
+    
+    function processPayment() {
+        const amount = document.getElementById('paymentAmount').value;
+        alert(`Processing payment of ₹${amount}. Payment gateway integration will be implemented in Phase 3.`);
+    }
+    
+    function downloadPaymentHistory() {
+        alert('Payment history download will be implemented in Phase 3');
+    }
+</script>
+{% endblock %}

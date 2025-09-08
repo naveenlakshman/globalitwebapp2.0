@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Branch Management - Global IT{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3><i class="fas fa-building"></i> Branch Management</h3>
+  {% if session.role in ['admin', 'corporate_admin'] %}
+  <a href="{{ url_for('branch.create_branch') }}" class="btn btn-primary">
+    <i class="fas fa-plus"></i> Add New Branch
+  </a>
+  {% else %}
+  <span class="text-muted">
+    <i class="fas fa-eye"></i> View Only Access
+  </span>
+  {% endif %}
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card bg-primary text-white">
+      <div class="card-body">
+        <h5 class="card-title">Total Branches</h5>
+        <h3>{{ branch_stats|length }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-success text-white">
+      <div class="card-body">
+        <h5 class="card-title">Active Branches</h5>
+        <h3>{{ branch_stats|selectattr('branch.status', 'equalto', 'Active')|list|length }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-info text-white">
+      <div class="card-body">
+        <h5 class="card-title">Total Students</h5>
+        <h3>{{ branch_stats|sum(attribute='student_count') }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-warning text-white">
+      <div class="card-body">
+        <h5 class="card-title">Total Batches</h5>
+        <h3>{{ branch_stats|sum(attribute='batch_count') }}</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Branch Management Controls -->
+<div class="row mb-3">
+  <div class="col-md-6">
+    <input type="text" class="form-control" id="searchBranch" placeholder="Search branches...">
+  </div>
+  <div class="col-md-3">
+    <select class="form-select" id="filterStatus">
+      <option value="">All Status</option>
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+      <option value="Suspended">Suspended</option>
+    </select>
+  </div>
+  <div class="col-md-3">
+    <select class="form-select" id="filterType">
+      <option value="">All Types</option>
+      <option value="Corporate">Corporate</option>
+      <option value="Franchise">Franchise</option>
+    </select>
+  </div>
+</div>
+
+<!-- Branches Table -->
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover" id="branchTable">
+        <thead class="table-dark">
+          <tr>
+            <th>Code</th>
+            <th>Branch Name</th>
+            <th>Manager</th>
+            <th>Contact</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Students</th>
+            <th>Batches</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stat in branch_stats %}
+          <tr data-status="{{ stat.branch.status }}" data-type="{{ stat.branch.branch_type }}">
+            <td>
+              <span class="badge bg-secondary">{{ stat.branch.branch_code }}</span>
+            </td>
+            <td>
+              <strong>{{ stat.branch.branch_name }}</strong>
+              <small class="d-block text-muted">{{ stat.branch.city }}, {{ stat.branch.state }}</small>
+            </td>
+            <td>
+              {{ stat.branch.manager_name or 'Not Set' }}
+              {% if stat.branch.manager_phone %}
+              <small class="d-block text-muted">{{ stat.branch.manager_phone }}</small>
+              {% endif %}
+            </td>
+            <td>
+              {% if stat.branch.phone %}
+              <i class="fas fa-phone text-success"></i> {{ stat.branch.phone }}<br>
+              {% endif %}
+              {% if stat.branch.email %}
+              <i class="fas fa-envelope text-primary"></i> {{ stat.branch.email }}
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge bg-{{ 'primary' if stat.branch.branch_type == 'Corporate' else 'info' }}">
+                {{ stat.branch.branch_type }}
+              </span>
+            </td>
+            <td>
+              <span class="badge bg-{{ 'success' if stat.branch.status == 'Active' else 'danger' if stat.branch.status == 'Inactive' else 'warning' }}">
+                {{ stat.branch.status }}
+              </span>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark">{{ stat.student_count }}</span>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark">{{ stat.batch_count }}</span>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('branch.view_branch', branch_id=stat.branch.id) }}" 
+                   class="btn btn-outline-primary btn-sm" title="View Details">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% if session.role in ['admin', 'corporate_admin'] %}
+                <a href="{{ url_for('branch.edit_branch', branch_id=stat.branch.id) }}" 
+                   class="btn btn-outline-warning btn-sm" title="Edit">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <button class="btn btn-outline-{{ 'danger' if stat.branch.status == 'Active' else 'success' }} btn-sm" 
+                        onclick="toggleBranchStatus({{ stat.branch.id }}, '{{ stat.branch.status }}')" 
+                        title="Toggle Status">
+                  <i class="fas fa-{{ 'pause' if stat.branch.status == 'Active' else 'play' }}"></i>
+                </button>
+                {% if stat.student_count == 0 and stat.batch_count == 0 %}
+                <button class="btn btn-outline-danger btn-sm" 
+                        onclick="deleteBranch({{ stat.branch.id }}, '{{ stat.branch.branch_name }}')" 
+                        title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+                {% endif %}
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Course Management Link - Admin Only -->
+{% if session.role in ['admin', 'corporate_admin'] %}
+<div class="mt-4">
+  <a href="{{ url_for('branch.manage_courses') }}" class="btn btn-outline-primary">
+    <i class="fas fa-graduation-cap"></i> Manage Courses
+  </a>
+</div>
+{% endif %}
+
+<script>
+// Search and filter functionality
+document.getElementById('searchBranch').addEventListener('keyup', filterTable);
+document.getElementById('filterStatus').addEventListener('change', filterTable);
+document.getElementById('filterType').addEventListener('change', filterTable);
+
+function filterTable() {
+  const searchValue = document.getElementById('searchBranch').value.toLowerCase();
+  const statusFilter = document.getElementById('filterStatus').value;
+  const typeFilter = document.getElementById('filterType').value;
+  const rows = document.querySelectorAll('#branchTable tbody tr');
+
+  rows.forEach(row => {
+    const branchName = row.cells[1].textContent.toLowerCase();
+    const managerName = row.cells[2].textContent.toLowerCase();
+    const status = row.dataset.status;
+    const type = row.dataset.type;
+
+    const matchesSearch = branchName.includes(searchValue) || managerName.includes(searchValue);
+    const matchesStatus = !statusFilter || status === statusFilter;
+    const matchesType = !typeFilter || type === typeFilter;
+
+    row.style.display = matchesSearch && matchesStatus && matchesType ? '' : 'none';
+  });
+}
+
+// Toggle branch status
+function toggleBranchStatus(branchId, currentStatus) {
+  const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+  
+  if (confirm(`Are you sure you want to change branch status to ${newStatus}?`)) {
+    fetch(`/branches/toggle-status/${branchId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert('Error: ' + data.error);
+      }
+    })
+    .catch(error => {
+      alert('Error: ' + error);
+    });
+  }
+}
+
+// Delete branch
+function deleteBranch(branchId, branchName) {
+  if (confirm(`Are you sure you want to delete "${branchName}"? This action cannot be undone.`)) {
+    fetch(`/branches/delete/${branchId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert('Error: ' + data.error);
+      }
+    })
+    .catch(error => {
+      alert('Error: ' + error);
+    });
+  }
+}
+</script>
+{% endblock %}

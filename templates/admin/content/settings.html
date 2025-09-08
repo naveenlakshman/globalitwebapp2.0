@@ -1,0 +1,272 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Content Management Settings{% endblock %}
+{% block page_icon %}fas fa-cogs{% endblock %}
+{% block page_title %}Content Management Settings{% endblock %}
+{% block page_description %}Configure system-wide content management settings, file limits, and workflow options{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <form method="POST" action="{{ url_for('lms_content_management.update_content_settings') }}">
+            <!-- File Upload Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-upload me-2 text-primary"></i>File Upload Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="max_video_file_size_mb" class="form-label">Max Video File Size (MB)</label>
+                            <input type="number" class="form-control" id="max_video_file_size_mb" 
+                                   name="setting_max_video_file_size_mb" 
+                                   value="{{ settings.get('max_video_file_size_mb', 2048) }}" 
+                                   min="1" max="10240">
+                            <div class="form-text">Maximum size for video uploads in megabytes</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="max_document_file_size_mb" class="form-label">Max Document File Size (MB)</label>
+                            <input type="number" class="form-control" id="max_document_file_size_mb" 
+                                   name="setting_max_document_file_size_mb" 
+                                   value="{{ settings.get('max_document_file_size_mb', 100) }}" 
+                                   min="1" max="1024">
+                            <div class="form-text">Maximum size for document uploads in megabytes</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="allowed_video_formats" class="form-label">Allowed Video Formats</label>
+                            <input type="text" class="form-control" id="allowed_video_formats" 
+                                   name="setting_allowed_video_formats" 
+                                   value="{{ settings.get('allowed_video_formats', ['mp4', 'avi', 'mov'])|join(', ') if settings.get('allowed_video_formats') is iterable else 'mp4, avi, mov' }}"
+                                   placeholder="mp4, avi, mov, wmv">
+                            <div class="form-text">Comma-separated list of allowed video formats</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="allowed_document_formats" class="form-label">Allowed Document Formats</label>
+                            <input type="text" class="form-control" id="allowed_document_formats" 
+                                   name="setting_allowed_document_formats" 
+                                   value="{{ settings.get('allowed_document_formats', ['pdf', 'doc', 'docx'])|join(', ') if settings.get('allowed_document_formats') is iterable else 'pdf, doc, docx' }}"
+                                   placeholder="pdf, doc, docx, ppt, pptx">
+                            <div class="form-text">Comma-separated list of allowed document formats</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processing Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2 text-success"></i>Content Processing Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto_video_encoding" 
+                                       name="setting_auto_video_encoding" value="true"
+                                       {% if settings.get('auto_video_encoding', False) %}checked{% endif %}>
+                                <label class="form-check-label" for="auto_video_encoding">
+                                    <strong>Auto Video Encoding</strong>
+                                </label>
+                                <div class="form-text">Automatically encode videos after upload for optimal streaming</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto_document_watermarking" 
+                                       name="setting_auto_document_watermarking" value="true"
+                                       {% if settings.get('auto_document_watermarking', False) %}checked{% endif %}>
+                                <label class="form-check-label" for="auto_document_watermarking">
+                                    <strong>Auto Document Watermarking</strong>
+                                </label>
+                                <div class="form-text">Automatically add watermarks to uploaded documents</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks me-2 text-warning"></i>Workflow Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="content_approval_required" 
+                                       name="setting_content_approval_required" value="true"
+                                       {% if settings.get('content_approval_required', True) %}checked{% endif %}>
+                                <label class="form-check-label" for="content_approval_required">
+                                    <strong>Content Approval Required</strong>
+                                </label>
+                                <div class="form-text">Require approval before content is published</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="workflow_notification_enabled" 
+                                       name="setting_workflow_notification_enabled" value="true"
+                                       {% if settings.get('workflow_notification_enabled', True) %}checked{% endif %}>
+                                <label class="form-check-label" for="workflow_notification_enabled">
+                                    <strong>Workflow Notifications</strong>
+                                </label>
+                                <div class="form-text">Send notifications for workflow events (approval, rejection, etc.)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="resetForm()">
+                            <i class="fas fa-undo me-2"></i>Reset Changes
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Settings
+                        </button>
+                    </div>
+                    <div class="text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Changes take effect immediately after saving
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Current Settings Overview -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2 text-info"></i>Settings Overview
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <div class="mb-2">
+                        <strong>Video Upload Limit:</strong> {{ settings.get('max_video_file_size_mb', 2048) }} MB
+                    </div>
+                    <div class="mb-2">
+                        <strong>Document Upload Limit:</strong> {{ settings.get('max_document_file_size_mb', 100) }} MB
+                    </div>
+                    <div class="mb-2">
+                        <strong>Approval Required:</strong> 
+                        <span class="badge bg-{% if settings.get('content_approval_required', True) %}success{% else %}warning{% endif %}">
+                            {{ 'Yes' if settings.get('content_approval_required', True) else 'No' }}
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Notifications:</strong> 
+                        <span class="badge bg-{% if settings.get('workflow_notification_enabled', True) %}success{% else %}secondary{% endif %}">
+                            {{ 'Enabled' if settings.get('workflow_notification_enabled', True) else 'Disabled' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help & Documentation -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-question-circle me-2 text-success"></i>Help & Documentation
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <h6>File Size Recommendations:</h6>
+                    <ul class="mb-3">
+                        <li><strong>Videos:</strong> 500MB - 2GB for good quality</li>
+                        <li><strong>Documents:</strong> 10MB - 100MB for most files</li>
+                    </ul>
+                    
+                    <h6>Format Recommendations:</h6>
+                    <ul class="mb-3">
+                        <li><strong>Videos:</strong> MP4 (H.264) for best compatibility</li>
+                        <li><strong>Documents:</strong> PDF for universal access</li>
+                    </ul>
+                    
+                    <h6>Workflow Settings:</h6>
+                    <ul class="mb-0">
+                        <li><strong>Approval:</strong> Recommended for quality control</li>
+                        <li><strong>Notifications:</strong> Keeps team informed of changes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-heartbeat me-2 text-danger"></i>System Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small">Content Processing:</span>
+                    <span class="badge bg-success">Active</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small">Workflow Engine:</span>
+                    <span class="badge bg-success">Running</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="small">File Storage:</span>
+                    <span class="badge bg-success">Available</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function resetForm() {
+    if (confirm('Are you sure you want to reset all changes? This will reload the page with current saved settings.')) {
+        location.reload();
+    }
+}
+
+// Auto-save indication
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            // Add visual indication that changes need to be saved
+            const saveBtn = document.querySelector('button[type="submit"]');
+            if (!saveBtn.classList.contains('btn-warning')) {
+                saveBtn.classList.remove('btn-primary');
+                saveBtn.classList.add('btn-warning');
+                saveBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Save Pending Changes';
+            }
+        });
+    });
+    
+    // Reset button appearance after save
+    form.addEventListener('submit', function() {
+        const saveBtn = document.querySelector('button[type="submit"]');
+        saveBtn.classList.remove('btn-warning');
+        saveBtn.classList.add('btn-primary');
+        saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Settings';
+    });
+});
+</script>
+{% endblock %}

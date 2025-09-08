@@ -1,0 +1,308 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Create Quiz{% endblock %}
+{% block page_icon %}fas fa-plus-circle{% endblock %}
+{% block page_title %}Create New Quiz{% endblock %}
+{% block page_description %}Create a new quiz for course sections{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-question-circle me-2"></i>Create New Quiz
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('lms_content_management.quiz_create_process') }}">
+                    <!-- Course Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label for="course_id" class="form-label">Course *</label>
+                            <select id="course_id" name="course_id" class="form-select" required>
+                                <option value="">Select Course</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.course_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="module_id" class="form-label">Module *</label>
+                            <select id="module_id" name="module_id" class="form-select" required disabled>
+                                <option value="">Select Module</option>
+                            </select>
+                    </div>
+
+                    <!-- Quiz Placement Type -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="quiz_placement" class="form-label">Quiz Placement *</label>
+                            <select id="quiz_placement" name="quiz_placement" class="form-select" required>
+                                <option value="section">Section Level - Quiz for specific section</option>
+                                <option value="module">Module Level - Quiz after completing all sections</option>
+                            </select>
+                            <div class="form-text">Choose when students should take this quiz</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="placement_order" class="form-label">Order</label>
+                            <input type="number" id="placement_order" name="placement_order" 
+                                   class="form-control" value="1" min="1" max="10">
+                            <div class="form-text">Order within the placement level (e.g., 1st quiz after module)</div>
+                        </div>
+                    </div>
+
+                    <!-- Section Selection (conditional) -->
+                    <div class="row mb-4" id="section_selection">
+                        <div class="col-md-4">
+                            <label for="section_id" class="form-label">Section <span id="section_required">*</span></label>
+                            <select id="section_id" name="section_id" class="form-select" disabled>
+                                <option value="">Select Section</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <label for="quiz_title" class="form-label">Quiz Title *</label>
+                            <input type="text" id="quiz_title" name="quiz_title" class="form-control" 
+                                   placeholder="Enter quiz title" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="passing_score" class="form-label">Passing Score (%) *</label>
+                            <input type="number" id="passing_score" name="passing_score" class="form-control" 
+                                   value="70" min="1" max="100" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="quiz_description" class="form-label">Description</label>
+                        <textarea id="quiz_description" name="quiz_description" class="form-control" 
+                                  rows="3" placeholder="Optional quiz description"></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="instructions" class="form-label">Instructions</label>
+                        <textarea id="instructions" name="instructions" class="form-control" 
+                                  rows="4" placeholder="Instructions for students taking this quiz"></textarea>
+                    </div>
+
+                    <!-- Quiz Settings -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Quiz Settings</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="time_limit_minutes" class="form-label">Time Limit (minutes)</label>
+                                        <input type="number" id="time_limit_minutes" name="time_limit_minutes" 
+                                               class="form-control" value="30" min="1" max="300">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="max_attempts" class="form-label">Maximum Attempts</label>
+                                        <input type="number" id="max_attempts" name="max_attempts" 
+                                               class="form-control" value="3" min="1" max="10">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="is_mandatory" name="is_mandatory" checked>
+                                        <label class="form-check-label" for="is_mandatory">
+                                            Mandatory Quiz
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="shuffle_questions" name="shuffle_questions" checked>
+                                        <label class="form-check-label" for="shuffle_questions">
+                                            Shuffle Questions
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="shuffle_options" name="shuffle_options" checked>
+                                        <label class="form-check-label" for="shuffle_options">
+                                            Shuffle Answer Options
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="show_results_immediately" name="show_results_immediately">
+                                        <label class="form-check-label" for="show_results_immediately">
+                                            Show Results Immediately
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="show_correct_answers" name="show_correct_answers">
+                                        <label class="form-check-label" for="show_correct_answers">
+                                            Show Correct Answers
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="requires_video_completion" name="requires_video_completion" checked>
+                                        <label class="form-check-label" for="requires_video_completion">
+                                            Requires Video Completion
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Availability Settings -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Availability</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="available_from" class="form-label">Available From</label>
+                                    <input type="datetime-local" id="available_from" name="available_from" class="form-control">
+                                    <small class="text-muted">Leave empty for immediate availability</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="available_until" class="form-label">Available Until</label>
+                                    <input type="datetime-local" id="available_until" name="available_until" class="form-control">
+                                    <small class="text-muted">Leave empty for no expiry</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Creator Notes -->
+                    <div class="mb-4">
+                        <label for="creator_notes" class="form-label">Creator Notes</label>
+                        <textarea id="creator_notes" name="creator_notes" class="form-control" 
+                                  rows="2" placeholder="Any notes about this quiz for reviewers"></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('lms_content_management.quiz_list') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Quizzes
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-2"></i>Create Quiz
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Quiz Creation Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li><strong>Time Limit:</strong> Consider the number of questions when setting time limits (typically 1-3 minutes per question)</li>
+                    <li><strong>Passing Score:</strong> Set appropriate passing scores based on difficulty level (70-80% is common)</li>
+                    <li><strong>Shuffle Options:</strong> Prevents students from sharing answer patterns</li>
+                    <li><strong>Multiple Attempts:</strong> Allow retakes for learning reinforcement</li>
+                    <li><strong>Video Completion:</strong> Ensures students watch content before taking quiz</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Load modules when course is selected
+    document.getElementById('course_id').addEventListener('change', function() {
+        const courseId = this.value;
+        const moduleSelect = document.getElementById('module_id');
+        const sectionSelect = document.getElementById('section_id');
+        
+        // Reset dependent selects
+        moduleSelect.innerHTML = '<option value="">Select Module</option>';
+        sectionSelect.innerHTML = '<option value="">Select Section</option>';
+        moduleSelect.disabled = !courseId;
+        sectionSelect.disabled = true;
+        
+        if (courseId) {
+            fetch(`/admin/content/api/modules/${courseId}`)
+                .then(response => response.json())
+                .then(modules => {
+                    modules.forEach(module => {
+                        const option = document.createElement('option');
+                        option.value = module.id;
+                        option.textContent = module.module_name;
+                        moduleSelect.appendChild(option);
+                    });
+                    moduleSelect.disabled = false;
+                });
+        }
+    });
+
+    // Load sections when module is selected
+    document.getElementById('module_id').addEventListener('change', function() {
+        const moduleId = this.value;
+        const sectionSelect = document.getElementById('section_id');
+        
+        sectionSelect.innerHTML = '<option value="">Select Section</option>';
+        sectionSelect.disabled = !moduleId;
+        
+        if (moduleId) {
+            fetch(`/admin/content/api/sections/${moduleId}?type=quiz`)
+                .then(response => response.json())
+                .then(sections => {
+                    if (sections && sections.length > 0) {
+                        sections.forEach(section => {
+                            const option = document.createElement('option');
+                            option.value = section.id;
+                            option.textContent = section.section_name;
+                            sectionSelect.appendChild(option);
+                        });
+                        sectionSelect.disabled = false;
+                    } else {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'No quiz sections available';
+                        option.disabled = true;
+                        sectionSelect.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading sections:', error);
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'Error loading sections';
+                    option.disabled = true;
+                    sectionSelect.appendChild(option);
+                });
+        }
+    });
+
+    // Handle quiz placement type changes
+    document.getElementById('quiz_placement').addEventListener('change', function() {
+        const placement = this.value;
+        const sectionSelection = document.getElementById('section_selection');
+        const sectionSelect = document.getElementById('section_id');
+        const sectionRequired = document.getElementById('section_required');
+        
+        if (placement === 'module') {
+            // Module level quiz - hide section selection
+            sectionSelection.style.display = 'none';
+            sectionSelect.removeAttribute('required');
+            sectionRequired.style.display = 'none';
+        } else {
+            // Section level quiz - show section selection
+            sectionSelection.style.display = 'block';
+            sectionSelect.setAttribute('required', 'required');
+            sectionRequired.style.display = 'inline';
+        }
+    });
+
+    // Auto-fill quiz title based on section
+    document.getElementById('section_id').addEventListener('change', function() {
+        const sectionText = this.options[this.selectedIndex].text;
+        const titleInput = document.getElementById('quiz_title');
+        
+        if (!titleInput.value && sectionText !== 'Select Section') {
+            titleInput.value = `${sectionText} - Quiz`;
+        }
+    });
+</script>
+{% endblock %}

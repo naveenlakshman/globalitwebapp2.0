@@ -1,0 +1,492 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}{{ material.material_name }} - Material Viewer{% endblock %}
+
+{% block extra_css %}
+<style>
+.material-viewer {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.material-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+}
+
+.security-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.pdf-viewer {
+    width: 100%;
+    height: 80vh;
+    border: none;
+    border-radius: 0 0 15px 15px;
+}
+
+.watermark-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="100" viewBox="0 0 300 100"><text x="150" y="50" text-anchor="middle" fill="rgba(0,0,0,0.1)" font-size="14" transform="rotate(-45 150 50)">{{ watermark_text|urlencode }}</text></svg>') repeat;
+}
+
+.download-section {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.protection-notice {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 10px;
+    padding: 1rem;
+    border-left: 4px solid #2196f3;
+    margin-bottom: 1rem;
+}
+
+/* Security: Disable text selection */
+.no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.content-protection {
+    position: relative;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 3rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Material Header -->
+<div class="material-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2" style="color: rgba(255,255,255,0.8);">
+                    <li class="breadcrumb-item">{{ material.section.module.course.course_name }}</li>
+                    <li class="breadcrumb-item">{{ material.section.module.module_name }}</li>
+                    <li class="breadcrumb-item">{{ material.section.section_name }}</li>
+                    <li class="breadcrumb-item active text-white">{{ material.material_name }}</li>
+                </ol>
+            </nav>
+            <h1 class="mb-2">
+                <i class="fas fa-file-alt me-2"></i>{{ material.material_name }}
+            </h1>
+            {% if material.description %}
+            <p class="mb-0 opacity-75">{{ material.description }}</p>
+            {% endif %}
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="d-flex gap-2 justify-content-end">
+                <span class="badge bg-light text-dark">{{ material.format_file_size() }}</span>
+                <span class="badge bg-light text-dark">{{ material.material_type.upper() }}</span>
+                <a href="{{ url_for('lms.section_content', section_id=material.section_id) }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Section
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Security Warning -->
+<div class="security-warning no-select">
+    <i class="fas fa-shield-alt me-2"></i>
+    This content is protected by copyright. Copying, downloading, or sharing is strictly prohibited and monitored.
+</div>
+
+<!-- Protection Notice -->
+{% if security_config.copy_protection or security_config.print_protection %}
+<div class="protection-notice">
+    <h6><i class="fas fa-info-circle me-2"></i>Content Protection Notice</h6>
+    <div class="row">
+        {% if security_config.copy_protection %}
+        <div class="col-md-6">
+            <small><i class="fas fa-ban me-1"></i>Text selection disabled</small>
+        </div>
+        {% endif %}
+        {% if security_config.print_protection %}
+        <div class="col-md-6">
+            <small><i class="fas fa-print me-1"></i>Printing disabled</small>
+        </div>
+        {% endif %}
+        {% if security_config.watermark %}
+        <div class="col-md-6">
+            <small><i class="fas fa-eye me-1"></i>Watermarked content</small>
+        </div>
+        {% endif %}
+        {% if security_config.right_click_disabled %}
+        <div class="col-md-6">
+            <small><i class="fas fa-mouse me-1"></i>Right-click disabled</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Material Viewer -->
+<div class="material-viewer">
+    <div class="content-protection {{ 'no-select' if security_config.copy_protection else '' }}">
+        {% if material.material_type.lower() == 'pdf' %}
+            <!-- PDF Viewer -->
+            <div id="pdf-container">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading document...</p>
+                </div>
+                {% if secure_url %}
+                <iframe 
+                    id="pdf-viewer"
+                    class="pdf-viewer"
+                    src="{{ secure_url }}"
+                    style="display: none;"
+                    oncontextmenu="return false;"
+                    {{ 'onselect="return false;"' if security_config.copy_protection else '' }}>
+                </iframe>
+                {% else %}
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Access Denied</h5>
+                    <p>You don't have permission to view this material.</p>
+                </div>
+                {% endif %}
+            </div>
+        {% elif material.material_type.lower() in ['doc', 'docx'] %}
+            <!-- Document Viewer -->
+            <div class="p-4 text-center">
+                <i class="fas fa-file-word fa-3x text-primary mb-3"></i>
+                <h5>Microsoft Word Document</h5>
+                <p class="text-muted">{{ material.material_name }}</p>
+                {% if not security_config.view_only %}
+                <a href="{{ url_for('lms.download_material', material_id=material.id) }}" 
+                   class="btn btn-primary">
+                    <i class="fas fa-download me-2"></i>Download to View
+                </a>
+                {% else %}
+                <p class="text-warning">
+                    <i class="fas fa-lock me-1"></i>View-only mode - Download not available
+                </p>
+                {% endif %}
+            </div>
+        {% elif material.material_type.lower() in ['ppt', 'pptx'] %}
+            <!-- PowerPoint Viewer -->
+            <div class="p-4 text-center">
+                <i class="fas fa-file-powerpoint fa-3x text-danger mb-3"></i>
+                <h5>PowerPoint Presentation</h5>
+                <p class="text-muted">{{ material.material_name }}</p>
+                {% if not security_config.view_only %}
+                <a href="{{ url_for('lms.download_material', material_id=material.id) }}" 
+                   class="btn btn-danger">
+                    <i class="fas fa-download me-2"></i>Download to View
+                </a>
+                {% else %}
+                <p class="text-warning">
+                    <i class="fas fa-lock me-1"></i>View-only mode - Download not available
+                </p>
+                {% endif %}
+            </div>
+        {% elif material.material_type.lower() in ['jpg', 'jpeg', 'png', 'gif'] %}
+            <!-- Image Viewer -->
+            <div class="p-3">
+                <img src="{{ secure_url if secure_url else url_for('lms.download_material', material_id=material.id) }}" 
+                     class="img-fluid rounded"
+                     alt="{{ material.material_name }}"
+                     oncontextmenu="return false;"
+                     ondragstart="return false;">
+            </div>
+        {% else %}
+            <!-- Generic File -->
+            <div class="p-4 text-center">
+                <i class="fas fa-file fa-3x text-secondary mb-3"></i>
+                <h5>{{ material.material_type.upper() }} File</h5>
+                <p class="text-muted">{{ material.material_name }}</p>
+                {% if material.is_downloadable and not security_config.view_only %}
+                <a href="{{ url_for('lms.download_material', material_id=material.id) }}" 
+                   class="btn btn-secondary">
+                    <i class="fas fa-download me-2"></i>Download
+                </a>
+                {% else %}
+                <p class="text-warning">
+                    <i class="fas fa-lock me-1"></i>Download not available
+                </p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Download Section -->
+    {% if material.is_downloadable and not security_config.view_only %}
+    <div class="download-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h6><i class="fas fa-download me-2"></i>Download Material</h6>
+                <p class="mb-0 text-muted">Download this material for offline study</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{{ url_for('lms.download_material', material_id=material.id) }}" 
+                   class="btn btn-success"
+                   onclick="trackDownload()">
+                    <i class="fas fa-download me-2"></i>Download ({{ material.format_file_size() }})
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Watermark Overlay -->
+{% if security_config.watermark %}
+<div class="watermark-overlay"></div>
+{% endif %}
+
+<!-- Access Information -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle me-2"></i>Study Guidelines</h6>
+            <ul class="mb-0">
+                <li>This material is part of your course curriculum</li>
+                <li>Take notes while studying for better retention</li>
+                <li>Contact your instructor if you have questions about the content</li>
+                {% if security_config.session_timeout %}
+                <li>Your viewing session will expire after {{ security_config.session_timeout // 60 }} minutes of inactivity</li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h6><i class="fas fa-chart-bar me-2"></i>Material Stats</h6>
+                <div class="row">
+                    <div class="col-6">
+                        <small class="text-muted">File Size</small>
+                        <div>{{ material.format_file_size() }}</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Downloads</small>
+                        <div>{{ material.download_count }}</div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <small class="text-muted">Type</small>
+                        <div>{{ material.material_type.upper() }}</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Added</small>
+                        <div>{{ material.get_upload_date_formatted() }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Security Configuration
+const securityConfig = {
+    copyProtection: {{ security_config.copy_protection|tojson }},
+    printProtection: {{ security_config.print_protection|tojson }},
+    rightClickDisabled: {{ security_config.right_click_disabled|tojson }},
+    sessionTimeout: {{ security_config.session_timeout|tojson }}
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSecurity();
+    loadMaterial();
+    startSessionTimer();
+});
+
+function initializeSecurity() {
+    // Disable right-click
+    if (securityConfig.rightClickDisabled) {
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            reportViolation('right_click_attempt');
+        });
+    }
+
+    // Disable keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && (e.key === 'c' || e.key === 'a' || e.key === 's' || e.key === 'p')) {
+            e.preventDefault();
+            reportViolation('keyboard_shortcut_attempt');
+        }
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+            e.preventDefault();
+            reportViolation('developer_tools_attempt');
+        }
+        if (e.key === 'PrintScreen') {
+            reportViolation('screenshot_attempt');
+        }
+    });
+
+    // Disable text selection
+    if (securityConfig.copyProtection) {
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+            reportViolation('text_selection_attempt');
+        });
+    }
+
+    // Disable print
+    if (securityConfig.printProtection) {
+        window.addEventListener('beforeprint', function(e) {
+            e.preventDefault();
+            reportViolation('print_attempt');
+        });
+    }
+
+    // Monitor for developer tools
+    monitorDevTools();
+}
+
+function loadMaterial() {
+    const pdfViewer = document.getElementById('pdf-viewer');
+    const loadingSpinner = document.querySelector('.loading-spinner');
+
+    if (pdfViewer) {
+        pdfViewer.onload = function() {
+            loadingSpinner.style.display = 'none';
+            pdfViewer.style.display = 'block';
+            logAccess('view');
+        };
+
+        pdfViewer.onerror = function() {
+            loadingSpinner.innerHTML = '<div class="alert alert-danger">Failed to load document</div>';
+        };
+
+        // Show PDF after timeout if onload doesn't fire
+        setTimeout(function() {
+            if (pdfViewer.style.display === 'none') {
+                loadingSpinner.style.display = 'none';
+                pdfViewer.style.display = 'block';
+                logAccess('view');
+            }
+        }, 3000);
+    } else {
+        logAccess('view');
+    }
+}
+
+function trackDownload() {
+    logAccess('download');
+}
+
+function logAccess(action) {
+    fetch('/lms/api/material/access', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            material_id: {{ material.id }},
+            action: action,
+            timestamp: new Date().toISOString()
+        })
+    }).catch(function(error) {
+        console.log('Access logging failed');
+    });
+}
+
+function reportViolation(violationType) {
+    fetch('/lms/api/security/report', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            violation_type: violationType,
+            resource_type: 'material',
+            resource_id: {{ material.id }},
+            details: 'Material viewer security violation'
+        })
+    }).catch(function(error) {
+        // Silent fail for security reporting
+    });
+}
+
+function monitorDevTools() {
+    let devtools = {open: false, orientation: null};
+    setInterval(function() {
+        if (window.outerHeight - window.innerHeight > 200 || 
+            window.outerWidth - window.innerWidth > 200) {
+            if (!devtools.open) {
+                devtools.open = true;
+                reportViolation('developer_tools_detected');
+            }
+        } else {
+            devtools.open = false;
+        }
+    }, 1000);
+}
+
+function startSessionTimer() {
+    if (securityConfig.sessionTimeout > 0) {
+        setTimeout(function() {
+            alert('Your viewing session has expired for security reasons.');
+            window.close();
+        }, securityConfig.sessionTimeout * 1000);
+    }
+}
+
+// Monitor page visibility
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        logAccess('page_hidden');
+    } else {
+        logAccess('page_visible');
+    }
+});
+
+// Disable drag and drop
+document.addEventListener('dragstart', function(e) {
+    e.preventDefault();
+    reportViolation('drag_attempt');
+});
+
+// Monitor for multiple tabs
+window.addEventListener('blur', function() {
+    reportViolation('window_blur');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,1231 @@
+{% extends "base.html" %}
+
+{% block page_title %}Mark Attendance - {{ batch.name }}{% endblock %}
+
+{% block content %}
+<div class="attendance-dashboard">
+    <!-- Attendance Header -->
+    <div class="attendance-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1>
+                    <i class="fas fa-calendar-check"></i>
+                    Mark Attendance
+                </h1>
+                <div class="batch-info">
+                    <strong>{{ batch.name }}</strong> | {{ batch.course_name }} | {{ batch.branch.branch_name if batch.branch else 'No Branch' }}
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('attendance.view_attendance_audit', batch_id=batch.id) }}" 
+                   class="btn btn-light">
+                    <i class="fas fa-history me-1"></i>
+                    Audit Trail
+                </a>
+                <a href="{{ url_for('attendance.batch_attendance', batch_id=batch.id) }}" 
+                   class="btn btn-light">
+                    <i class="fas fa-chart-line me-1"></i>
+                    View Analytics
+                </a>
+                <a href="{{ url_for('batches.view_batch', batch_id=batch.id) }}" 
+                   class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Batch
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Controls -->
+    <div class="attendance-controls">
+        <div class="attendance-controls-header">
+            <h6>
+                <i class="fas fa-sliders-h"></i>
+                Attendance Controls
+            </h6>
+            <span class="badge badge-light">{{ students|length }} Students</span>
+        </div>
+        <div class="attendance-controls-body">
+            <!-- Date and Session Type Selection -->
+            <form method="GET" class="mb-0">
+                <div class="attendance-date-selector">
+                    <div class="form-group">
+                        <label for="attendance_date" class="form-label">Attendance Date</label>
+                        <input type="date" 
+                               id="attendance_date" 
+                               name="date"
+                               class="form-control" 
+                               value="{{ selected_date or today }}"
+                               min="{{ batch.start_date if batch.start_date else today }}"
+                               max="{{ today }}"
+                               onchange="this.form.submit()"
+                               title="Attendance can only be marked from batch start date ({{ batch.start_date if batch.start_date else 'today' }}) to today">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="session_type" class="form-label">Session Type</label>
+                        <select id="session_type" 
+                                name="session_type" 
+                                class="form-select"
+                                onchange="this.form.submit()">
+                            <option value="Regular" {{ 'selected' if selected_session_type == 'Regular' else '' }}>Regular Class</option>
+                            <option value="Theory" {{ 'selected' if selected_session_type == 'Theory' else '' }}>Theory Session</option>
+                            <option value="Practical" {{ 'selected' if selected_session_type == 'Practical' else '' }}>Practical Session</option>
+                            <option value="Assessment" {{ 'selected' if selected_session_type == 'Assessment' else '' }}>Assessment</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Attendance Statistics -->
+    <div class="attendance-stats">
+        <div class="attendance-stat-card">
+            <div class="attendance-stat-header total">
+                <h6>Total Students</h6>
+                <i class="fas fa-users stat-icon"></i>
+            </div>
+            <div class="attendance-stat-body">
+                <div class="attendance-stat-number">{{ students|length }}</div>
+                <div class="attendance-stat-label">Enrolled</div>
+            </div>
+        </div>
+
+        <div class="attendance-stat-card">
+            <div class="attendance-stat-header present">
+                <h6>Present</h6>
+                <i class="fas fa-check-circle stat-icon"></i>
+            </div>
+            <div class="attendance-stat-body">
+                <div class="attendance-stat-number" id="present-count">{{ today_attendance.present_count if today_attendance else 0 }}</div>
+                <div class="attendance-stat-label">Students</div>
+            </div>
+        </div>
+
+        <div class="attendance-stat-card">
+            <div class="attendance-stat-header absent">
+                <h6>Absent</h6>
+                <i class="fas fa-times-circle stat-icon"></i>
+            </div>
+            <div class="attendance-stat-body">
+                <div class="attendance-stat-number" id="absent-count">{{ today_attendance.absent_count if today_attendance else 0 }}</div>
+                <div class="attendance-stat-label">Students</div>
+            </div>
+        </div>
+
+        <div class="attendance-stat-card">
+            <div class="attendance-stat-header late">
+                <h6>Late</h6>
+                <i class="fas fa-clock stat-icon"></i>
+            </div>
+            <div class="attendance-stat-body">
+                <div class="attendance-stat-number" id="late-count">{{ today_attendance.late_count if today_attendance else 0 }}</div>
+                <div class="attendance-stat-label">Students</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Timing Information -->
+    {% if batch_timings.checkin_time or batch_timings.checkout_time %}
+    <div class="batch-timing-info">
+        <div class="batch-timing-header">
+            <i class="fas fa-clock"></i>
+            <strong>Batch Timings</strong>
+            <span class="batch-timing-tooltip" title="These times will be auto-filled when you mark students as Present">
+                <i class="fas fa-info-circle"></i>
+            </span>
+        </div>
+        <div class="batch-timing-details">
+            {% if batch_timings.checkin_time %}
+                <span class="timing-item">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Check-in: <strong>{{ batch_timings.checkin_time }}</strong>
+                </span>
+            {% endif %}
+            {% if batch_timings.checkout_time %}
+                <span class="timing-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Check-out: <strong>{{ batch_timings.checkout_time }}</strong>
+                </span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Batch Status Validation -->
+    {% if batch.status != 'Active' %}
+    <div class="batch-status-warning">
+        <div class="status-warning-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Batch Not Active</strong>
+        </div>
+        <div class="status-warning-details">
+            This batch is currently <strong>{{ batch.status }}</strong>. 
+            Attendance can only be marked for active batches.
+            {% if batch.status == 'Completed' %}
+                <br><span class="text-muted">This batch was completed on {{ batch.completion_date if batch.completion_date else 'unknown date' }}.</span>
+            {% elif batch.status == 'Suspended' %}
+                <br><span class="text-muted">This batch was suspended. Contact administrator to reactivate.</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Date Range Validation -->
+    {% if batch.start_date %}
+    {% set batch_start_date = batch.start_date %}
+    {% set today_date = today %}
+    <script>
+        // Client-side date validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('attendance_date');
+            const batchStartDate = '{{ batch_start_date }}';
+            const todayDate = '{{ today_date }}';
+            
+            // Set date restrictions
+            dateInput.min = batchStartDate;
+            dateInput.max = todayDate;
+            
+            // Add validation on change
+            dateInput.addEventListener('change', function() {
+                const selectedDate = this.value;
+                if (selectedDate < batchStartDate) {
+                    alert(`Cannot select date before batch start date (${batchStartDate})`);
+                    this.value = batchStartDate;
+                } else if (selectedDate > todayDate) {
+                    alert(`Cannot select future date. Today is ${todayDate}`);
+                    this.value = todayDate;
+                }
+            });
+        });
+    </script>
+    {% endif %}
+
+    <!-- Attendance Form -->
+    {% if batch.status == 'Active' %}
+    <form method="POST" action="{{ url_for('attendance.mark_batch_attendance', batch_id=batch.id) }}" id="attendanceForm">
+    {% else %}
+    <div class="form-disabled-overlay">
+        <div class="form-disabled-message">
+            <i class="fas fa-lock"></i>
+            <h5>Attendance Marking Disabled</h5>
+            <p>This batch is {{ batch.status.lower() }}. Only active batches allow attendance marking.</p>
+        </div>
+    <form method="POST" action="#" id="attendanceForm" style="pointer-events: none; opacity: 0.5;">
+    {% endif %}
+        <input type="hidden" name="attendance_date" value="{{ selected_date or today }}">
+        <input type="hidden" name="session_type" value="{{ selected_session_type or 'Regular' }}">
+        
+        <!-- Change Reason Section (for audit trail) -->
+        {% set has_existing_attendance = existing_attendance and existing_attendance.values() | selectattr('status') | list | length > 0 %}
+        {% if has_existing_attendance %}
+        <div class="attendance-audit-section">
+            <div class="attendance-audit-header">
+                <h6>
+                    <i class="fas fa-edit"></i>
+                    Editing Existing Attendance - Audit Trail Required
+                </h6>
+                <span class="badge badge-warning">Changes will be logged</span>
+            </div>
+            <div class="attendance-audit-body">
+                <div class="form-group">
+                    <label for="change_reason" class="form-label">
+                        <i class="fas fa-comment"></i>
+                        Reason for Changes *
+                    </label>
+                    <input type="text" 
+                           id="change_reason" 
+                           name="change_reason"
+                           class="form-control" 
+                           placeholder="e.g., Student arrived late, Correction from yesterday, Medical excuse verified..."
+                           required 
+                           maxlength="500">
+                    <small class="form-text text-muted">
+                        All attendance changes are logged for audit purposes. Please provide a clear reason.
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="attendance-table-container">
+            <div class="attendance-table-header">
+                <h6>
+                    <i class="fas fa-list-check"></i>
+                    Student Attendance - {{ selected_date or today }}
+                </h6>
+                <div class="attendance-table-actions">
+                    <button type="button" class="btn-mark-all" onclick="markAllPresent()">
+                        <i class="fas fa-check-double"></i>
+                        Mark All Present
+                    </button>
+                </div>
+            </div>
+            
+            <table class="attendance-table">
+                <thead>
+                    <tr>
+                        <th style="width: 280px;">Student</th>
+                        <th style="width: 200px;">Status *</th>
+                        <th style="width: 120px;">Check In</th>
+                        <th style="width: 120px;">Check Out</th>
+                        <th style="width: 100px;">Late (min)</th>
+                        {% if selected_session_type in ['Practical', 'Theory'] %}
+                        <th style="width: 80px;">Hours *</th>
+                        {% endif %}
+                        <th style="width: 120px;">Fee Status *</th>
+                        <th style="width: 100px;">Due Amount</th>
+                        <th style="width: 120px;">Due Date</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr data-student-id="{{ student.student_id }}">
+                        <td>
+                            <div class="student-info">
+                                <div class="student-avatar">
+                                    {{ student.full_name[:2].upper() }}
+                                </div>
+                                <div class="student-details">
+                                    <h6>{{ student.full_name }}</h6>
+                                    <p>ID: {{ student.student_id }} | {{ student.mobile or 'No mobile' }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="status-radio-group">
+                                <input type="radio" 
+                                       name="attendance_{{ student.student_id }}" 
+                                       value="Present" 
+                                       id="present_{{ student.student_id }}"
+                                       {{ 'checked' if existing_attendance and existing_attendance.get(student.student_id, {}).get('status') == 'Present' else '' }}
+                                       onchange="updateAttendanceFields('{{ student.student_id }}', 'Present'); updateStats()"
+                                       required>
+                                <label for="present_{{ student.student_id }}" class="status-radio-label present">
+                                    <i class="fas fa-check"></i>
+                                    Present
+                                </label>
+                                
+                                <input type="radio" 
+                                       name="attendance_{{ student.student_id }}" 
+                                       value="Absent" 
+                                       id="absent_{{ student.student_id }}"
+                                       {{ 'checked' if existing_attendance and existing_attendance.get(student.student_id, {}).get('status') == 'Absent' else '' }}
+                                       onchange="updateAttendanceFields('{{ student.student_id }}', 'Absent'); updateStats()"
+                                       required>
+                                <label for="absent_{{ student.student_id }}" class="status-radio-label absent">
+                                    <i class="fas fa-times"></i>
+                                    Absent
+                                </label>
+                                
+                                <input type="radio" 
+                                       name="attendance_{{ student.student_id }}" 
+                                       value="Late" 
+                                       id="late_{{ student.student_id }}"
+                                       {{ 'checked' if existing_attendance and existing_attendance.get(student.student_id, {}).get('status') == 'Late' else '' }}
+                                       onchange="updateAttendanceFields('{{ student.student_id }}', 'Late'); updateStats()"
+                                       required>
+                                <label for="late_{{ student.student_id }}" class="status-radio-label late">
+                                    <i class="fas fa-clock"></i>
+                                    Late
+                                </label>
+                                
+                                <input type="radio" 
+                                       name="attendance_{{ student.student_id }}" 
+                                       value="ExcusedAbsent" 
+                                       id="excused_{{ student.student_id }}"
+                                       {{ 'checked' if existing_attendance and existing_attendance.get(student.student_id, {}).get('status') == 'ExcusedAbsent' else '' }}
+                                       onchange="updateAttendanceFields('{{ student.student_id }}', 'ExcusedAbsent'); updateStats()"
+                                       required>
+                                <label for="excused_{{ student.student_id }}" class="status-radio-label excused">
+                                    <i class="fas fa-user-check"></i>
+                                    Excused
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="time" 
+                                   name="check_in_{{ student.student_id }}" 
+                                   class="time-input check-in-time"
+                                   data-student-id="{{ student.student_id }}"
+                                   value="{{ existing_attendance.get(student.student_id, {}).get('check_in_time', '') if existing_attendance else '' }}"
+                                   placeholder="HH:MM">
+                        </td>
+                        <td>
+                            <input type="time" 
+                                   name="check_out_{{ student.student_id }}" 
+                                   class="time-input check-out-time"
+                                   data-student-id="{{ student.student_id }}"
+                                   value="{{ existing_attendance.get(student.student_id, {}).get('check_out_time', '') if existing_attendance else '' }}"
+                                   placeholder="HH:MM">
+                        </td>
+                        <td>
+                            <input type="number" 
+                                   name="late_minutes_{{ student.student_id }}" 
+                                   class="hours-input"
+                                   min="0" 
+                                   max="120"
+                                   value="{{ existing_attendance.get(student.student_id, {}).get('late_minutes', '') if existing_attendance else '' }}"
+                                   placeholder="0">
+                        </td>
+                        {% if selected_session_type == 'Practical' %}
+                        <td>
+                            <input type="number" 
+                                   name="practical_hours_{{ student.student_id }}" 
+                                   class="hours-input"
+                                   min="0" 
+                                   max="8" 
+                                   step="0.5"
+                                   value="{{ existing_attendance.get(student.student_id, {}).get('practical_hours', '') if existing_attendance else '' }}"
+                                   placeholder="0"
+                                   required>
+                        </td>
+                        {% elif selected_session_type == 'Theory' %}
+                        <td>
+                            <input type="number" 
+                                   name="theory_hours_{{ student.student_id }}" 
+                                   class="hours-input"
+                                   min="0" 
+                                   max="8" 
+                                   step="0.5"
+                                   value="{{ existing_attendance.get(student.student_id, {}).get('theory_hours', '') if existing_attendance else '' }}"
+                                   placeholder="0"
+                                   required>
+                        </td>
+                        {% endif %}
+                        <td>
+                            <div class="fee-status-container">
+                                {% if existing_attendance and existing_attendance.get(student.student_id) %}
+                                    {% set fee_data = existing_attendance.get(student.student_id, {}) %}
+                                {% else %}
+                                    {% set fee_data = student_fee_info.get(student.student_id, {}) %}
+                                {% endif %}
+                                {% set fee_status = fee_data.get('fee_status', 'Unknown') %}
+                                {% set due_amount = fee_data.get('due_amount', 0) %}
+                                
+                                {% if fee_status and fee_status != 'Unknown' and fee_status != '' %}
+                                    <!-- Display current fee status with badge -->
+                                    <div class="fee-status-display">
+                                        <span class="fee-status-badge {{ fee_status.lower() }}">
+                                            {{ fee_status.upper() }}
+                                        </span>
+                                    </div>
+                                    <!-- Hidden input to maintain status -->
+                                    <input type="hidden" 
+                                           name="fee_status_{{ student.student_id }}" 
+                                           value="{{ fee_status }}">
+                                {% elif due_amount == 0 or due_amount == 0.0 %}
+                                    <!-- Auto-set as PAID if no due amount -->
+                                    <div class="fee-status-display">
+                                        <span class="fee-status-badge paid">
+                                            PAID
+                                        </span>
+                                    </div>
+                                    <!-- Hidden input to maintain status -->
+                                    <input type="hidden" 
+                                           name="fee_status_{{ student.student_id }}" 
+                                           value="Paid">
+                                {% else %}
+                                    <!-- Fallback to dropdown only if no fee data and has dues -->
+                                    <select name="fee_status_{{ student.student_id }}" 
+                                            class="fee-status-select"
+                                            required>
+                                        <option value="">Select Status</option>
+                                        <option value="Paid">Paid</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Overdue">Overdue</option>
+                                        <option value="Partial">Partial</option>
+                                    </select>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if existing_attendance and existing_attendance.get(student.student_id) %}
+                                {% set fee_data = existing_attendance.get(student.student_id, {}) %}
+                            {% else %}
+                                {% set fee_data = student_fee_info.get(student.student_id, {}) %}
+                            {% endif %}
+                            {% set due_amount = fee_data.get('due_amount', 0) %}
+                            {% set fee_status = fee_data.get('fee_status', 'Unknown') %}
+                            
+                            {% if due_amount and due_amount > 0 %}
+                                <!-- Display calculated due amount -->
+                                <div class="due-amount-display">
+                                    ₹{{ "%.2f"|format(due_amount) }}
+                                </div>
+                                <!-- Hidden input to maintain amount -->
+                                <input type="hidden" 
+                                       name="due_amount_{{ student.student_id }}" 
+                                       value="{{ due_amount }}">
+                            {% elif fee_status == 'Paid' or due_amount == 0 or due_amount == 0.0 %}
+                                <!-- Display zero for paid students -->
+                                <div class="due-amount-display paid">
+                                    ₹0.00
+                                </div>
+                                <!-- Hidden input to maintain amount -->
+                                <input type="hidden" 
+                                       name="due_amount_{{ student.student_id }}" 
+                                       value="0.00">
+                            {% else %}
+                                <!-- Manual input only if unknown status and no calculated amount -->
+                                <input type="number" 
+                                       name="due_amount_{{ student.student_id }}" 
+                                       class="amount-input"
+                                       min="0" 
+                                       step="0.01"
+                                       value="{{ due_amount if due_amount else '' }}"
+                                       placeholder="0.00">
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if existing_attendance and existing_attendance.get(student.student_id) %}
+                                {% set fee_data = existing_attendance.get(student.student_id, {}) %}
+                            {% else %}
+                                {% set fee_data = student_fee_info.get(student.student_id, {}) %}
+                            {% endif %}
+                            {% set due_date = fee_data.get('due_date', '') %}
+                            {% set fee_status = fee_data.get('fee_status', 'Unknown') %}
+                            {% set due_amount = fee_data.get('due_amount', 0) %}
+                            
+                            {% if due_date and due_amount > 0 %}
+                                <!-- Display calculated due date -->
+                                <div class="due-date-display">
+                                    {{ due_date }}
+                                </div>
+                                <!-- Hidden input to maintain date -->
+                                <input type="hidden" 
+                                       name="due_date_{{ student.student_id }}" 
+                                       value="{{ due_date }}">
+                            {% elif fee_status == 'Paid' or due_amount == 0 or due_amount == 0.0 %}
+                                <!-- Show blank for paid students -->
+                                <div class="due-date-display paid">
+                                    -
+                                </div>
+                                <!-- Hidden input with empty value -->
+                                <input type="hidden" 
+                                       name="due_date_{{ student.student_id }}" 
+                                       value="">
+                            {% else %}
+                                <!-- Manual input only if unknown status -->
+                                <input type="date" 
+                                       name="due_date_{{ student.student_id }}" 
+                                       class="date-input"
+                                       value="{{ due_date }}">
+                            {% endif %}
+                        </td>
+                        <td>
+                            <input type="text" 
+                                   name="notes_{{ student.student_id }}" 
+                                   class="attendance-notes"
+                                   value="{{ existing_attendance.get(student.student_id, {}).get('notes', '') if existing_attendance else '' }}"
+                                   placeholder="Optional notes...">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="attendance-form-actions">
+            <div class="bulk-actions">
+                <button type="button" class="btn-bulk-action" onclick="markAllPresent()">
+                    <i class="fas fa-check-double"></i>
+                    Mark All Present
+                </button>
+                <button type="button" class="btn-bulk-action" onclick="autoFillBatchTimings()">
+                    <i class="fas fa-clock"></i>
+                    Auto-Fill Times
+                </button>
+                <button type="button" class="btn-bulk-action" onclick="clearAll()">
+                    <i class="fas fa-eraser"></i>
+                    Clear All
+                </button>
+                <button type="button" class="btn-bulk-action" onclick="copyPreviousDay()">
+                    <i class="fas fa-copy"></i>
+                    Copy Previous Day
+                </button>
+            </div>
+            
+            <button type="submit" class="btn-save-attendance" id="saveBtn">
+                <i class="fas fa-save"></i>
+                Save Attendance
+            </button>
+        </div>
+    </form>
+    {% if batch.status != 'Active' %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Batch timing configuration for auto-fill functionality
+const BATCH_TIMINGS = {
+    checkinTime: '{{ batch_timings.checkin_time }}',
+    checkoutTime: '{{ batch_timings.checkout_time }}'
+};
+
+// Attendance management JavaScript with business logic
+function updateStats() {
+    const presentCount = document.querySelectorAll('input[type="radio"][value="Present"]:checked').length;
+    const absentCount = document.querySelectorAll('input[type="radio"][value="Absent"]:checked').length;
+    const lateCount = document.querySelectorAll('input[type="radio"][value="Late"]:checked').length;
+    
+    document.getElementById('present-count').textContent = presentCount;
+    document.getElementById('absent-count').textContent = absentCount;
+    document.getElementById('late-count').textContent = lateCount;
+}
+
+// Business Logic: Update form fields based on attendance status
+function updateAttendanceFields(studentId, status) {
+    const checkInField = document.querySelector(`input[name="check_in_${studentId}"]`);
+    const checkOutField = document.querySelector(`input[name="check_out_${studentId}"]`);
+    const lateMinutesField = document.querySelector(`input[name="late_minutes_${studentId}"]`);
+    const practicalHoursField = document.querySelector(`input[name="practical_hours_${studentId}"]`);
+    const theoryHoursField = document.querySelector(`input[name="theory_hours_${studentId}"]`);
+    const notesField = document.querySelector(`input[name="notes_${studentId}"]`);
+    
+    // Get the student row for visual feedback
+    const studentRow = document.querySelector(`tr[data-student-id="${studentId}"]`);
+    
+    // Remove all status classes first
+    studentRow.classList.remove('student-present', 'student-absent', 'student-late', 'student-excused');
+    
+    if (status === 'Absent' || status === 'ExcusedAbsent') {
+        // For absent students: disable time fields and clear values
+        checkInField.disabled = true;
+        checkOutField.disabled = true;
+        checkInField.value = '';
+        checkOutField.value = '';
+        checkInField.removeAttribute('required');
+        checkOutField.removeAttribute('required');
+        
+        // Clear and disable late minutes
+        lateMinutesField.value = '';
+        lateMinutesField.disabled = true;
+        
+        // Clear and disable hours tracking (no attendance = no hours)
+        if (practicalHoursField) {
+            practicalHoursField.value = '';
+            practicalHoursField.disabled = true;
+            practicalHoursField.removeAttribute('required');
+        }
+        if (theoryHoursField) {
+            theoryHoursField.value = '';
+            theoryHoursField.disabled = true;
+            theoryHoursField.removeAttribute('required');
+        }
+        
+        // Update visual style
+        studentRow.classList.add(status === 'Absent' ? 'student-absent' : 'student-excused');
+        
+        // Update placeholder for notes
+        notesField.placeholder = status === 'ExcusedAbsent' ? 'Reason for excused absence...' : 'Reason for absence...';
+        
+    } else if (status === 'Present' || status === 'Late') {
+        // For present/late students: enable all relevant fields
+        checkInField.disabled = false;
+        checkOutField.disabled = false;
+        checkInField.setAttribute('required', 'required');
+        checkOutField.setAttribute('required', 'required');
+        
+        // Auto-fill with batch timings if fields are empty
+        if (!checkInField.value && BATCH_TIMINGS.checkinTime) {
+            checkInField.value = BATCH_TIMINGS.checkinTime;
+            checkInField.setAttribute('data-auto-filled', 'true');
+            // Add visual feedback
+            setTimeout(() => checkInField.removeAttribute('data-auto-filled'), 3000);
+        }
+        if (!checkOutField.value && BATCH_TIMINGS.checkoutTime) {
+            checkOutField.value = BATCH_TIMINGS.checkoutTime;
+            checkOutField.setAttribute('data-auto-filled', 'true');
+            // Add visual feedback
+            setTimeout(() => checkOutField.removeAttribute('data-auto-filled'), 3000);
+        }
+        
+        // Enable late minutes (especially for late students)
+        lateMinutesField.disabled = false;
+        if (status === 'Late') {
+            // For late students, calculate late minutes if check-in time is set
+            if (checkInField.value && BATCH_TIMINGS.checkinTime) {
+                const lateMinutes = calculateLateMinutes(BATCH_TIMINGS.checkinTime, checkInField.value);
+                lateMinutesField.value = Math.max(0, lateMinutes);
+            } else if (!lateMinutesField.value) {
+                lateMinutesField.value = '5'; // Default 5 minutes late
+            }
+            lateMinutesField.focus(); // Focus on late minutes for easy input
+        } else {
+            // For present students, check if they're actually late based on check-in time
+            if (checkInField.value && BATCH_TIMINGS.checkinTime) {
+                const lateMinutes = calculateLateMinutes(BATCH_TIMINGS.checkinTime, checkInField.value);
+                if (lateMinutes > 0) {
+                    lateMinutesField.value = lateMinutes;
+                    // Optionally suggest changing status to "Late"
+                    showLateTimeAlert(studentId, lateMinutes);
+                } else {
+                    lateMinutesField.value = '';
+                }
+            } else {
+                lateMinutesField.value = '';
+            }
+        }
+        
+        // Enable hours tracking for present/late students
+        if (practicalHoursField) {
+            practicalHoursField.disabled = false;
+            practicalHoursField.setAttribute('required', 'required');
+        }
+        if (theoryHoursField) {
+            theoryHoursField.disabled = false;
+            theoryHoursField.setAttribute('required', 'required');
+        }
+        
+        // Update visual style
+        studentRow.classList.add(status === 'Present' ? 'student-present' : 'student-late');
+        
+        // Update placeholder for notes
+        notesField.placeholder = status === 'Late' ? 'Reason for being late...' : 'Optional notes...';
+    }
+    
+    // Add event listener for check-in time changes to auto-calculate late minutes
+    if (checkInField && !checkInField.hasAttribute('data-listener-added')) {
+        checkInField.addEventListener('change', function() {
+            if (this.value && BATCH_TIMINGS.checkinTime) {
+                const lateMinutes = calculateLateMinutes(BATCH_TIMINGS.checkinTime, this.value);
+                const currentStatus = document.querySelector(`input[name="attendance_${studentId}"]:checked`)?.value;
+                
+                if (lateMinutes > 0) {
+                    lateMinutesField.value = lateMinutes;
+                    // If student is marked as "Present" but arrived late, suggest changing to "Late"
+                    if (currentStatus === 'Present') {
+                        showLateTimeAlert(studentId, lateMinutes);
+                    }
+                } else {
+                    lateMinutesField.value = '';
+                }
+            }
+        });
+        checkInField.setAttribute('data-listener-added', 'true');
+    }
+}
+
+// Helper function to calculate late minutes
+function calculateLateMinutes(expectedTime, actualTime) {
+    if (!expectedTime || !actualTime) return 0;
+    
+    const [expectedHour, expectedMin] = expectedTime.split(':').map(Number);
+    const [actualHour, actualMin] = actualTime.split(':').map(Number);
+    
+    const expectedMinutes = expectedHour * 60 + expectedMin;
+    const actualMinutes = actualHour * 60 + actualMin;
+    
+    return Math.max(0, actualMinutes - expectedMinutes);
+}
+
+// Helper function to show alert for late arrival
+function showLateTimeAlert(studentId, lateMinutes) {
+    const studentRow = document.querySelector(`tr[data-student-id="${studentId}"]`);
+    const studentName = studentRow.querySelector('td:first-child').textContent.trim();
+    
+    // Create a subtle notification
+    const notification = document.createElement('div');
+    notification.className = 'late-time-alert';
+    notification.innerHTML = `
+        <i class="fas fa-clock text-warning"></i>
+        ${studentName} is ${lateMinutes} minutes late. 
+        <a href="#" onclick="changeToLateStatus('${studentId}'); this.parentElement.remove(); return false;">
+            Mark as Late?
+        </a>
+        <a href="#" onclick="this.parentElement.remove(); return false;" class="ms-2">
+            <i class="fas fa-times"></i>
+        </a>
+    `;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        padding: 10px 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+        max-width: 300px;
+        font-size: 14px;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 8 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 8000);
+}
+
+// Helper function to change status to "Late"
+function changeToLateStatus(studentId) {
+    const lateRadio = document.querySelector(`input[name="attendance_${studentId}"][value="Late"]`);
+    if (lateRadio) {
+        lateRadio.checked = true;
+        updateAttendanceFields(studentId, 'Late');
+        updateStats();
+    }
+}
+
+function markAllPresent() {
+    const presentRadios = document.querySelectorAll('input[type="radio"][value="Present"]');
+    presentRadios.forEach(radio => {
+        radio.checked = true;
+        // Extract student ID from radio ID
+        const studentId = radio.id.replace('present_', '');
+        updateAttendanceFields(studentId, 'Present');
+    });
+    updateStats();
+}
+
+function clearAll() {
+    const allRadios = document.querySelectorAll('input[type="radio"]');
+    const allInputs = document.querySelectorAll('.attendance-notes, .time-input, .hours-input');
+    
+    allRadios.forEach(radio => {
+        radio.checked = false;
+    });
+    
+    allInputs.forEach(input => {
+        input.value = '';
+        input.disabled = false;
+        input.removeAttribute('required');
+    });
+    
+    // Remove all visual status classes
+    const studentRows = document.querySelectorAll('tr[data-student-id]');
+    studentRows.forEach(row => {
+        row.classList.remove('student-present', 'student-absent', 'student-late', 'student-excused');
+    });
+    
+    updateStats();
+}
+
+function autoFillBatchTimings() {
+    if (!BATCH_TIMINGS.checkinTime || !BATCH_TIMINGS.checkoutTime) {
+        alert('Batch timings are not configured. Please set check-in and check-out times for this batch.');
+        return;
+    }
+    
+    let filledCount = 0;
+    const checkInFields = document.querySelectorAll('.check-in-time');
+    const checkOutFields = document.querySelectorAll('.check-out-time');
+    
+    // Fill check-in times
+    checkInFields.forEach(field => {
+        if (!field.value && !field.disabled) {
+            field.value = BATCH_TIMINGS.checkinTime;
+            field.setAttribute('data-auto-filled', 'true');
+            setTimeout(() => field.removeAttribute('data-auto-filled'), 3000);
+            filledCount++;
+        }
+    });
+    
+    // Fill check-out times
+    checkOutFields.forEach(field => {
+        if (!field.value && !field.disabled) {
+            field.value = BATCH_TIMINGS.checkoutTime;
+            field.setAttribute('data-auto-filled', 'true');
+            setTimeout(() => field.removeAttribute('data-auto-filled'), 3000);
+            filledCount++;
+        }
+    });
+    
+    if (filledCount > 0) {
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.innerHTML = `
+            <i class="fas fa-check-circle text-success"></i>
+            Auto-filled ${filledCount} time fields with batch timings
+        `;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 10px 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            font-size: 14px;
+        `;
+        
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
+        
+        // Re-calculate late minutes for all students
+        checkInFields.forEach(field => {
+            const studentId = field.getAttribute('data-student-id');
+            const currentStatus = document.querySelector(`input[name="attendance_${studentId}"]:checked`)?.value;
+            
+            if (field.value && BATCH_TIMINGS.checkinTime && (currentStatus === 'Present' || currentStatus === 'Late')) {
+                const lateMinutes = calculateLateMinutes(BATCH_TIMINGS.checkinTime, field.value);
+                const lateMinutesField = document.querySelector(`input[name="late_minutes_${studentId}"]`);
+                
+                if (lateMinutes > 0 && lateMinutesField) {
+                    lateMinutesField.value = lateMinutes;
+                    if (currentStatus === 'Present') {
+                        showLateTimeAlert(studentId, lateMinutes);
+                    }
+                } else if (lateMinutesField) {
+                    lateMinutesField.value = '';
+                }
+            }
+        });
+    } else {
+        alert('No empty time fields found to fill.');
+    }
+}
+
+function copyPreviousDay() {
+    // This would need to be implemented with AJAX to fetch previous day's attendance
+    alert('Copy previous day functionality would fetch and apply previous attendance data');
+}
+
+// Form submission handling with business logic validation
+document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+    const saveBtn = document.getElementById('saveBtn');
+    const changeReasonField = document.getElementById('change_reason');
+    
+    // Validate business logic before submission
+    let hasErrors = false;
+    const errors = [];
+    
+    // Check each student's attendance
+    const studentRows = document.querySelectorAll('tr[data-student-id]');
+    studentRows.forEach(row => {
+        const studentId = row.dataset.studentId;
+        const checkedStatus = document.querySelector(`input[name="attendance_${studentId}"]:checked`);
+        
+        if (checkedStatus) {
+            const status = checkedStatus.value;
+            const checkInField = document.querySelector(`input[name="check_in_${studentId}"]`);
+            const checkOutField = document.querySelector(`input[name="check_out_${studentId}"]`);
+            
+            // Business rule: Present/Late students must have check-in time
+            if ((status === 'Present' || status === 'Late') && !checkInField.value) {
+                errors.push(`${studentId}: Check-in time is required for ${status.toLowerCase()} students`);
+                hasErrors = true;
+            }
+            
+            // Business rule: Present/Late students should have check-out time
+            if ((status === 'Present' || status === 'Late') && !checkOutField.value) {
+                // This is a warning, not an error - allow but warn
+                console.warn(`${studentId}: No check-out time provided for ${status.toLowerCase()} student`);
+            }
+        }
+    });
+    
+    if (hasErrors) {
+        e.preventDefault();
+        alert('Please fix the following errors:\n\n' + errors.join('\n'));
+        return false;
+    }
+    
+    // Check if editing existing attendance and reason is required
+    if (changeReasonField && changeReasonField.hasAttribute('required')) {
+        const reason = changeReasonField.value.trim();
+        if (!reason) {
+            e.preventDefault();
+            alert('Please provide a reason for the attendance changes. This is required for audit purposes.');
+            changeReasonField.focus();
+            return false;
+        }
+        
+        if (reason.length < 10) {
+            e.preventDefault();
+            alert('Please provide a more detailed reason (at least 10 characters) for the attendance changes.');
+            changeReasonField.focus();
+            return false;
+        }
+    }
+    
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving & Logging Changes...';
+});
+
+// Initialize attendance fields on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateStats();
+    
+    // Initialize business logic for existing attendance records
+    const checkedRadios = document.querySelectorAll('input[type="radio"]:checked');
+    checkedRadios.forEach(radio => {
+        const studentId = radio.id.replace(/^(present|absent|late|excused)_/, '');
+        updateAttendanceFields(studentId, radio.value);
+    });
+    
+    // Enhanced radio button visual feedback
+    const radioGroups = document.querySelectorAll('.status-radio-group');
+    radioGroups.forEach(group => {
+        const radios = group.querySelectorAll('input[type="radio"]');
+        const labels = group.querySelectorAll('.status-radio-label');
+        
+        radios.forEach((radio, index) => {
+            radio.addEventListener('change', function() {
+                // Remove active state from all labels in this group
+                labels.forEach(label => label.classList.remove('active'));
+                
+                // Add active state to selected label
+                if (this.checked) {
+                    labels[index].classList.add('active');
+                }
+            });
+            
+            // Set initial state if radio is checked
+            if (radio.checked) {
+                labels[index].classList.add('active');
+            }
+        });
+    });
+});
+</script>
+
+<style>
+/* Business Logic Visual Feedback Styles */
+.student-present {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+    border-left: 4px solid #28a745;
+}
+
+.student-absent {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    border-left: 4px solid #dc3545;
+}
+
+.student-late {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    border-left: 4px solid #ffc107;
+}
+
+.student-excused {
+    background-color: rgba(23, 162, 184, 0.1) !important;
+    border-left: 4px solid #17a2b8;
+}
+
+/* Disabled field styling */
+input:disabled {
+    background-color: #f8f9fa !important;
+    color: #6c757d !important;
+    cursor: not-allowed;
+}
+
+/* Enhanced status label styling */
+.status-radio-label.active {
+    background-color: var(--status-color, #007bff);
+    color: white;
+    border-color: var(--status-color, #007bff);
+}
+
+.status-radio-label.present.active {
+    --status-color: #28a745;
+}
+
+.status-radio-label.absent.active {
+    --status-color: #dc3545;
+}
+
+.status-radio-label.late.active {
+    --status-color: #ffc107;
+    color: #212529;
+}
+
+.status-radio-label.excused.active {
+    --status-color: #17a2b8;
+}
+
+/* Placeholder text styling for different states */
+input[placeholder*="Reason for absence"] {
+    border-left: 3px solid #dc3545;
+}
+
+input[placeholder*="Reason for excused absence"] {
+    border-left: 3px solid #17a2b8;
+}
+
+input[placeholder*="Reason for being late"] {
+    border-left: 3px solid #ffc107;
+}
+
+/* Late time alert notification styling */
+.late-time-alert {
+    animation: slideInRight 0.3s ease-out;
+}
+
+.late-time-alert a {
+    color: #856404;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.late-time-alert a:hover {
+    color: #533f03;
+    text-decoration: none;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Enhanced time input styling for better UX */
+.time-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.time-input[data-auto-filled="true"] {
+    background-color: #e7f3ff;
+    border-color: #007bff;
+}
+
+/* Batch timing info card styling */
+.batch-timing-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.batch-timing-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.batch-timing-tooltip {
+    margin-left: auto;
+    opacity: 0.8;
+    cursor: help;
+}
+
+.batch-timing-details {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.timing-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.timing-item i {
+    width: 16px;
+    text-align: center;
+    opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .batch-timing-details {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Batch status warning styling */
+.batch-status-warning {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    animation: pulse 2s infinite;
+}
+
+.status-warning-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.status-warning-details {
+    font-size: 14px;
+    line-height: 1.4;
+    opacity: 0.95;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); }
+    50% { box-shadow: 0 4px 20px rgba(255, 107, 107, 0.5); }
+    100% { box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); }
+}
+
+/* Date input validation styling */
+input[type="date"]:invalid {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+input[type="date"]:invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Form disabled overlay styling */
+.form-disabled-overlay {
+    position: relative;
+}
+
+.form-disabled-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    border: 2px solid #dc3545;
+}
+
+.form-disabled-message i {
+    font-size: 3rem;
+    color: #dc3545;
+    margin-bottom: 15px;
+}
+
+.form-disabled-message h5 {
+    color: #dc3545;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.form-disabled-message p {
+    color: #6c757d;
+    margin: 0;
+    font-size: 14px;
+}
+</style>
+{% endblock %}

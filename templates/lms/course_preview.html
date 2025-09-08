@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+
+{% block title %}Course Preview - {{ course.course_name }} - Global IT{% endblock %}
+
+{% block extra_css %}
+<style>
+    .course-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .student-card {
+        border-left: 4px solid #28a745;
+    }
+    
+    .content-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .module-item {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        transition: background-color 0.2s ease;
+    }
+    
+    .module-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .badge-custom {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Back Navigation -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('lms.admin_dashboard') }}">
+                            <i class="fas fa-arrow-left me-2"></i>LMS Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">Course Preview</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Course Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="course-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2 class="mb-2">
+                            <i class="fas fa-book-open me-3"></i>{{ course.course_name }}
+                        </h2>
+                        <p class="mb-3 opacity-75">
+                            {% if course.description %}
+                                {{ course.description }}
+                            {% else %}
+                                Professional course designed to enhance your skills and knowledge.
+                            {% endif %}
+                        </p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-clock me-1"></i>Duration: {{ course.duration or 'Variable' }}
+                            </span>
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-users me-1"></i>Students: {{ enrolled_students|length }}
+                            </span>
+                            {% if course.moodle_course_id %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>LMS Enabled
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        {% if role in ['admin', 'super_admin'] and course.moodle_course_id %}
+                            <a href="{{ moodle_url }}/course/view.php?id={{ course.moodle_course_id }}" 
+                               target="_blank" 
+                               class="btn btn-light btn-lg">
+                                <i class="fas fa-external-link-alt me-2"></i>Admin: Open in Moodle
+                            </a>
+                        {% elif role in ['franchise', 'branch_manager'] %}
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Franchise View:</strong> Manage your students through the ERP system
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card info-card h-100">
+                <div class="card-body text-center">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <h4 class="card-title">{{ enrolled_students|length }}</h4>
+                    <p class="card-text text-muted">Enrolled Students</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card info-card h-100">
+                <div class="card-body text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <h4 class="card-title">
+                        {{ enrolled_students|selectattr('status', 'equalto', 'Active')|list|length }}
+                    </h4>
+                    <p class="card-text text-muted">Active Students</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card info-card h-100">
+                <div class="card-body text-center">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-graduation-cap fa-2x"></i>
+                    </div>
+                    <h4 class="card-title">
+                        {{ enrolled_students|selectattr('moodle_synced', 'equalto', 1)|list|length }}
+                    </h4>
+                    <p class="card-text text-muted">LMS Synced</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card info-card h-100">
+                <div class="card-body text-center">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <h4 class="card-title">{{ course.duration or 'N/A' }}</h4>
+                    <p class="card-text text-muted">Course Duration</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Content & Enrolled Students -->
+    <div class="row">
+        <!-- Course Content Section -->
+        <div class="col-lg-8">
+            <div class="card info-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list-alt me-2"></i>Course Content Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if course_contents %}
+                        {% for section in course_contents %}
+                            <div class="content-section">
+                                <h6 class="fw-bold text-primary">
+                                    <i class="fas fa-folder me-2"></i>{{ section.name or 'Section ' + loop.index|string }}
+                                </h6>
+                                
+                                {% if section.modules %}
+                                    {% for module in section.modules %}
+                                        <div class="module-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fas fa-file me-2 text-secondary"></i>
+                                                    <span>{{ module.name }}</span>
+                                                </div>
+                                                <span class="badge badge-custom bg-secondary">
+                                                    {{ module.modname|title if module.modname else 'Resource' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-info-circle me-1"></i>Content details will be available once students access the course.
+                                    </p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">Course Content Preview</h6>
+                            <p class="text-muted">
+                                {% if course.moodle_course_id %}
+                                    Course content is available in the LMS. Students can access detailed materials after enrollment.
+                                {% else %}
+                                    This course is not yet synced to the LMS. 
+                                    <a href="{{ url_for('lms.sync_course_to_moodle', course_id=course.id) }}" class="btn btn-sm btn-outline-primary ms-2">
+                                        Sync to LMS
+                                    </a>
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Enrolled Students Section -->
+        <div class="col-lg-4">
+            <div class="card info-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Enrolled Students
+                        {% if role in ['franchise', 'branch_manager'] %}
+                            <small class="text-muted">(Your Branch)</small>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if enrolled_students %}
+                        <div class="list-group list-group-flush">
+                            {% for student in enrolled_students[:10] %}
+                                <div class="list-group-item student-card border-0 mb-2 rounded">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ student.full_name }}</h6>
+                                            <small class="text-muted">ID: {{ student.student_id }}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            {% if student.moodle_synced %}
+                                                <span class="badge bg-success badge-custom">LMS Synced</span>
+                                            {% else %}
+                                                <span class="badge bg-warning badge-custom">Pending Sync</span>
+                                            {% endif %}
+                                            <br>
+                                            <small class="text-muted">{{ student.status }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            
+                            {% if enrolled_students|length > 10 %}
+                                <div class="text-center mt-3">
+                                    <small class="text-muted">
+                                        ... and {{ enrolled_students|length - 10 }} more students
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if role in ['admin', 'super_admin', 'franchise', 'branch_manager'] %}
+                            <div class="mt-3 text-center">
+                                <a href="{{ url_for('students.list_students', course_id=course.id) }}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-list me-1"></i>View Course Students
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-user-plus fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">No students enrolled yet.</p>
+                            {% if role in ['admin', 'super_admin', 'franchise', 'branch_manager'] %}
+                                <a href="{{ url_for('students.register_student') }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i>Add Students
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    {% if role in ['admin', 'super_admin', 'franchise', 'branch_manager'] %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card info-card">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-cogs me-2"></i>Course Management Actions
+                    </h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if not course.moodle_course_id %}
+                            <a href="{{ url_for('lms.sync_course_to_moodle', course_id=course.id) }}" 
+                               class="btn btn-success btn-sm">
+                                <i class="fas fa-sync me-1"></i>Sync Course to LMS
+                            </a>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('lms.course_management') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-list me-1"></i>Course Management
+                        </a>
+                        
+                        {% if enrolled_students %}
+                            <button onclick="syncAllStudentsInCourse({{ course.id }})" class="btn btn-info btn-sm">
+                                <i class="fas fa-users-cog me-1"></i>Sync All Students
+                            </button>
+                        {% endif %}
+                        
+                        {% if role in ['admin', 'super_admin'] and course.moodle_course_id %}
+                            <a href="{{ moodle_url }}/course/view.php?id={{ course.moodle_course_id }}" 
+                               target="_blank" 
+                               class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-external-link-alt me-1"></i>Admin: Open in Moodle
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function syncAllStudentsInCourse(courseId) {
+    if (!confirm('This will sync all students in this course to the LMS. Continue?')) {
+        return;
+    }
+    
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Syncing...';
+    button.disabled = true;
+    
+    // Make API call to sync all students
+    fetch(`/lms/sync/course/${courseId}/students`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Successfully synced ${data.synced_count} students to LMS!`);
+            location.reload(); // Refresh to show updated sync status
+        } else {
+            alert(`Sync failed: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Sync failed. Please try again.');
+    })
+    .finally(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Content Management{% endblock %} - Global IT LMS</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        .sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar .nav-link {
+            color: white;
+            border-radius: 10px;
+            margin: 5px 15px;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            transform: translateX(5px);
+        }
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
+        .content-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-radius: 15px;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: none;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn {
+            border-radius: 10px;
+        }
+        .upload-zone {
+            border: 2px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .upload-zone:hover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+        .progress {
+            border-radius: 10px;
+        }
+        .badge {
+            border-radius: 20px;
+        }
+        .workflow-stage {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .stage-draft { background: #ffeaa7; color: #fdcb6e; }
+        .stage-review { background: #74b9ff; color: #0984e3; }
+        .stage-approved { background: #55a3ff; color: #0984e3; }
+        .stage-published { background: #00b894; color: #00a085; }
+        .stage-rejected { background: #fd79a8; color: #e84393; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0">
+                <div class="sidebar">
+                    <div class="p-3">
+                        <h4 class="text-white mb-4">
+                            <i class="fas fa-cogs me-2"></i>Content Management
+                        </h4>
+                        <nav class="nav flex-column">
+                            <a class="nav-link {% if request.endpoint == 'lms_content_management.dashboard' %}active{% endif %}" 
+                               href="{{ url_for('lms_content_management.dashboard') }}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                            <a class="nav-link {% if 'video' in request.endpoint %}active{% endif %}" 
+                               href="{{ url_for('lms_content_management.video_list') }}">
+                                <i class="fas fa-video me-2"></i>Videos
+                            </a>
+                            <a class="nav-link {% if 'document' in request.endpoint %}active{% endif %}" 
+                               href="{{ url_for('lms_content_management.document_list') }}">
+                                <i class="fas fa-file-alt me-2"></i>Documents
+                            </a>
+                            <a class="nav-link {% if 'quiz' in request.endpoint %}active{% endif %}" 
+                               href="{{ url_for('lms_content_management.quiz_list') }}">
+                                <i class="fas fa-question-circle me-2"></i>Quizzes
+                            </a>
+                            <a class="nav-link {% if 'assignment' in request.endpoint %}active{% endif %}" 
+                               href="{{ url_for('lms_content_management.assignment_list') }}">
+                                <i class="fas fa-tasks me-2"></i>Assignments
+                            </a>
+                            <a class="nav-link {% if 'workflow' in request.endpoint %}active{% endif %}" 
+                               href="{{ url_for('lms_content_management.workflow_list') }}">
+                                <i class="fas fa-route me-2"></i>Workflows
+                            </a>
+                            <a class="nav-link {% if 'settings' in request.endpoint %}active{% endif %}" 
+                               href="{{ url_for('lms_content_management.content_settings') }}">
+                                <i class="fas fa-cog me-2"></i>Settings
+                            </a>
+                            <hr class="my-3" style="border-color: rgba(255,255,255,0.3);">
+                            <a class="nav-link" href="{{ url_for('index') }}">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Main
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10">
+                <div class="p-4">
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Page Header -->
+                    <div class="content-header">
+                        <div class="container-fluid">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h1 class="m-0">
+                                        <i class="{% block page_icon %}fas fa-cogs{% endblock %} me-3"></i>
+                                        {% block page_title %}Content Management{% endblock %}
+                                    </h1>
+                                    <p class="mb-0 opacity-75">{% block page_description %}Manage content uploads and approvals{% endblock %}</p>
+                                </div>
+                                <div class="col-auto">
+                                    {% block header_actions %}{% endblock %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Page Content -->
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <script>
+        // Common JavaScript functions
+        function showWorkflowStage(stage) {
+            const stages = {
+                'draft': { class: 'stage-draft', icon: 'fas fa-edit', text: 'Draft' },
+                'review': { class: 'stage-review', icon: 'fas fa-eye', text: 'Under Review' },
+                'approved': { class: 'stage-approved', icon: 'fas fa-check', text: 'Approved' },
+                'published': { class: 'stage-published', icon: 'fas fa-globe', text: 'Published' },
+                'rejected': { class: 'stage-rejected', icon: 'fas fa-times', text: 'Rejected' }
+            };
+            
+            const stageInfo = stages[stage] || stages['draft'];
+            return `<span class="workflow-stage ${stageInfo.class}">
+                        <i class="${stageInfo.icon} me-1"></i>${stageInfo.text}
+                    </span>`;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showToast(message, type = 'success') {
+            const toastHtml = `
+                <div class="toast align-items-center text-bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            const toast = new bootstrap.Toast(toastContainer.lastElementChild);
+            toast.show();
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            document.body.appendChild(container);
+            return container;
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

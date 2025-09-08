@@ -1,0 +1,50 @@
+:root{--sidebar-width:260px; --sidebar-collapsed-width:70px}
+.sidebar{
+  position:fixed; top:0; left:0; height:100vh; width:var(--sidebar-width);
+  background:var(--gradient-primary); color:#fff; transition:.3s all; z-index:1000; overflow-y:auto
+}
+.sidebar.collapsed{width:var(--sidebar-collapsed-width)}
+.sidebar-header{padding:var(--space-xl) var(--space-md); text-align:center}
+.sidebar-header .brand{color:#fff; font-weight:var(--font-bold); font-size:var(--text-xl); text-decoration:none}
+.brand-subtitle{color:rgba(255,255,255,.9); font-size:var(--text-sm)}
+.sidebar-menu{padding:var(--space-md) 0}
+.menu-section{margin-bottom:var(--space-sm)}
+.menu-section-header{
+  display:flex; justify-content:space-between; align-items:center; padding:.6rem .9rem;
+  margin:0 .5rem; border-radius:var(--radius-md); background:rgba(255,255,255,.08); cursor:pointer
+}
+.menu-section-title{color:#fff; font-size:var(--text-sm); text-transform:uppercase; letter-spacing:.5px; font-weight:var(--font-semibold)}
+.section-toggle{color:#fff; transition:.3s transform}
+.section-toggle.rotated{transform:rotate(180deg)}
+.menu-items{max-height:0; overflow:hidden; transition:max-height .3s}
+.menu-items.show{max-height:500px}
+.menu-link{
+  display:flex; align-items:center; gap:.75rem; color:#fff; text-decoration:none;
+  padding:.6rem .9rem; margin:0 .5rem; border-radius:var(--radius-md); transition:.2s
+}
+.menu-link i{width:20px; text-align:center}
+.menu-link:hover{background:rgba(255,255,255,.12)}
+.menu-link.active{background:rgba(255,255,255,.22); border-left:3px solid #fff}
+.sidebar.collapsed .menu-link span,.sidebar.collapsed .brand-subtitle,.sidebar.collapsed .menu-section-title,.sidebar.collapsed .section-toggle{display:none}
+.sidebar.collapsed .menu-link{justify-content:center; padding:.6rem}
+.sidebar-overlay{display:none}
+@media (max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .sidebar-overlay{position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:999; display:none}
+  .sidebar-overlay.show{display:block}
+}
+/* Content layout relative to sidebar */
+.main-content{
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  transition: margin-left .3s ease;
+}
+
+.sidebar.collapsed + .main-content{
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+@media (max-width:768px){
+  .main-content{ margin-left: 0; }
+}

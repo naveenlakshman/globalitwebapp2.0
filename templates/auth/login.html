@@ -1,0 +1,176 @@
+{% extends 'auth_base.html' %}
+
+{% block title %}Login | Global IT Education{% endblock %}
+
+{% block header_title %}Global IT Education{% endblock %}
+{% block header_subtitle %}Student Management System - Login{% endblock %}
+
+{% block content %}
+<form method="POST" action="/auth/login" novalidate aria-label="Login form">
+    <div class="mb-3">
+        <label for="username" class="form-label">
+            <i class="bi bi-person" aria-hidden="true"></i>Username
+        </label>
+        <input type="text" 
+               name="username" 
+               id="username" 
+               class="form-control" 
+               placeholder="Enter your username" 
+               required 
+               autocomplete="username"
+               aria-describedby="username-help">
+        <div id="username-help" class="visually-hidden">Enter your assigned username to access the system</div>
+    </div>
+    
+    <div class="mb-4">
+        <label for="password" class="form-label">
+            <i class="bi bi-lock" aria-hidden="true"></i>Password
+        </label>
+        <div class="input-group">
+            <input type="password" 
+                   name="password" 
+                   id="password" 
+                   class="form-control" 
+                   placeholder="Enter your password" 
+                   required 
+                   autocomplete="current-password"
+                   aria-describedby="password-help password-toggle">
+            <button type="button" 
+                    class="btn btn-outline-secondary password-toggle-btn" 
+                    id="password-toggle"
+                    aria-label="Toggle password visibility"
+                    tabindex="0">
+                <i class="bi bi-eye" id="password-toggle-icon" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div id="password-help" class="visually-hidden">Enter your password to authenticate</div>
+    </div>
+    
+    <div class="d-grid mb-4">
+        <button type="submit" class="btn btn-auth" aria-describedby="signin-help">
+            <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+            Sign In
+        </button>
+        <div id="signin-help" class="visually-hidden">Click to sign in to your account</div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Enhanced form validation and UX
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const usernameField = document.getElementById('username');
+    const passwordField = document.getElementById('password');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const passwordToggle = document.getElementById('password-toggle');
+    const passwordToggleIcon = document.getElementById('password-toggle-icon');
+    
+    // Password visibility toggle functionality
+    if (passwordToggle && passwordToggleIcon && passwordField) {
+        passwordToggle.addEventListener('click', function() {
+            const isPassword = passwordField.type === 'password';
+            
+            // Toggle password field type
+            passwordField.type = isPassword ? 'text' : 'password';
+            
+            // Toggle icon
+            passwordToggleIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+            
+            // Update aria-label for accessibility
+            passwordToggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+            
+            // Announce change to screen readers
+            const announcement = document.createElement('div');
+            announcement.className = 'sr-only';
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.textContent = isPassword ? 'Password is now visible' : 'Password is now hidden';
+            document.body.appendChild(announcement);
+            
+            // Remove announcement after screen reader reads it
+            setTimeout(() => {
+                if (announcement.parentNode) {
+                    announcement.remove();
+                }
+            }, 1000);
+            
+            // Keep focus on password field
+            passwordField.focus();
+        });
+        
+        // Handle keyboard navigation for password toggle
+        passwordToggle.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                passwordToggle.click();
+            }
+        });
+    }
+    
+    // Real-time form validation
+    function validateForm() {
+        const isValid = usernameField.value.trim() !== '' && passwordField.value.trim() !== '';
+        submitBtn.disabled = !isValid;
+        
+        if (isValid) {
+            submitBtn.classList.remove('opacity-50');
+            submitBtn.setAttribute('aria-describedby', 'signin-help');
+        } else {
+            submitBtn.classList.add('opacity-50');
+            submitBtn.setAttribute('aria-describedby', 'signin-disabled-help');
+        }
+        
+        return isValid;
+    }
+    
+    // Add validation listeners
+    usernameField.addEventListener('input', validateForm);
+    passwordField.addEventListener('input', validateForm);
+    
+    // Initial validation
+    validateForm();
+    
+    // Form submission handling
+    form.addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+            
+            // Focus on first empty field
+            if (usernameField.value.trim() === '') {
+                usernameField.focus();
+            } else if (passwordField.value.trim() === '') {
+                passwordField.focus();
+            }
+            
+            // Show error message
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'alert alert-danger mt-2';
+            errorMsg.setAttribute('role', 'alert');
+            errorMsg.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Please enter both username and password.';
+            
+            const existingError = form.querySelector('.alert-danger');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            form.appendChild(errorMsg);
+            
+            setTimeout(() => {
+                if (errorMsg.parentNode) {
+                    errorMsg.remove();
+                }
+            }, 5000);
+        }
+    });
+    
+    // Add loading state on form submission
+    form.addEventListener('submit', function() {
+        if (validateForm()) {
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Signing In...';
+            submitBtn.disabled = true;
+        }
+    });
+});
+</script>
+{% endblock %}

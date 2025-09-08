@@ -1,0 +1,472 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Registration - Global IT{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="student-registration-card card">
+      <div class="student-registration-header">
+        <h4><i class="fas fa-user-plus"></i> Student Registration Form</h4>
+      </div>
+      <div class="student-registration-body">
+        <form method="POST" action="/students/register" enctype="multipart/form-data" id="studentForm">
+          
+          <!-- Personal Information Section -->
+          <div class="form-section">
+            <h5 class="form-section-title">
+              <i class="fas fa-user"></i> Personal Information
+            </h5>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label form-label-required">Full Name <span class="text-danger">*</span></label>
+              <input type="text" name="full_name" class="form-control" required placeholder="Enter full name">
+              <div class="form-help-text">As per official documents</div>
+            </div>
+            
+            <div class="col-md-3">
+              <label class="form-label form-label-required">Gender <span class="text-danger">*</span></label>
+              <select name="gender" class="form-select" required>
+                <option value="" disabled selected>Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            
+            <div class="col-md-3">
+              <label class="form-label form-label-required">Date of Birth <span class="text-danger">*</span></label>
+              <input type="date" name="dob" class="form-control" required id="dobInput">
+              <div class="form-help-text">Age must be between 8-50 years</div>
+            </div>
+          </div>
+
+          <!-- Contact Information Section -->
+          <div class="form-section">
+            <h5 class="form-section-title">
+              <i class="fas fa-phone"></i> Contact Information
+            </h5>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label form-label-required">Mobile Number <span class="text-danger">*</span></label>
+              <input type="tel" name="mobile" class="form-control" required pattern="[0-9]{10}" maxlength="10"
+                     placeholder="10-digit mobile number" title="Enter valid 10-digit mobile number">
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Email Address</label>
+              <input type="email" name="email" class="form-control" placeholder="example@email.com">
+              <div class="form-help-text">Optional - for course updates</div>
+            </div>
+            
+            <div class="col-12">
+              <label class="form-label form-label-required">Complete Address <span class="text-danger">*</span></label>
+              <textarea name="address" class="form-control" rows="3" required 
+                        placeholder="Enter complete address with city, state, pincode"></textarea>
+            </div>
+          </div>
+
+          <!-- Academic Information Section -->
+          <div class="form-section">
+            <h5 class="form-section-title">
+              <i class="fas fa-graduation-cap"></i> Academic Information
+            </h5>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            {% if user_branch_id %}
+              <!-- Branch is pre-determined from user login -->
+              <input type="hidden" name="branch_id" value="{{ user_branch_id }}" id="hiddenBranchId">
+              <div class="col-12 mb-3">
+                <div class="branch-info-alert alert">
+                  <i class="fas fa-map-marker-alt me-2"></i>
+                  <strong>Registering for:</strong> {{ branch_name }}
+                  <small class="text-muted ms-2">(Auto-selected based on your login)</small>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <label class="form-label form-label-required">Select Batch <span class="text-danger">*</span></label>
+                <select name="batch_id" class="form-select" required id="batchSelect">
+                  <option value="" disabled selected>Choose your batch</option>
+                  {% for batch in batches %}
+                  <option value="{{ batch.id }}" data-course="{{ batch.course_name }}">
+                    {{ batch.name }} - {{ batch.course_name }}
+                  </option>
+                  {% endfor %}
+                </select>
+                <div class="form-help-text">Available batches for your branch</div>
+              </div>
+              
+              <div class="col-md-6">
+                <label class="form-label">Course</label>
+                <input type="text" id="courseDisplay" class="form-control" readonly placeholder="Will be auto-filled">
+              </div>
+            {% else %}
+              <!-- Corporate admin - show branch selection -->
+              <div class="col-md-4">
+                <label class="form-label form-label-required">Select Branch <span class="text-danger">*</span></label>
+                <select name="branch_id" class="form-select" required id="branchSelect">
+                  <option value="" disabled selected>Choose your branch</option>
+                  {% for branch in branches %}
+                  <option value="{{ branch.id }}">{{ branch.branch_name }}</option>
+                  {% endfor %}
+                </select>
+                <div class="form-help-text">Select franchise location</div>
+              </div>
+              
+              <div class="col-md-4">
+                <label class="form-label form-label-required">Select Batch <span class="text-danger">*</span></label>
+                <select name="batch_id" class="form-select" required id="batchSelect" disabled>
+                  <option value="" disabled selected>First select a branch</option>
+                </select>
+                <div class="form-help-text">Course will be auto-filled based on batch selection</div>
+              </div>
+              
+              <div class="col-md-4">
+                <label class="form-label">Course</label>
+                <input type="text" id="courseDisplay" class="form-control" readonly placeholder="Will be auto-filled">
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Guardian/Family Information Section -->
+          <div class="form-section">
+            <h5 class="form-section-title">
+              <i class="fas fa-users"></i> Guardian Information
+            </h5>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label form-label-required">Guardian/Parent Name <span class="text-danger">*</span></label>
+              <input type="text" name="guardian_name" class="form-control" required 
+                     placeholder="Father/Mother/Guardian name">
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Guardian Mobile</label>
+              <input type="tel" name="guardian_mobile" class="form-control" pattern="[0-9]{10}" maxlength="10"
+                     placeholder="Guardian's mobile number">
+              <div class="form-help-text">Optional - for emergency contact</div>
+            </div>
+          </div>
+
+          <!-- Admission Details Section -->
+          <div class="form-section">
+            <h5 class="form-section-title">
+              <i class="fas fa-clipboard-check"></i> Admission Details
+            </h5>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <label class="form-label form-label-required">Admission Mode <span class="text-danger">*</span></label>
+              <select name="admission_mode" class="form-select" required>
+                <option value="" disabled selected>How did you apply?</option>
+                <option value="Walk-in">Walk-in</option>
+                <option value="Online">Online Application</option>
+                <option value="Phone">Phone Inquiry</option>
+                <option value="Counselor">Through Counselor</option>
+              </select>
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label">How did you hear about us?</label>
+              <select name="referred_by" class="form-select">
+                <option value="">Select source</option>
+                <option value="Google Search">Google Search</option>
+                <option value="Facebook">Facebook</option>
+                <option value="Instagram">Instagram</option>
+                <option value="Friend/Family">Friend/Family Referral</option>
+                <option value="Newspaper">Newspaper Ad</option>
+                <option value="Banner">Banner/Hoarding</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label form-label-required">Lead Source <span class="text-danger">*</span></label>
+              <select name="lead_source" class="form-select" required>
+                <option value="" disabled selected>How did they come to us?</option>
+                <option value="Walk-in" selected>Walk-in</option>
+                <option value="Referral">Referral</option>
+                <option value="Phone">Phone</option>
+                <option value="Instagram">Instagram</option>
+                <option value="Facebook">Facebook</option>
+                <option value="Google">Google</option>
+                <option value="College Visit">College Visit</option>
+                <option value="Tally">Tally</option>
+                <option value="Other">Other</option>
+              </select>
+              <div class="form-help-text">For lead tracking and analytics</div>
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label">Educational Qualification</label>
+              <select name="qualification" class="form-select">
+                <option value="">Select qualification</option>
+                <option value="10th Pass">10th Pass</option>
+                <option value="12th Pass">12th Pass</option>
+                <option value="Graduate">Graduate</option>
+                <option value="Post Graduate">Post Graduate</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Lead Tracking Options -->
+          <div class="row g-3 mb-4">
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="createAutoLead" name="create_auto_lead" checked>
+                <label class="form-check-label" for="createAutoLead">
+                  <strong>🎯 Auto-Create Lead Record</strong>
+                </label>
+                <div class="form-help-text mt-1">
+                  <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <strong>Recommended:</strong> This will automatically create a "Converted" lead record for this direct admission. 
+                    This ensures complete lead tracking and maintains your lead-to-conversion analytics.
+                    The lead will be marked as "Closed Won" with admission date as conversion date.
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+              </select>
+            </div>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label form-label-required">Student Status <span class="text-danger">*</span></label>
+              <select name="status" class="form-select" required>
+                <option value="Active" selected>Active - Currently enrolled and attending classes</option>
+                <option value="Hold">Hold - Temporarily paused (fees pending, personal reasons, etc.)</option>
+                <option value="Inactive">Inactive - Not attending for a longer period</option>
+                <option value="Dropout">Dropout - Officially left/discontinued</option>
+                <option value="Completed">Completed - Successfully finished the course</option>
+              </select>
+              <div class="form-help-text">Current enrollment status of the student</div>
+            </div>
+          </div>
+
+          <!-- Documents Section -->
+          <div class="form-section">
+            <h5 class="form-section-title">
+              <i class="fas fa-file-upload"></i> Documents Upload
+            </h5>
+          </div>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Profile Photo</label>
+              <input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png" onchange="validateFileSize(this)">
+              <div class="form-help-text">Max size: 5MB (JPG, JPEG, PNG only)</div>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">ID Proof</label>
+              <input type="file" name="id_proof" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+              <div class="form-help-text">Aadhar/Passport/Driving License (Optional)</div>
+            </div>
+          </div>
+
+          <!-- Submit Section -->
+          <div class="form-submit-section">
+            <div class="form-submit-actions">
+              <div class="form-required-note">
+                <small>
+                  <span class="text-danger">*</span> Required fields
+                </small>
+              </div>
+              <div class="form-actions">
+                <button type="reset" class="btn-reset btn">
+                  <i class="fas fa-undo"></i> Reset Form
+                </button>
+                <button type="submit" class="btn-submit btn">
+                  <i class="fas fa-check"></i> Register Student
+                </button>
+              </div>
+            </div>
+          </div>
+          
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Enhanced JavaScript -->
+<script>
+// Set dynamic date range for DOB (8-50 years old)
+document.addEventListener('DOMContentLoaded', function() {
+  const dobInput = document.getElementById('dobInput');
+  const today = new Date();
+  
+  // Maximum date: 8 years ago (minimum age 8)
+  const maxDate = new Date(today.getFullYear() - 8, today.getMonth(), today.getDate());
+  dobInput.max = maxDate.toISOString().split('T')[0];
+  
+  // Minimum date: 50 years ago (maximum age 50)
+  const minDate = new Date(today.getFullYear() - 50, today.getMonth(), today.getDate());
+  dobInput.min = minDate.toISOString().split('T')[0];
+});
+
+// File size validation (max 5MB)
+function validateFileSize(input) {
+  const file = input.files[0];
+  if (file && file.size > 5 * 1024 * 1024) {
+    alert("File size must be less than 5MB");
+    input.value = '';
+  }
+}
+
+// Auto-fill course based on batch selection and branch-based batch filtering
+document.addEventListener('DOMContentLoaded', function() {
+  const hiddenBranchId = document.getElementById('hiddenBranchId');
+  const branchSelect = document.getElementById('branchSelect');
+  
+  // If branch is pre-selected (franchise user), auto-load batches
+  if (hiddenBranchId) {
+    // Branch is pre-determined, batches are already loaded in template
+    console.log('Branch pre-selected:', hiddenBranchId.value);
+  } else if (branchSelect) {
+    // Corporate user - add branch change listener
+    branchSelect.addEventListener('change', function() {
+      loadBatchesForBranch(this.value);
+    });
+  }
+});
+
+function loadBatchesForBranch(branchId) {
+  const batchSelect = document.getElementById('batchSelect');
+  const courseDisplay = document.getElementById('courseDisplay');
+  
+  // Clear current batch and course selections
+  batchSelect.innerHTML = '<option value="" disabled selected>Loading batches...</option>';
+  courseDisplay.value = '';
+  batchSelect.disabled = true;
+  
+  if (branchId) {
+    // Fetch batches for selected branch via AJAX
+    fetch(`/students/api/batches?branch_id=${branchId}`)
+      .then(response => response.json())
+      .then(data => {
+        batchSelect.innerHTML = '<option value="" disabled selected>Choose your batch</option>';
+        
+        if (data.batches && data.batches.length > 0) {
+          data.batches.forEach(batch => {
+            const option = document.createElement('option');
+            option.value = batch.id;
+            option.textContent = `${batch.name} - ${batch.course_name}`;
+            option.setAttribute('data-course', batch.course_name);
+            batchSelect.appendChild(option);
+          });
+          batchSelect.disabled = false;
+        } else {
+          batchSelect.innerHTML = '<option value="" disabled>No batches available for this branch</option>';
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching batches:', error);
+        batchSelect.innerHTML = '<option value="" disabled>Error loading batches</option>';
+      });
+  }
+}
+
+document.getElementById('batchSelect').addEventListener('change', function() {
+  const selectedOption = this.options[this.selectedIndex];
+  const courseName = selectedOption.getAttribute('data-course');
+  document.getElementById('courseDisplay').value = courseName || '';
+});
+
+// Form validation
+document.getElementById('studentForm').addEventListener('submit', function(e) {
+  let isValid = true;
+  let errorMessages = [];
+
+  // Mobile number validation
+  const mobile = document.querySelector('input[name="mobile"]').value;
+  if (!/^\d{10}$/.test(mobile)) {
+    errorMessages.push("Mobile number must be exactly 10 digits");
+    isValid = false;
+  }
+
+  // Age validation (must be 8-50 years old)
+  const dob = document.querySelector('input[name="dob"]').value;
+  if (dob) {
+    const dobDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - dobDate.getFullYear();
+    const monthDiff = today.getMonth() - dobDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
+      age--;
+    }
+    
+    if (age < 8) {
+      errorMessages.push("Student must be at least 8 years old");
+      isValid = false;
+    }
+    
+    if (age > 50) {
+      errorMessages.push("Student must be 50 years old or younger");
+      isValid = false;
+    }
+    
+    if (dobDate >= today) {
+      errorMessages.push("Date of birth cannot be in the future");
+      isValid = false;
+    }
+  }
+
+  // Email validation (if provided)
+  const email = document.querySelector('input[name="email"]').value;
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errorMessages.push("Please enter a valid email address");
+    isValid = false;
+  }
+
+  // Show errors if any
+  if (!isValid) {
+    alert("Please fix the following errors:\n\n" + errorMessages.join("\n"));
+    e.preventDefault();
+  }
+});
+
+// Real-time mobile number formatting
+document.querySelectorAll('input[type="tel"]').forEach(function(input) {
+  input.addEventListener('input', function(e) {
+    // Remove non-digits
+    this.value = this.value.replace(/\D/g, '');
+    
+    // Limit to 10 digits
+    if (this.value.length > 10) {
+      this.value = this.value.slice(0, 10);
+    }
+  });
+});
+
+// Real-time name validation (no numbers)
+document.querySelectorAll('input[name="full_name"], input[name="guardian_name"]').forEach(function(input) {
+  input.addEventListener('input', function(e) {
+    this.value = this.value.replace(/[0-9]/g, '');
+  });
+});
+
+// Auto-capitalize names
+document.querySelectorAll('input[name="full_name"], input[name="guardian_name"]').forEach(function(input) {
+  input.addEventListener('blur', function(e) {
+    this.value = this.value.replace(/\b\w+/g, function(txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+  });
+});
+</script>
+{% endblock %}

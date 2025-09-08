@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+
+{% block title %}SMS Campaigns - Global IT Education{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">SMS Campaigns</h1>
+                    <p class="text-muted">Manage SMS marketing campaigns and broadcasts</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('sms.sms_dashboard') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+                        <i class="fas fa-plus me-2"></i>Create Campaign
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Stats -->
+    {% if campaigns %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4>{{ campaigns|selectattr('status', 'equalto', 'completed')|list|length }}</h4>
+                    <p class="mb-0">Completed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h4>{{ campaigns|selectattr('status', 'equalto', 'running')|list|length }}</h4>
+                    <p class="mb-0">Running</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h4>{{ campaigns|selectattr('status', 'equalto', 'scheduled')|list|length }}</h4>
+                    <p class="mb-0">Scheduled</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4>{{ campaigns|selectattr('status', 'equalto', 'draft')|list|length }}</h4>
+                    <p class="mb-0">Drafts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Campaigns List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bullhorn me-2"></i>SMS Campaigns
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if campaigns %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Campaign Name</th>
+                                    <th>Message/Template</th>
+                                    <th>Recipients</th>
+                                    <th>Status</th>
+                                    <th>Scheduled</th>
+                                    <th>Progress</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for campaign in campaigns %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ campaign.name }}</strong>
+                                        {% if campaign.description %}
+                                            <br><small class="text-muted">{{ campaign.description[:50] }}{% if campaign.description|length > 50 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if campaign.template %}
+                                            <span class="badge bg-secondary">Template: {{ campaign.template.name }}</span>
+                                        {% else %}
+                                            <div class="text-truncate" style="max-width: 200px;" title="{{ campaign.message }}">
+                                                {{ campaign.message }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ campaign.total_recipients or 0 }}</span>
+                                        {% if campaign.target_audience %}
+                                            <br><small class="text-muted">{{ campaign.target_audience.replace('_', ' ').title() }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if campaign.status == 'draft' %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-file-alt me-1"></i>Draft
+                                            </span>
+                                        {% elif campaign.status == 'scheduled' %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock me-1"></i>Scheduled
+                                            </span>
+                                        {% elif campaign.status == 'running' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-play me-1"></i>Running
+                                            </span>
+                                        {% elif campaign.status == 'completed' %}
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-check me-1"></i>Completed
+                                            </span>
+                                        {% elif campaign.status == 'paused' %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-pause me-1"></i>Paused
+                                            </span>
+                                        {% elif campaign.status == 'cancelled' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>Cancelled
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if campaign.scheduled_at %}
+                                            <small>{{ campaign.scheduled_at|format_datetime('%m/%d/%Y %H:%M') }}</small>
+                                        {% else %}
+                                            <small class="text-muted">Not scheduled</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if campaign.status in ['running', 'completed'] %}
+                                            <div class="progress" style="height: 8px;">
+                                                {% set progress = ((campaign.sent_count or 0) / (campaign.total_recipients or 1) * 100)|round %}
+                                                <div class="progress-bar" role="progressbar" style="width: {{ progress }}%"></div>
+                                            </div>
+                                            <small class="text-muted">{{ campaign.sent_count or 0 }}/{{ campaign.total_recipients or 0 }}</small>
+                                        {% else %}
+                                            <small class="text-muted">Not started</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ campaign.created_at|format_datetime('%m/%d/%Y') }}</small>
+                                        {% if campaign.created_by_user %}
+                                            <br><small class="text-muted">by {{ campaign.created_by_user.first_name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            {% if campaign.status == 'draft' %}
+                                            <button type="button" class="btn btn-outline-primary edit-campaign-btn" 
+                                                    data-campaign-id="{{ campaign.id }}" title="Edit Campaign">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success start-campaign-btn" 
+                                                    data-campaign-id="{{ campaign.id }}" title="Start Campaign">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            {% elif campaign.status == 'scheduled' %}
+                                            <button type="button" class="btn btn-outline-warning pause-campaign-btn" 
+                                                    data-campaign-id="{{ campaign.id }}" title="Cancel Schedule">
+                                                <i class="fas fa-pause"></i>
+                                            </button>
+                                            {% elif campaign.status == 'running' %}
+                                            <button type="button" class="btn btn-outline-warning pause-campaign-btn" 
+                                                    data-campaign-id="{{ campaign.id }}" title="Pause Campaign">
+                                                <i class="fas fa-pause"></i>
+                                            </button>
+                                            {% elif campaign.status == 'paused' %}
+                                            <button type="button" class="btn btn-outline-success resume-campaign-btn" 
+                                                    data-campaign-id="{{ campaign.id }}" title="Resume Campaign">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            {% endif %}
+                                            
+                                            <button type="button" class="btn btn-outline-info view-campaign-btn" 
+                                                    data-campaign-id="{{ campaign.id }}" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            
+                                            {% if campaign.status in ['draft', 'cancelled', 'completed'] %}
+                                            <button type="button" class="btn btn-outline-danger delete-campaign-btn" 
+                                                    data-campaign-id="{{ campaign.id }}" title="Delete Campaign">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No SMS campaigns created</h5>
+                        <p class="text-muted">Create campaigns to send targeted SMS messages to groups</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+                            Create Your First Campaign
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Campaign Modal -->
+<div class="modal fade" id="createCampaignModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create SMS Campaign</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createCampaignForm" method="POST">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="campaignName" class="form-label">Campaign Name</label>
+                                <input type="text" class="form-control" id="campaignName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="campaignPriority" class="form-label">Priority</label>
+                                <select class="form-select" id="campaignPriority" name="priority">
+                                    <option value="low">Low</option>
+                                    <option value="normal" selected>Normal</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="campaignDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="campaignDescription" name="description" rows="2" 
+                                  placeholder="Brief description of the campaign..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="targetAudience" class="form-label">Target Audience</label>
+                        <select class="form-select" id="targetAudience" name="target_audience" required>
+                            <option value="">Select Audience</option>
+                            <option value="all_students">All Students</option>
+                            <option value="all_parents">All Parents</option>
+                            <option value="active_students">Active Students Only</option>
+                            <option value="branch_students">Students by Branch</option>
+                            <option value="course_students">Students by Course</option>
+                            <option value="custom_list">Custom Phone List</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3 d-none" id="branchSelection">
+                        <label for="campaignBranch" class="form-label">Select Branch</label>
+                        <select class="form-select" id="campaignBranch" name="branch_id">
+                            <option value="">Choose Branch</option>
+                            <!-- Branches will be populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3 d-none" id="customPhoneList">
+                        <label for="phoneNumbers" class="form-label">Phone Numbers (one per line)</label>
+                        <textarea class="form-control" id="phoneNumbers" name="phone_numbers" rows="4" 
+                                  placeholder="9876543210&#10;9876543211&#10;9876543212"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Message Configuration</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="message_type" id="campaignUseTemplate" value="template" checked>
+                            <label class="form-check-label" for="campaignUseTemplate">
+                                Use Existing Template
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="message_type" id="campaignCustomMessage" value="custom">
+                            <label class="form-check-label" for="campaignCustomMessage">
+                                Custom Message
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3" id="campaignTemplateSelection">
+                        <label for="campaignTemplateId" class="form-label">Select Template</label>
+                        <select class="form-select" id="campaignTemplateId" name="template_id">
+                            <option value="">Choose Template</option>
+                            {% for template in templates %}
+                            <option value="{{ template.id }}">{{ template.name }} ({{ template.category }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3 d-none" id="campaignCustomMessageInput">
+                        <label for="campaignMessage" class="form-label">Custom Message</label>
+                        <textarea class="form-control" id="campaignMessage" name="message" rows="3" 
+                                  placeholder="Enter your SMS message..."></textarea>
+                        <div class="form-text">
+                            <span id="messageCounter">0</span>/160 characters
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Schedule Options</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="schedule_type" id="sendNow" value="now" checked>
+                            <label class="form-check-label" for="sendNow">
+                                Send Immediately
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="schedule_type" id="scheduleLater" value="scheduled">
+                            <label class="form-check-label" for="scheduleLater">
+                                Schedule for Later
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 d-none" id="scheduleDateTime">
+                        <label for="scheduledAt" class="form-label">Schedule Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="scheduledAt" name="scheduled_at">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="saveDraft()">Save as Draft</button>
+                    <button type="submit" class="btn btn-primary">Create Campaign</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle message type radio buttons
+    const campaignUseTemplateRadio = document.getElementById('campaignUseTemplate');
+    const campaignCustomMessageRadio = document.getElementById('campaignCustomMessage');
+    const campaignTemplateSelection = document.getElementById('campaignTemplateSelection');
+    const campaignCustomMessageInput = document.getElementById('campaignCustomMessageInput');
+    
+    function toggleCampaignMessageType() {
+        if (campaignUseTemplateRadio.checked) {
+            campaignTemplateSelection.classList.remove('d-none');
+            campaignCustomMessageInput.classList.add('d-none');
+        } else {
+            campaignTemplateSelection.classList.add('d-none');
+            campaignCustomMessageInput.classList.remove('d-none');
+        }
+    }
+    
+    campaignUseTemplateRadio.addEventListener('change', toggleCampaignMessageType);
+    campaignCustomMessageRadio.addEventListener('change', toggleCampaignMessageType);
+    
+    // Handle schedule type radio buttons
+    const sendNowRadio = document.getElementById('sendNow');
+    const scheduleLaterRadio = document.getElementById('scheduleLater');
+    const scheduleDateTime = document.getElementById('scheduleDateTime');
+    
+    function toggleScheduleType() {
+        if (scheduleLaterRadio.checked) {
+            scheduleDateTime.classList.remove('d-none');
+        } else {
+            scheduleDateTime.classList.add('d-none');
+        }
+    }
+    
+    sendNowRadio.addEventListener('change', toggleScheduleType);
+    scheduleLaterRadio.addEventListener('change', toggleScheduleType);
+    
+    // Handle target audience selection
+    const targetAudienceSelect = document.getElementById('targetAudience');
+    const branchSelection = document.getElementById('branchSelection');
+    const customPhoneList = document.getElementById('customPhoneList');
+    
+    targetAudienceSelect.addEventListener('change', function() {
+        const value = this.value;
+        
+        // Hide all conditional fields
+        branchSelection.classList.add('d-none');
+        customPhoneList.classList.add('d-none');
+        
+        // Show relevant fields
+        if (value === 'branch_students') {
+            branchSelection.classList.remove('d-none');
+        } else if (value === 'custom_list') {
+            customPhoneList.classList.remove('d-none');
+        }
+    });
+    
+    // Message character counter
+    const messageTextarea = document.getElementById('campaignMessage');
+    const messageCounter = document.getElementById('messageCounter');
+    
+    messageTextarea.addEventListener('input', function() {
+        const length = this.value.length;
+        messageCounter.textContent = length;
+        
+        if (length > 160) {
+            messageCounter.className = 'text-danger';
+        } else if (length > 140) {
+            messageCounter.className = 'text-warning';
+        } else {
+            messageCounter.className = '';
+        }
+    });
+    
+    // Event delegation for action buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.edit-campaign-btn')) {
+            const campaignId = e.target.closest('.edit-campaign-btn').dataset.campaignId;
+            editCampaign(campaignId);
+        } else if (e.target.closest('.start-campaign-btn')) {
+            const campaignId = e.target.closest('.start-campaign-btn').dataset.campaignId;
+            startCampaign(campaignId);
+        } else if (e.target.closest('.pause-campaign-btn')) {
+            const campaignId = e.target.closest('.pause-campaign-btn').dataset.campaignId;
+            pauseCampaign(campaignId);
+        } else if (e.target.closest('.resume-campaign-btn')) {
+            const campaignId = e.target.closest('.resume-campaign-btn').dataset.campaignId;
+            resumeCampaign(campaignId);
+        } else if (e.target.closest('.view-campaign-btn')) {
+            const campaignId = e.target.closest('.view-campaign-btn').dataset.campaignId;
+            viewCampaign(campaignId);
+        } else if (e.target.closest('.delete-campaign-btn')) {
+            const campaignId = e.target.closest('.delete-campaign-btn').dataset.campaignId;
+            deleteCampaign(campaignId);
+        }
+    });
+});
+
+function saveDraft() {
+    // Add draft status to form
+    const form = document.getElementById('createCampaignForm');
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'status';
+    hiddenInput.value = 'draft';
+    form.appendChild(hiddenInput);
+    
+    // Submit form
+    form.submit();
+}
+
+function editCampaign(campaignId) {
+    alert('Edit campaign feature coming soon!');
+}
+
+function startCampaign(campaignId) {
+    if (confirm('Are you sure you want to start this campaign? SMS messages will be sent immediately.')) {
+        alert('Start campaign feature coming soon!');
+    }
+}
+
+function pauseCampaign(campaignId) {
+    if (confirm('Are you sure you want to pause this campaign?')) {
+        alert('Pause campaign feature coming soon!');
+    }
+}
+
+function resumeCampaign(campaignId) {
+    if (confirm('Are you sure you want to resume this campaign?')) {
+        alert('Resume campaign feature coming soon!');
+    }
+}
+
+function viewCampaign(campaignId) {
+    alert('View campaign details feature coming soon!');
+}
+
+function deleteCampaign(campaignId) {
+    if (confirm('Are you sure you want to delete this campaign? This action cannot be undone.')) {
+        alert('Delete campaign feature coming soon!');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,66 @@
+<!-- Follow-up Modal -->
+<div class="modal fade" id="followupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Follow-up</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="followupForm">
+                    <div class="mb-3">
+                        <label class="form-label">Follow-up Type *</label>
+                        <select class="form-select" name="follow_up_type" required>
+                            <option value="">Select Type</option>
+                            <option value="Inbound Call">📞 Inbound Call (Lead called us)</option>
+                            <option value="Outbound Call">📱 Outbound Call (We called lead)</option>
+                            <option value="Admission Visit Scheduled">🏢 Admission Visit Scheduled</option>
+                            <option value="Demo Session">🎓 Demo Session</option>
+                            <option value="Course Counseling">💡 Course Counseling</option>
+                            <option value="Fee Discussion">💰 Fee Discussion</option>
+                            <option value="Document Collection">📄 Document Collection</option>
+                            <option value="Email">📧 Email</option>
+                            <option value="WhatsApp">💬 WhatsApp</option>
+                            <option value="SMS">📱 SMS</option>
+                            <option value="Video Call">📹 Video Call</option>
+                            <option value="Site Visit">🏠 Site Visit</option>
+                            <option value="Meeting">🤝 Meeting</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Follow-up Date & Time *</label>
+                        <input type="datetime-local" class="form-control" name="follow_up_date" id="followupDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="4"
+                                  placeholder="Enter follow-up agenda, discussion points, or any relevant notes"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Priority</label>
+                        <select class="form-select" name="priority">
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                            <option value="High">High</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="send_reminder" id="sendReminder">
+                            <label class="form-check-label" for="sendReminder">
+                                Send reminder notification
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addFollowup()">
+                    <i class="fas fa-save"></i> Add Follow-up
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

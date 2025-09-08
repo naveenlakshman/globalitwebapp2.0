@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block title %}{{ branch.branch_name }} - Branch Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary">
+                        <i class="fas fa-building me-2"></i>{{ branch.branch_name }}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-map-marker-alt me-1"></i>{{ branch.address }}, {{ branch.city }}, {{ branch.state }}
+                    </p>
+                </div>
+                <div>
+                    {% if session.role == 'admin' %}
+                    <a href="{{ url_for('branch.edit_branch', branch_id=branch.id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit me-1"></i>Edit Branch
+                    </a>
+                    {% endif %}
+                    {% if session.role == 'admin' %}
+                        <a href="{{ url_for('dashboard_bp.admin_dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    {% elif session.role == 'franchise' %}
+                        <a href="{{ url_for('dashboard_bp.franchise_dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    {% elif session.role == 'regional_manager' %}
+                        <a href="{{ url_for('dashboard_bp.regional_manager_dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    {% elif session.role in ['branch_manager', 'staff'] %}
+                        <a href="{{ url_for('dashboard_bp.branch_manager_dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    {% elif session.role == 'trainer' %}
+                        <a href="{{ url_for('dashboard_bp.trainer_dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('dashboard_bp.admin_dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Branch Information Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Students
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ students|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Active Batches
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ batches|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Branch Status
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <span class="badge bg-{% if branch.status == 'Active' %}success{% else %}warning{% endif %}">
+                                    {{ branch.status }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Branch Type
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ branch.branch_type }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tag fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Branch Details and Quick Actions -->
+    <div class="row mb-4">
+        <!-- Branch Information -->
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-info-circle me-2"></i>Branch Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Branch Code:</strong></td>
+                                    <td>{{ branch.branch_code }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Manager:</strong></td>
+                                    <td>{{ branch.manager_name or 'Not Assigned' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td>{{ branch.phone }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>{{ branch.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Opening Date:</strong></td>
+                                    <td>{{ branch.opening_date.strftime('%d/%m/%Y') if branch.opening_date else 'N/A' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>City:</strong></td>
+                                    <td>{{ branch.city }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>State:</strong></td>
+                                    <td>{{ branch.state }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Pincode:</strong></td>
+                                    <td>{{ branch.pincode }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>GST Number:</strong></td>
+                                    <td>{{ branch.gst_number or 'N/A' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>PAN Number:</strong></td>
+                                    <td>{{ branch.pan_number or 'N/A' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-rocket me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('students.register_student') }}" class="btn btn-success">
+                            <i class="fas fa-user-plus me-2"></i>Add New Student
+                        </a>
+                        <a href="{{ url_for('students.list_students') }}" class="btn btn-info">
+                            <i class="fas fa-users me-2"></i>View All Students
+                        </a>
+                        <a href="{{ url_for('batches.list_batches') }}" class="btn btn-warning">
+                            <i class="fas fa-layer-group me-2"></i>Manage Batches
+                        </a>
+                        <a href="{{ url_for('finance.financial_reports') }}" class="btn btn-primary">
+                            <i class="fas fa-chart-bar me-2"></i>Financial Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Student Enrollments -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-clock me-2"></i>Recent Student Enrollments
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_students %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
+                                        <th>Contact</th>
+                                        <th>Course</th>
+                                        <th>Admission Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in recent_students %}
+                                    <tr>
+                                        <td><strong>{{ student.student_id }}</strong></td>
+                                        <td>{{ student.full_name }}</td>
+                                        <td>
+                                            <div>
+                                                <i class="fas fa-phone me-1"></i>{{ student.mobile }}
+                                                <br>
+                                                <small class="text-muted">{{ student.email }}</small>
+                                            </div>
+                                        </td>
+                                        <td>{{ student.course_name or 'Not Assigned' }}</td>
+                                        <td>{{ student.admission_date.strftime('%d/%m/%Y') if student.admission_date else 'N/A' }}</td>
+                                        <td><span class="badge bg-success">Active</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                            <p class="text-muted">No students enrolled yet</p>
+                            <a href="{{ url_for('students.register_student') }}" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-1"></i>Register First Student
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showComingSoon(feature) {
+    alert(`🚧 ${feature} feature is coming soon!\n\nThis will provide comprehensive ${feature.toLowerCase()} functionality for your branch.`);
+}
+</script>
+
+<style>
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 4px solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 4px solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 4px solid #f6c23e !important;
+}
+
+.card-body .progress {
+    background-color: #e3e6f0;
+}
+</style>
+{% endblock %}

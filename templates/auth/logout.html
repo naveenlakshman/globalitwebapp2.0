@@ -1,0 +1,39 @@
+{% extends 'auth_base.html' %}
+
+{% block title %}Logged Out | Global IT Education{% endblock %}
+
+{% block header_title %}Successfully Logged Out{% endblock %}
+{% block header_subtitle %}Thank you for using Global IT Education{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <div class="mb-4">
+        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+    </div>
+    
+    <h5 class="text-success mb-3">You have been logged out successfully!</h5>
+    
+    <p class="text-muted mb-4">
+        Your session has been terminated securely. Thank you for using our franchise management system.
+    </p>
+    
+    <div class="d-grid gap-2">
+        <a href="/auth/login" class="btn btn-primary btn-auth btn-lg">
+            <i class="fas fa-sign-in-alt me-2"></i>Login Again
+        </a>
+        <a href="/" class="btn btn-outline-secondary">
+            <i class="fas fa-home me-2"></i>Go to Homepage
+        </a>
+    </div>
+</div>
+
+<div class="mt-4 p-3 bg-light rounded">
+    <h6 class="text-primary mb-2">
+        <i class="fas fa-shield-alt me-2"></i>Security Notice
+    </h6>
+    <small class="text-muted">
+        For your security, make sure to close your browser if you're using a shared computer.
+        Always log out when you're done using the system.
+    </small>
+</div>
+{% endblock %}

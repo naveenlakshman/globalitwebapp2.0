@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}My Assigned Batches{% endblock %}
+
+{% block content %}
+<div class="attendance-dashboard">
+    <!-- Header -->
+    <div class="attendance-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1>
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    My Assigned Batches
+                </h1>
+                <div class="batch-info">
+                    Trainer: {{ current_user.full_name }} | {{ trainer_batches|length }} Batches
+                </div>
+            </div>
+            <div>
+                <a href="{{ url_for('dashboard_bp.trainer_dashboard') }}" 
+                   class="btn btn-outline-light">
+                    <i class="fas fa-tachometer-alt me-1"></i>
+                    Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batches Grid -->
+    {% if trainer_batches %}
+        <div class="row">
+            {% for batch_info in trainer_batches %}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header py-3 bg-gradient-primary text-white">
+                            <h6 class="m-0 font-weight-bold">
+                                <i class="fas fa-graduation-cap me-2"></i>{{ batch_info.batch.name }}
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- Batch Information -->
+                            <div class="mb-3">
+                                <p class="text-sm mb-2">
+                                    <strong>Course:</strong> {{ batch_info.batch.course_name }}
+                                </p>
+                                <p class="text-sm mb-2">
+                                    <strong>Timing:</strong> 
+                                    {% if batch_info.batch.get_formatted_timing_display() %}
+                                        {{ batch_info.batch.get_formatted_timing_display() }}
+                                    {% else %}
+                                        {{ batch_info.batch.timing or 'Not Set' }}
+                                    {% endif %}
+                                </p>
+                                {% if batch_info.batch.start_date %}
+                                <p class="text-sm mb-2">
+                                    <strong>Start Date:</strong> {{ batch_info.batch.start_date|format_date_indian }}
+                                </p>
+                                {% endif %}
+                                {% if batch_info.batch.end_date %}
+                                <p class="text-sm mb-2">
+                                    <strong>End Date:</strong> {{ batch_info.batch.end_date|format_date_indian }}
+                                </p>
+                                {% endif %}
+                                <p class="text-sm mb-2">
+                                    <strong>Role:</strong> 
+                                    {{ batch_info.assignment.role_in_batch if batch_info.assignment else 'N/A' }}
+                                </p>
+                                <p class="text-sm mb-2">
+                                    <strong>Students:</strong> 
+                                    {{ batch_info.total_students if batch_info.total_students is not none else 0 }}
+                                    {% if not batch_info.total_students or batch_info.total_students == 0 %}
+                                        <small class="text-muted ms-1">(No students enrolled)</small>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <!-- Recent Attendance Summary -->
+                            {% if batch_info.recent_attendance %}
+                                <div class="mb-3">
+                                    <h6 class="text-primary mb-2">
+                                        <i class="fas fa-clock me-1"></i>Latest Attendance
+                                    </h6>
+                                    <div class="small">
+                                        {% set latest_attendance = batch_info.recent_attendance[0] %}
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>{{ latest_attendance.date|format_date_indian if latest_attendance.date else 'N/A' }}</span>
+                                            <span class="badge badge-{% if latest_attendance.status == 'Present' %}success{% elif latest_attendance.status == 'Absent' %}danger{% else %}warning{% endif %}">
+                                                {{ latest_attendance.status }}
+                                            </span>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>Most recent attendance record
+                                        </small>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <!-- Action Buttons -->
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <a href="{{ url_for('attendance.mark_attendance_page', batch_id=batch_info.batch.id) }}" 
+                                       class="btn btn-primary btn-sm btn-block">
+                                        <i class="fas fa-check-square me-1"></i>Mark Attendance
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="{{ url_for('attendance.batch_attendance', batch_id=batch_info.batch.id) }}" 
+                                       class="btn btn-success btn-sm btn-block">
+                                        <i class="fas fa-calendar-check me-1"></i>View Records
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="{{ url_for('batches.view_batch', batch_id=batch_info.batch.id) }}" 
+                                       class="btn btn-outline-primary btn-sm btn-block">
+                                        <i class="fas fa-eye me-1"></i>Batch Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer text-center small text-muted">
+                            Assigned on: {{ batch_info.assignment.assigned_on|format_date_indian if batch_info.assignment.assigned_on else 'Unknown' }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- No Batches Assigned -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-users-slash fa-4x text-gray-400 mb-4"></i>
+                        <h4 class="text-gray-600 mb-3">No Batches Assigned</h4>
+                        <p class="text-muted mb-4">
+                            You are not assigned to any batches yet. Contact your branch manager or admin to get batch assignments.
+                        </p>
+                        <a href="{{ url_for('dashboard_bp.trainer_dashboard') }}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    transition: all 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.2);
+}
+</style>
+{% endblock %}

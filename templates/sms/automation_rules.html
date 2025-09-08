@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}SMS Automation Rules - Global IT Education{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">SMS Automation Rules</h1>
+                    <p class="text-muted">Manage automatic SMS triggers and workflows</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('sms.sms_dashboard') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRuleModal">
+                        <i class="fas fa-plus me-2"></i>Create Rule
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Automation Rules -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-robot me-2"></i>Active Automation Rules
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if rules %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rule Name</th>
+                                    <th>Trigger Event</th>
+                                    <th>Conditions</th>
+                                    <th>Message/Template</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rule in rules %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ rule.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ rule.trigger_event.replace('_', ' ').title() }}</span>
+                                    </td>
+                                    <td>
+                                        {% if rule.conditions and rule.conditions != '{}' %}
+                                            <small class="text-muted">{{ rule.conditions[:50] }}{% if rule.conditions|length > 50 %}...{% endif %}</small>
+                                        {% else %}
+                                            <small class="text-muted">No conditions</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if rule.template %}
+                                            <span class="badge bg-secondary">Template: {{ rule.template.name }}</span>
+                                        {% elif rule.custom_message %}
+                                            <div class="text-truncate" style="max-width: 200px;" title="{{ rule.custom_message }}">
+                                                {{ rule.custom_message }}
+                                            </div>
+                                        {% else %}
+                                            <small class="text-muted">No message configured</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if rule.is_active %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-play me-1"></i>Active
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-pause me-1"></i>Inactive
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ rule.created_at|format_datetime('%m/%d/%Y') }}</small>
+                                        {% if rule.created_by_user %}
+                                            <br><small class="text-muted">by {{ rule.created_by_user.first_name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary edit-rule-btn" 
+                                                    data-rule-id="{{ rule.id }}" title="Edit Rule">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-warning toggle-rule-btn" 
+                                                    data-rule-id="{{ rule.id }}" data-active="{{ rule.is_active }}" 
+                                                    title="{% if rule.is_active %}Disable{% else %}Enable{% endif %} Rule">
+                                                <i class="fas fa-toggle-{% if rule.is_active %}off{% else %}on{% endif %}"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger delete-rule-btn" 
+                                                    data-rule-id="{{ rule.id }}" title="Delete Rule">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-robot fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No automation rules configured</h5>
+                        <p class="text-muted">Create rules to automatically send SMS based on events</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRuleModal">
+                            Create Your First Rule
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Triggers Info -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Available Trigger Events
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-primary">Student Events</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-user-plus text-success me-2"></i>Student Registration</li>
+                                <li><i class="fas fa-user-check text-info me-2"></i>Student Enrollment</li>
+                                <li><i class="fas fa-calendar-alt text-warning me-2"></i>Birthday Reminder</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-primary">Payment Events</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-money-bill text-success me-2"></i>Payment Received</li>
+                                <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>Payment Due</li>
+                                <li><i class="fas fa-times-circle text-danger me-2"></i>Payment Overdue</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-primary">Course Events</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-graduation-cap text-success me-2"></i>Course Completion</li>
+                                <li><i class="fas fa-clock text-info me-2"></i>Class Reminder</li>
+                                <li><i class="fas fa-user-times text-warning me-2"></i>Attendance Alert</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Rule Modal -->
+<div class="modal fade" id="createRuleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Automation Rule</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('sms.create_automation_rule') }}" method="POST">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="ruleName" class="form-label">Rule Name</label>
+                                <input type="text" class="form-control" id="ruleName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="triggerEvent" class="form-label">Trigger Event</label>
+                                <select class="form-select" id="triggerEvent" name="trigger_event" required>
+                                    <option value="">Select Event</option>
+                                    <optgroup label="Student Events">
+                                        <option value="student_registration">Student Registration</option>
+                                        <option value="student_enrollment">Student Enrollment</option>
+                                        <option value="birthday_reminder">Birthday Reminder</option>
+                                    </optgroup>
+                                    <optgroup label="Payment Events">
+                                        <option value="payment_received">Payment Received</option>
+                                        <option value="payment_due">Payment Due</option>
+                                        <option value="payment_overdue">Payment Overdue</option>
+                                    </optgroup>
+                                    <optgroup label="Course Events">
+                                        <option value="course_completion">Course Completion</option>
+                                        <option value="class_reminder">Class Reminder</option>
+                                        <option value="attendance_alert">Attendance Alert</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="ruleConditions" class="form-label">Conditions (JSON format)</label>
+                        <textarea class="form-control" id="ruleConditions" name="conditions" rows="3" 
+                                  placeholder='{"branch_id": 1, "course_type": "basic"}'></textarea>
+                        <div class="form-text">
+                            Define conditions for when this rule should trigger (optional)
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Message Configuration</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="message_type" id="useTemplate" value="template" checked>
+                            <label class="form-check-label" for="useTemplate">
+                                Use Existing Template
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="message_type" id="customMessage" value="custom">
+                            <label class="form-check-label" for="customMessage">
+                                Custom Message
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3" id="templateSelection">
+                        <label for="templateId" class="form-label">Select Template</label>
+                        <select class="form-select" id="templateId" name="template_id">
+                            <option value="">Choose Template</option>
+                            {% for template in templates %}
+                            <option value="{{ template.id }}">{{ template.name }} ({{ template.category }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3 d-none" id="customMessageInput">
+                        <label for="customMessageText" class="form-label">Custom Message</label>
+                        <textarea class="form-control" id="customMessageText" name="custom_message" rows="3" 
+                                  placeholder="Enter your custom SMS message..."></textarea>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="ruleActive" name="is_active" checked>
+                        <label class="form-check-label" for="ruleActive">
+                            Active (rule will trigger immediately when conditions are met)
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle message type radio buttons
+    const useTemplateRadio = document.getElementById('useTemplate');
+    const customMessageRadio = document.getElementById('customMessage');
+    const templateSelection = document.getElementById('templateSelection');
+    const customMessageInput = document.getElementById('customMessageInput');
+    
+    function toggleMessageType() {
+        if (useTemplateRadio.checked) {
+            templateSelection.classList.remove('d-none');
+            customMessageInput.classList.add('d-none');
+        } else {
+            templateSelection.classList.add('d-none');
+            customMessageInput.classList.remove('d-none');
+        }
+    }
+    
+    useTemplateRadio.addEventListener('change', toggleMessageType);
+    customMessageRadio.addEventListener('change', toggleMessageType);
+    
+    // Event delegation for action buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.edit-rule-btn')) {
+            const ruleId = e.target.closest('.edit-rule-btn').dataset.ruleId;
+            editRule(ruleId);
+        } else if (e.target.closest('.toggle-rule-btn')) {
+            const ruleId = e.target.closest('.toggle-rule-btn').dataset.ruleId;
+            const isActive = e.target.closest('.toggle-rule-btn').dataset.active === 'True';
+            toggleRule(ruleId, isActive);
+        } else if (e.target.closest('.delete-rule-btn')) {
+            const ruleId = e.target.closest('.delete-rule-btn').dataset.ruleId;
+            deleteRule(ruleId);
+        }
+    });
+});
+
+function editRule(ruleId) {
+    // Placeholder for edit functionality
+    alert('Edit rule feature coming soon!');
+}
+
+function toggleRule(ruleId, isActive) {
+    const action = isActive ? 'disable' : 'enable';
+    if (confirm(`Are you sure you want to ${action} this automation rule?`)) {
+        // Placeholder for toggle functionality
+        alert('Toggle rule feature coming soon!');
+    }
+}
+
+function deleteRule(ruleId) {
+    if (confirm('Are you sure you want to delete this automation rule? This action cannot be undone.')) {
+        // Placeholder for delete functionality
+        alert('Delete rule feature coming soon!');
+    }
+}
+</script>
+{% endblock %}

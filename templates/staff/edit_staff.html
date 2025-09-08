@@ -1,0 +1,901 @@
+{% extends "base.html" %}
+{% block title %}Edit Staff Member - {{ staff_member.full_name or staff_member.username }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff-management.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary">
+                        <i class="fas fa-user-edit me-2"></i>Edit Staff Member
+                    </h2>
+                    <p class="text-muted mb-0">Update staff details and profile information for {{ staff_member.full_name or staff_member.username }}</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('staff.view_staff', user_id=staff_member.id) }}" class="btn btn-outline-info me-2">
+                        <i class="fas fa-eye me-1"></i>View Profile
+                    </a>
+                    <a href="{{ url_for('staff.list_staff') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Staff List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Wizard -->
+    <div class="form-wizard">
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+            <div class="progress-bar-custom" id="progressBar" style="width: 20%"></div>
+        </div>
+
+        <!-- Wizard Navigation -->
+        <ul class="nav nav-tabs wizard-nav justify-content-center" id="wizardNav">
+            <li class="nav-item">
+                <a class="nav-link active" data-step="1">
+                    <i class="fas fa-user me-1"></i>Basic Info
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-step="2">
+                    <i class="fas fa-id-card me-1"></i>Personal Details
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-step="3">
+                    <i class="fas fa-briefcase me-1"></i>Professional Info
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-step="4">
+                    <i class="fas fa-file-upload me-1"></i>Documents
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-step="5">
+                    <i class="fas fa-check-circle me-1"></i>Review & Update
+                </a>
+            </li>
+        </ul>
+
+        <!-- Wizard Form -->
+        <form id="editStaffForm" action="{{ url_for('staff.update_staff', user_id=staff_member.id) }}" method="POST" enctype="multipart/form-data">
+            <!-- Step 1: Basic Information -->
+            <div class="wizard-step active" data-step="1">
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        <div class="form-section">
+                            <h6><i class="fas fa-user-circle"></i>Account & Login Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="username" class="form-label">Username <span class="required">*</span></label>
+                                        <input type="text" class="form-control" id="username" name="username" 
+                                               value="{{ staff_member.username }}" readonly
+                                               title="Username cannot be changed after creation">
+                                        <div class="field-help">Username cannot be changed</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="full_name" class="form-label">Full Name <span class="required">*</span></label>
+                                        <input type="text" class="form-control" id="full_name" name="full_name" 
+                                               value="{{ staff_member.full_name or '' }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="password" class="form-label">New Password</label>
+                                        <input type="password" class="form-control" id="password" name="password" 
+                                               minlength="6" placeholder="Leave blank to keep current password">
+                                        <div class="field-help">Minimum 6 characters (leave blank to keep current password)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                               minlength="6" placeholder="Confirm new password">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-user-tag"></i>Role & Assignment</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="role" class="form-label">Role <span class="required">*</span></label>
+                                        <select class="form-select" id="role" name="role" required>
+                                            <option value="">Select Role</option>
+                                            <option value="trainer" {{ 'selected' if staff_member.role == 'trainer' }}>Trainer</option>
+                                            <option value="branch_manager" {{ 'selected' if staff_member.role == 'branch_manager' }}>Branch Manager</option>
+                                            <option value="staff" {{ 'selected' if staff_member.role == 'staff' }}>Support Staff</option>
+                                            {% if user_role == 'admin' %}
+                                            <option value="franchise" {{ 'selected' if staff_member.role == 'franchise' }}>Franchise Owner</option>
+                                            <option value="regional_manager" {{ 'selected' if staff_member.role == 'regional_manager' }}>Regional Manager</option>
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="designation" class="form-label">Designation</label>
+                                        <input type="text" class="form-control" id="designation" name="designation" 
+                                               value="{{ staff_profile.designation if staff_profile else '' }}"
+                                               placeholder="e.g. Senior Trainer, Assistant Manager">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="branch_ids" class="form-label">Assign to Branches <span class="required">*</span></label>
+                                <select class="form-select" id="branch_ids" name="branch_ids[]" multiple required>
+                                    {% for branch in available_branches %}
+                                    <option value="{{ branch.id }}" 
+                                        {% for assignment in current_assignments %}
+                                            {% if assignment.branch_id == branch.id %}selected{% endif %}
+                                        {% endfor %}>
+                                        {{ branch.branch_name }} - {{ branch.location }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="field-help">Hold Ctrl/Cmd to select multiple branches</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Personal Details -->
+            <div class="wizard-step" data-step="2">
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        <div class="form-section">
+                            <h6><i class="fas fa-id-card"></i>Personal Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                        <input type="date" class="form-control" id="date_of_birth" name="date_of_birth"
+                                               value="{{ staff_profile.date_of_birth.strftime('%Y-%m-%d') if staff_profile and staff_profile.date_of_birth else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="gender" class="form-label">Gender</label>
+                                        <select class="form-select" id="gender" name="gender">
+                                            <option value="">Select Gender</option>
+                                            <option value="Male" {{ 'selected' if staff_profile and staff_profile.gender == 'Male' }}>Male</option>
+                                            <option value="Female" {{ 'selected' if staff_profile and staff_profile.gender == 'Female' }}>Female</option>
+                                            <option value="Other" {{ 'selected' if staff_profile and staff_profile.gender == 'Other' }}>Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="marital_status" class="form-label">Marital Status</label>
+                                        <select class="form-select" id="marital_status" name="marital_status">
+                                            <option value="">Select Status</option>
+                                            <option value="Single" {{ 'selected' if staff_profile and staff_profile.marital_status == 'Single' }}>Single</option>
+                                            <option value="Married" {{ 'selected' if staff_profile and staff_profile.marital_status == 'Married' }}>Married</option>
+                                            <option value="Divorced" {{ 'selected' if staff_profile and staff_profile.marital_status == 'Divorced' }}>Divorced</option>
+                                            <option value="Widowed" {{ 'selected' if staff_profile and staff_profile.marital_status == 'Widowed' }}>Widowed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="blood_group" class="form-label">Blood Group</label>
+                                        <select class="form-select" id="blood_group" name="blood_group">
+                                            <option value="">Select Blood Group</option>
+                                            <option value="A+" {{ 'selected' if staff_profile and staff_profile.blood_group == 'A+' }}>A+</option>
+                                            <option value="A-" {{ 'selected' if staff_profile and staff_profile.blood_group == 'A-' }}>A-</option>
+                                            <option value="B+" {{ 'selected' if staff_profile and staff_profile.blood_group == 'B+' }}>B+</option>
+                                            <option value="B-" {{ 'selected' if staff_profile and staff_profile.blood_group == 'B-' }}>B-</option>
+                                            <option value="AB+" {{ 'selected' if staff_profile and staff_profile.blood_group == 'AB+' }}>AB+</option>
+                                            <option value="AB-" {{ 'selected' if staff_profile and staff_profile.blood_group == 'AB-' }}>AB-</option>
+                                            <option value="O+" {{ 'selected' if staff_profile and staff_profile.blood_group == 'O+' }}>O+</option>
+                                            <option value="O-" {{ 'selected' if staff_profile and staff_profile.blood_group == 'O-' }}>O-</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-phone"></i>Contact Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="primary_mobile" class="form-label">Primary Mobile <span class="required">*</span></label>
+                                        <input type="tel" class="form-control" id="primary_mobile" name="primary_mobile" 
+                                               value="{{ staff_profile.primary_mobile if staff_profile else '' }}"
+                                               required pattern="[0-9]{10}" title="Please enter a 10-digit mobile number">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="secondary_mobile" class="form-label">Secondary Mobile</label>
+                                        <input type="tel" class="form-control" id="secondary_mobile" name="secondary_mobile" 
+                                               value="{{ staff_profile.secondary_mobile if staff_profile else '' }}"
+                                               pattern="[0-9]{10}" title="Please enter a 10-digit mobile number">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="personal_email" class="form-label">Personal Email</label>
+                                        <input type="email" class="form-control" id="personal_email" name="personal_email"
+                                               value="{{ staff_profile.personal_email if staff_profile else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="official_email" class="form-label">Official Email</label>
+                                        <input type="email" class="form-control" id="official_email" name="official_email"
+                                               value="{{ staff_profile.official_email if staff_profile else '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-map-marker-alt"></i>Address Information</h6>
+                            <div class="mb-3">
+                                <label for="current_address" class="form-label">Current Address</label>
+                                <textarea class="form-control" id="current_address" name="current_address" rows="3">{{ staff_profile.current_address if staff_profile else '' }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="permanent_address" class="form-label">Permanent Address</label>
+                                <textarea class="form-control" id="permanent_address" name="permanent_address" rows="3">{{ staff_profile.permanent_address if staff_profile else '' }}</textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="city" class="form-label">City</label>
+                                        <input type="text" class="form-control" id="city" name="city"
+                                               value="{{ staff_profile.city if staff_profile else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="state" class="form-label">State</label>
+                                        <input type="text" class="form-control" id="state" name="state"
+                                               value="{{ staff_profile.state if staff_profile else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="pincode" class="form-label">Pincode</label>
+                                        <input type="text" class="form-control" id="pincode" name="pincode" 
+                                               value="{{ staff_profile.pincode if staff_profile else '' }}"
+                                               pattern="[0-9]{6}" title="Please enter a 6-digit pincode">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-exclamation-triangle"></i>Emergency Contact</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="emergency_contact_name" class="form-label">Emergency Contact Name</label>
+                                        <input type="text" class="form-control" id="emergency_contact_name" name="emergency_contact_name"
+                                               value="{{ staff_profile.emergency_contact_name if staff_profile else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="emergency_contact_relation" class="form-label">Relation</label>
+                                        <input type="text" class="form-control" id="emergency_contact_relation" name="emergency_contact_relation" 
+                                               value="{{ staff_profile.emergency_contact_relation if staff_profile else '' }}"
+                                               placeholder="e.g. Father, Mother, Spouse">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="emergency_contact_mobile" class="form-label">Emergency Contact Mobile</label>
+                                        <input type="tel" class="form-control" id="emergency_contact_mobile" name="emergency_contact_mobile" 
+                                               value="{{ staff_profile.emergency_contact_mobile if staff_profile else '' }}"
+                                               pattern="[0-9]{10}" title="Please enter a 10-digit mobile number">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="emergency_contact_address" class="form-label">Emergency Contact Address</label>
+                                        <input type="text" class="form-control" id="emergency_contact_address" name="emergency_contact_address"
+                                               value="{{ staff_profile.emergency_contact_address if staff_profile else '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Professional Information -->
+            <div class="wizard-step" data-step="3">
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        <div class="form-section">
+                            <h6><i class="fas fa-briefcase"></i>Employment Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="joining_date" class="form-label">Joining Date</label>
+                                        <input type="date" class="form-control" id="joining_date" name="joining_date"
+                                               value="{{ staff_profile.joining_date.strftime('%Y-%m-%d') if staff_profile and staff_profile.joining_date else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="employment_type" class="form-label">Employment Type</label>
+                                        <select class="form-select" id="employment_type" name="employment_type">
+                                            <option value="">Select Type</option>
+                                            <option value="Full-time" {{ 'selected' if staff_profile and staff_profile.employment_type == 'Full-time' }}>Full-time</option>
+                                            <option value="Part-time" {{ 'selected' if staff_profile and staff_profile.employment_type == 'Part-time' }}>Part-time</option>
+                                            <option value="Contract" {{ 'selected' if staff_profile and staff_profile.employment_type == 'Contract' }}>Contract</option>
+                                            <option value="Freelance" {{ 'selected' if staff_profile and staff_profile.employment_type == 'Freelance' }}>Freelance</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="department" class="form-label">Department</label>
+                                        <input type="text" class="form-control" id="department" name="department" 
+                                               value="{{ staff_profile.department if staff_profile else '' }}"
+                                               placeholder="e.g. Training, Administration">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="years_of_experience" class="form-label">Years of Experience</label>
+                                        <input type="number" class="form-control" id="years_of_experience" name="years_of_experience" 
+                                               value="{{ staff_profile.years_of_experience if staff_profile else '' }}"
+                                               min="0" max="50">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-graduation-cap"></i>Education & Qualifications</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="highest_qualification" class="form-label">Highest Qualification</label>
+                                        <select class="form-select" id="highest_qualification" name="highest_qualification">
+                                            <option value="">Select Qualification</option>
+                                            <option value="10th" {{ 'selected' if staff_profile and staff_profile.highest_qualification == '10th' }}>10th Standard</option>
+                                            <option value="12th" {{ 'selected' if staff_profile and staff_profile.highest_qualification == '12th' }}>12th Standard</option>
+                                            <option value="Diploma" {{ 'selected' if staff_profile and staff_profile.highest_qualification == 'Diploma' }}>Diploma</option>
+                                            <option value="Bachelor's" {{ 'selected' if staff_profile and staff_profile.highest_qualification == "Bachelor's" }}>Bachelor's Degree</option>
+                                            <option value="Master's" {{ 'selected' if staff_profile and staff_profile.highest_qualification == "Master's" }}>Master's Degree</option>
+                                            <option value="PhD" {{ 'selected' if staff_profile and staff_profile.highest_qualification == 'PhD' }}>PhD</option>
+                                            <option value="Professional" {{ 'selected' if staff_profile and staff_profile.highest_qualification == 'Professional' }}>Professional Certification</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="specialization" class="form-label">Specialization</label>
+                                        <input type="text" class="form-control" id="specialization" name="specialization" 
+                                               value="{{ staff_profile.specialization if staff_profile else '' }}"
+                                               placeholder="e.g. Computer Science, Commerce">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="university_college" class="form-label">University/College</label>
+                                        <input type="text" class="form-control" id="university_college" name="university_college"
+                                               value="{{ staff_profile.university_college if staff_profile else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="graduation_year" class="form-label">Graduation Year</label>
+                                        <input type="number" class="form-control" id="graduation_year" name="graduation_year" 
+                                               value="{{ staff_profile.graduation_year if staff_profile else '' }}"
+                                               min="1980" max="2030">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-tools"></i>Skills & Expertise</h6>
+                            <div class="mb-3">
+                                <label for="technical_skills" class="form-label">Technical Skills</label>
+                                <textarea class="form-control" id="technical_skills" name="technical_skills" rows="3" 
+                                          placeholder="e.g. Tally, Excel, Programming Languages, etc.">{{ staff_profile.technical_skills if staff_profile else '' }}</textarea>
+                                <div class="field-help">Separate skills with commas</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="teaching_subjects" class="form-label">Teaching Subjects (For Trainers)</label>
+                                <textarea class="form-control" id="teaching_subjects" name="teaching_subjects" rows="2" 
+                                          placeholder="e.g. Tally ERP, Excel, Accounting, etc.">{{ staff_profile.teaching_subjects if staff_profile else '' }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="languages_known" class="form-label">Languages Known</label>
+                                <input type="text" class="form-control" id="languages_known" name="languages_known" 
+                                       value="{{ staff_profile.languages_known if staff_profile else '' }}"
+                                       placeholder="e.g. English, Hindi, Kannada">
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-rupee-sign"></i>Bank & Identity Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="pan_number" class="form-label">PAN Number</label>
+                                        <input type="text" class="form-control" id="pan_number" name="pan_number" 
+                                               value="{{ staff_profile.pan_number if staff_profile else '' }}"
+                                               pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" title="Please enter a valid PAN number" 
+                                               style="text-transform: uppercase;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="aadhar_number" class="form-label">Aadhar Number</label>
+                                        <input type="text" class="form-control" id="aadhar_number" name="aadhar_number" 
+                                               value="{{ staff_profile.aadhar_number if staff_profile else '' }}"
+                                               pattern="[0-9]{12}" title="Please enter a valid 12-digit Aadhar number">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="bank_account_number" class="form-label">Bank Account Number</label>
+                                        <input type="text" class="form-control" id="bank_account_number" name="bank_account_number"
+                                               value="{{ staff_profile.bank_account_number if staff_profile else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="bank_name" class="form-label">Bank Name</label>
+                                        <input type="text" class="form-control" id="bank_name" name="bank_name"
+                                               value="{{ staff_profile.bank_name if staff_profile else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="bank_ifsc" class="form-label">IFSC Code</label>
+                                        <input type="text" class="form-control" id="bank_ifsc" name="bank_ifsc" 
+                                               value="{{ staff_profile.bank_ifsc if staff_profile else '' }}"
+                                               pattern="[A-Za-z0-9]{11}" title="Please enter a valid IFSC code (11 characters)" 
+                                               style="text-transform: uppercase;" maxlength="11">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Documents Upload -->
+            <div class="wizard-step" data-step="4">
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        <div class="form-section">
+                            <h6><i class="fas fa-camera"></i>Profile Photo</h6>
+                            <div class="text-center mb-3">
+                                {% if staff_profile and staff_profile.profile_photo %}
+                                    <img id="avatarPreview" src="{{ url_for('static', filename='uploads/profiles/' + staff_profile.profile_photo) }}" 
+                                         alt="Current Profile Photo" class="avatar-preview">
+                                    <div class="field-help">Current profile photo</div>
+                                {% else %}
+                                    <img id="avatarPreview" src="https://via.placeholder.com/100x100/007bff/white?text={{ (staff_member.full_name or staff_member.username)[0].upper() }}" 
+                                         alt="Profile Preview" class="avatar-preview">
+                                {% endif %}
+                            </div>
+                            <div class="file-upload-area" id="photoUploadArea">
+                                <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                <p class="mb-2">Drag & drop a new photo here or click to select</p>
+                                <input type="file" id="profile_photo" name="profile_photo" accept="image/*" style="display: none;">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('profile_photo').click()">
+                                    <i class="fas fa-image me-1"></i>Choose New Photo
+                                </button>
+                                <div class="field-help mt-2">Supported formats: JPG, PNG, GIF (Max: 2MB) - Leave blank to keep current</div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-file-alt"></i>Documents Upload</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="resume_file" class="form-label">Resume/CV</label>
+                                        {% if staff_profile and staff_profile.resume_file %}
+                                            <div class="current-file mb-2">
+                                                <i class="fas fa-file-pdf text-danger me-1"></i>
+                                                <span class="text-muted">Current: {{ staff_profile.resume_file }}</span>
+                                            </div>
+                                        {% endif %}
+                                        <input type="file" class="form-control" id="resume_file" name="resume_file" 
+                                               accept=".pdf,.doc,.docx">
+                                        <div class="field-help">PDF, DOC, DOCX files only (Max: 5MB) - Leave blank to keep current</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="id_proof_file" class="form-label">ID Proof</label>
+                                        {% if staff_profile and staff_profile.id_proof_file %}
+                                            <div class="current-file mb-2">
+                                                <i class="fas fa-file-image text-primary me-1"></i>
+                                                <span class="text-muted">Current: {{ staff_profile.id_proof_file }}</span>
+                                            </div>
+                                        {% endif %}
+                                        <input type="file" class="form-control" id="id_proof_file" name="id_proof_file" 
+                                               accept=".pdf,.jpg,.jpeg,.png">
+                                        <div class="field-help">Aadhar, PAN, Passport, etc. - Leave blank to keep current</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-sticky-note"></i>Additional Notes</h6>
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">General Notes</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                          placeholder="Any additional information about this staff member...">{{ staff_profile.notes if staff_profile else '' }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="hobbies_interests" class="form-label">Hobbies & Interests</label>
+                                <input type="text" class="form-control" id="hobbies_interests" name="hobbies_interests" 
+                                       value="{{ staff_profile.hobbies_interests if staff_profile else '' }}"
+                                       placeholder="e.g. Reading, Sports, Music">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Review & Submit -->
+            <div class="wizard-step" data-step="5">
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        <div class="summary-card">
+                            <h5 class="mb-3"><i class="fas fa-clipboard-check me-2"></i>Review Updated Information</h5>
+                            <p class="mb-0">Please review all the changes before updating. You can go back to make further changes if needed.</p>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-user"></i>Basic Information</h6>
+                            <div id="reviewBasicInfo">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-id-card"></i>Personal Details</h6>
+                            <div id="reviewPersonalInfo">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-briefcase"></i>Professional Information</h6>
+                            <div id="reviewProfessionalInfo">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-file-upload"></i>Documents</h6>
+                            <div id="reviewDocuments">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wizard Controls -->
+            <div class="d-flex justify-content-between p-3 border-top">
+                <button type="button" class="btn btn-outline-secondary btn-wizard" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
+                    <i class="fas fa-arrow-left me-1"></i>Previous
+                </button>
+                <div class="flex-fill"></div>
+                <button type="button" class="btn btn-primary btn-wizard" id="nextBtn" onclick="changeStep(1)">
+                    Next<i class="fas fa-arrow-right ms-1"></i>
+                </button>
+                <button type="submit" class="btn btn-success btn-wizard" id="submitBtn" style="display: none;">
+                    <i class="fas fa-save me-1"></i>Update Staff Member
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 5;
+
+function changeStep(direction) {
+    const currentStepElement = document.querySelector(`.wizard-step[data-step="${currentStep}"]`);
+    const currentNavElement = document.querySelector(`.nav-link[data-step="${currentStep}"]`);
+    
+    // Validate current step before proceeding
+    if (direction > 0 && !validateStep(currentStep)) {
+        return;
+    }
+    
+    // Hide current step
+    currentStepElement.classList.remove('active');
+    
+    // Mark current step as completed if moving forward
+    if (direction > 0) {
+        currentNavElement.classList.add('completed');
+    }
+    
+    // Update current step
+    currentStep += direction;
+    
+    // Show new step
+    const newStepElement = document.querySelector(`.wizard-step[data-step="${currentStep}"]`);
+    const newNavElement = document.querySelector(`.nav-link[data-step="${currentStep}"]`);
+    
+    newStepElement.classList.add('active');
+    
+    // Update navigation
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    newNavElement.classList.add('active');
+    
+    // Update progress bar
+    const progress = (currentStep / totalSteps) * 100;
+    document.getElementById('progressBar').style.width = progress + '%';
+    
+    // Update buttons
+    updateButtons();
+    
+    // Populate review section if on final step
+    if (currentStep === 5) {
+        populateReviewSection();
+    }
+}
+
+function updateButtons() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Show/hide previous button
+    if (currentStep === 1) {
+        prevBtn.style.display = 'none';
+    } else {
+        prevBtn.style.display = 'inline-block';
+    }
+    
+    // Show/hide next/submit buttons
+    if (currentStep === totalSteps) {
+        nextBtn.style.display = 'none';
+        submitBtn.style.display = 'inline-block';
+    } else {
+        nextBtn.style.display = 'inline-block';
+        submitBtn.style.display = 'none';
+    }
+}
+
+function validateStep(step) {
+    const stepElement = document.querySelector(`.wizard-step[data-step="${step}"]`);
+    if (!stepElement) return true;
+    
+    const requiredFields = stepElement.querySelectorAll('[required]');
+    
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            field.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+    
+    // Additional validation for step 1
+    if (step === 1) {
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirm_password');
+        
+        // Only validate password if it's being changed
+        if (password && confirmPassword && (password.value || confirmPassword.value)) {
+            if (password.value !== confirmPassword.value) {
+                confirmPassword.classList.add('is-invalid');
+                alert('Passwords do not match!');
+                isValid = false;
+            } else {
+                confirmPassword.classList.remove('is-invalid');
+            }
+        }
+    }
+    
+    // Additional validation for IFSC code if present
+    const ifscField = document.getElementById('bank_ifsc');
+    if (ifscField && ifscField.value.trim()) {
+        const ifscPattern = /^[A-Za-z0-9]{11}$/;
+        if (!ifscPattern.test(ifscField.value.trim())) {
+            ifscField.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            ifscField.classList.remove('is-invalid');
+        }
+    }
+    
+    if (!isValid) {
+        alert('Please fill in all required fields correctly.');
+    }
+    
+    return isValid;
+}
+
+function populateReviewSection() {
+    // Basic Information
+    const basicInfo = `
+        <div class="summary-item">
+            <strong>Full Name:</strong>
+            <span>${document.getElementById('full_name').value || 'Not provided'}</span>
+        </div>
+        <div class="summary-item">
+            <strong>Username:</strong>
+            <span>${document.getElementById('username').value || 'Not provided'}</span>
+        </div>
+        <div class="summary-item">
+            <strong>Role:</strong>
+            <span>${document.getElementById('role').selectedOptions[0]?.text || 'Not selected'}</span>
+        </div>
+        <div class="summary-item">
+            <strong>Designation:</strong>
+            <span>${document.getElementById('designation').value || 'Not provided'}</span>
+        </div>
+        <div class="summary-item">
+            <strong>Password:</strong>
+            <span>${document.getElementById('password').value ? 'Will be updated' : 'No change'}</span>
+        </div>
+    `;
+    document.getElementById('reviewBasicInfo').innerHTML = basicInfo;
+    
+    // Personal Information
+    const personalInfo = `
+        <div class="summary-item">
+            <strong>Primary Mobile:</strong>
+            <span>${document.getElementById('primary_mobile').value || 'Not provided'}</span>
+        </div>
+        <div class="summary-item">
+            <strong>Personal Email:</strong>
+            <span>${document.getElementById('personal_email').value || 'Not provided'}</span>
+        </div>
+        <div class="summary-item">
+            <strong>Date of Birth:</strong>
+            <span>${document.getElementById('date_of_birth').value || 'Not provided'}</span>
+        </div>
+        <div class="summary-item">
+            <strong>City:</strong>
+            <span>${document.getElementById('city').value || 'Not provided'}</span>
+        </div>
+    `;
+    document.getElementById('reviewPersonalInfo').innerHTML = personalInfo;
+    
+    // Professional Information
+    const professionalInfo = `
+        <div class="summary-item">
+            <strong>Joining Date:</strong>
+            <span>${document.getElementById('joining_date').value || 'Not provided'}</span>
+        </div>
+        <div class="summary-item">
+            <strong>Employment Type:</strong>
+            <span>${document.getElementById('employment_type').selectedOptions[0]?.text || 'Not selected'}</span>
+        </div>
+        <div class="summary-item">
+            <strong>Highest Qualification:</strong>
+            <span>${document.getElementById('highest_qualification').selectedOptions[0]?.text || 'Not selected'}</span>
+        </div>
+        <div class="summary-item">
+            <strong>Experience:</strong>
+            <span>${document.getElementById('years_of_experience').value || '0'} years</span>
+        </div>
+    `;
+    document.getElementById('reviewProfessionalInfo').innerHTML = professionalInfo;
+    
+    // Documents
+    const documents = [];
+    if (document.getElementById('profile_photo').files.length > 0) {
+        documents.push('Profile Photo (Updated)');
+    }
+    if (document.getElementById('resume_file').files.length > 0) {
+        documents.push('Resume/CV (Updated)');
+    }
+    if (document.getElementById('id_proof_file').files.length > 0) {
+        documents.push('ID Proof (Updated)');
+    }
+    
+    const documentsInfo = documents.length > 0 
+        ? documents.map(doc => `<span class="badge bg-success me-1">${doc}</span>`).join('')
+        : '<span class="text-muted">No document changes</span>';
+    
+    document.getElementById('reviewDocuments').innerHTML = documentsInfo;
+}
+
+// Profile photo preview
+document.getElementById('profile_photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('avatarPreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Drag and drop for photo upload
+const photoUploadArea = document.getElementById('photoUploadArea');
+photoUploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('dragover');
+});
+
+photoUploadArea.addEventListener('dragleave', function() {
+    this.classList.remove('dragover');
+});
+
+photoUploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].type.startsWith('image/')) {
+        document.getElementById('profile_photo').files = files;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('avatarPreview').src = e.target.result;
+        };
+        reader.readAsDataURL(files[0]);
+    }
+});
+
+// Form submission
+document.getElementById('editStaffForm').addEventListener('submit', function(e) {
+    // Don't validate on final submission - let the backend handle it
+    console.log('Form is being submitted...');
+    
+    // Show loading state
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Updating...';
+        submitBtn.disabled = true;
+    }
+    
+    // Let the form submit normally
+    return true;
+});
+
+// Initialize
+updateButtons();
+</script>
+{% endblock %}

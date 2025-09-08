@@ -1,0 +1,4 @@
+/* Student ↔ Batch assignment views */
+.sbm-toolbar{display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:var(--space-lg)}
+.sbm-card{background:#fff; border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:var(--space-lg); box-shadow:var(--shadow-sm)}
+.sbm-table{composes: table-clean}

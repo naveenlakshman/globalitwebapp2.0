@@ -1,0 +1,427 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}Notifications - {{ student.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.notifications-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.notification-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.notification-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+}
+
+.notification-card.unread {
+    border-left-color: #007bff;
+    background: #f8f9fa;
+}
+
+.notification-card.course-update {
+    border-left-color: #28a745;
+}
+
+.notification-card.assignment {
+    border-left-color: #ffc107;
+}
+
+.notification-card.system {
+    border-left-color: #6c757d;
+}
+
+.notification-card.achievement {
+    border-left-color: #fd7e14;
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: white;
+    margin-right: 1rem;
+}
+
+.notification-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.mark-read-btn {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.notification-card:hover .mark-read-btn {
+    opacity: 1;
+}
+
+.filter-tabs {
+    background: white;
+    border-radius: 10px;
+    padding: 0.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.filter-tab {
+    border: none;
+    background: transparent;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    color: #6c757d;
+}
+
+.filter-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.notification-empty {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+}
+
+.notification-actions {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Notifications Header -->
+<div class="notifications-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-2">
+                <i class="fas fa-bell me-2"></i>Notifications
+            </h1>
+            <p class="mb-0 opacity-75">
+                Stay updated with your learning progress and important announcements
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if unread_count > 0 %}
+                <span class="badge bg-warning fs-6">{{ unread_count }} unread</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Notification Actions -->
+<div class="notification-actions">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <button class="btn btn-sm btn-outline-primary me-2" id="markAllRead">
+                <i class="fas fa-check-double me-1"></i>Mark All as Read
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" id="refreshNotifications">
+                <i class="fas fa-sync me-1"></i>Refresh
+            </button>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="sortOrder" id="newest" value="newest" checked>
+                <label class="btn btn-sm btn-outline-secondary" for="newest">Newest First</label>
+                
+                <input type="radio" class="btn-check" name="sortOrder" id="oldest" value="oldest">
+                <label class="btn btn-sm btn-outline-secondary" for="oldest">Oldest First</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="filter-tabs">
+    <div class="d-flex">
+        <button class="filter-tab active" data-filter="all">
+            All ({{ notifications|length }})
+        </button>
+        <button class="filter-tab" data-filter="unread">
+            Unread ({{ notifications|selectattr('is_read', 'equalto', False)|list|length }})
+        </button>
+        <button class="filter-tab" data-filter="course-update">
+            Course Updates
+        </button>
+        <button class="filter-tab" data-filter="assignment">
+            Assignments
+        </button>
+        <button class="filter-tab" data-filter="achievement">
+            Achievements
+        </button>
+        <button class="filter-tab" data-filter="system">
+            System
+        </button>
+    </div>
+</div>
+
+<!-- Notifications List -->
+<div id="notificationsList">
+    {% if notifications %}
+        {% for notification in notifications %}
+        <div class="notification-card {{ 'unread' if not notification.is_read }} {{ notification.type }}" 
+             data-type="{{ notification.type }}" data-read="{{ notification.is_read|lower }}">
+            <div class="p-3">
+                <div class="d-flex align-items-start">
+                    <!-- Notification Icon -->
+                    <div class="notification-icon" style="background: 
+                        {% if notification.type == 'course-update' %}#28a745
+                        {% elif notification.type == 'assignment' %}#ffc107
+                        {% elif notification.type == 'achievement' %}#fd7e14
+                        {% elif notification.type == 'system' %}#6c757d
+                        {% else %}#007bff{% endif %};">
+                        <i class="fas 
+                            {% if notification.type == 'course-update' %}fa-book
+                            {% elif notification.type == 'assignment' %}fa-tasks
+                            {% elif notification.type == 'achievement' %}fa-trophy
+                            {% elif notification.type == 'system' %}fa-cog
+                            {% else %}fa-bell{% endif %}"></i>
+                    </div>
+                    
+                    <!-- Notification Content -->
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="mb-1">{{ notification.title }}</h6>
+                            <div class="d-flex align-items-center">
+                                {% if not notification.is_read %}
+                                    <span class="badge bg-primary me-2">New</span>
+                                {% endif %}
+                                <button class="btn btn-sm btn-outline-secondary mark-read-btn" 
+                                        onclick="markAsRead({{ notification.id }})">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <p class="mb-2 text-muted">{{ notification.message }}</p>
+                        
+                        <!-- Notification Actions -->
+                        {% if notification.action_url %}
+                        <div class="mb-2">
+                            <a href="{{ notification.action_url }}" class="btn btn-sm btn-primary">
+                                {{ notification.action_text or 'View' }}
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Notification Meta -->
+                        <div class="notification-meta d-flex justify-content-between">
+                            <span>
+                                <i class="fas fa-clock me-1"></i>
+                                {{ notification.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            </span>
+                            {% if notification.type == 'course-update' and notification.course_name %}
+                                <span>
+                                    <i class="fas fa-book me-1"></i>{{ notification.course_name }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="notification-empty">
+            <i class="fas fa-bell-slash fa-3x mb-3 text-muted"></i>
+            <h4>No notifications yet</h4>
+            <p>When you have new updates, they'll appear here.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Load More Button -->
+{% if has_more %}
+<div class="text-center mt-4">
+    <button class="btn btn-outline-primary" id="loadMore" data-page="2">
+        <i class="fas fa-plus me-2"></i>Load More Notifications
+    </button>
+</div>
+{% endif %}
+
+<!-- Back to Dashboard -->
+<div class="text-center mt-4">
+    <a href="{{ url_for('lms.student_dashboard') }}" class="btn btn-primary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter functionality
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    const notifications = document.querySelectorAll('.notification-card');
+    
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Update active tab
+            filterTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            const filter = this.dataset.filter;
+            
+            // Filter notifications
+            notifications.forEach(notification => {
+                if (filter === 'all') {
+                    notification.style.display = 'block';
+                } else if (filter === 'unread') {
+                    notification.style.display = notification.dataset.read === 'false' ? 'block' : 'none';
+                } else {
+                    notification.style.display = notification.dataset.type === filter ? 'block' : 'none';
+                }
+            });
+        });
+    });
+    
+    // Sort functionality
+    const sortRadios = document.querySelectorAll('input[name="sortOrder"]');
+    sortRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            sortNotifications(this.value);
+        });
+    });
+    
+    // Mark all as read
+    document.getElementById('markAllRead').addEventListener('click', function() {
+        if (confirm('Mark all notifications as read?')) {
+            fetch('{{ url_for("lms.mark_all_notifications_read") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+    });
+    
+    // Refresh notifications
+    document.getElementById('refreshNotifications').addEventListener('click', function() {
+        location.reload();
+    });
+    
+    // Load more functionality
+    const loadMoreBtn = document.getElementById('loadMore');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+            const page = this.dataset.page;
+            loadMoreNotifications(page);
+        });
+    }
+});
+
+function markAsRead(notificationId) {
+    fetch(`{{ url_for('lms.mark_notification_read', notification_id=0) }}`.replace('0', notificationId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken()
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const card = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            if (card) {
+                card.classList.remove('unread');
+                card.dataset.read = 'true';
+                const badge = card.querySelector('.badge.bg-primary');
+                if (badge) badge.remove();
+            }
+            
+            // Update unread count
+            updateUnreadCount();
+        }
+    });
+}
+
+function sortNotifications(order) {
+    const container = document.getElementById('notificationsList');
+    const notifications = Array.from(container.children);
+    
+    notifications.sort((a, b) => {
+        const dateA = new Date(a.querySelector('.notification-meta span').textContent.split('at')[1]);
+        const dateB = new Date(b.querySelector('.notification-meta span').textContent.split('at')[1]);
+        
+        return order === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+    
+    notifications.forEach(notification => container.appendChild(notification));
+}
+
+function loadMoreNotifications(page) {
+    fetch(`{{ url_for('lms.notifications') }}?page=${page}`)
+    .then(response => response.text())
+    .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newNotifications = doc.querySelectorAll('.notification-card');
+        
+        const container = document.getElementById('notificationsList');
+        newNotifications.forEach(notification => {
+            container.appendChild(notification);
+        });
+        
+        // Update load more button
+        const loadMoreBtn = document.getElementById('loadMore');
+        const nextPage = parseInt(page) + 1;
+        loadMoreBtn.dataset.page = nextPage;
+        
+        // Check if there are more pages
+        const hasMore = doc.querySelector('#loadMore');
+        if (!hasMore) {
+            loadMoreBtn.style.display = 'none';
+        }
+    });
+}
+
+function updateUnreadCount() {
+    const unreadCards = document.querySelectorAll('.notification-card[data-read="false"]');
+    const countBadge = document.querySelector('.badge.bg-warning');
+    
+    if (unreadCards.length === 0 && countBadge) {
+        countBadge.remove();
+    } else if (countBadge) {
+        countBadge.textContent = `${unreadCards.length} unread`;
+    }
+    
+    // Update filter tab counts
+    const unreadTab = document.querySelector('[data-filter="unread"]');
+    if (unreadTab) {
+        unreadTab.textContent = `Unread (${unreadCards.length})`;
+    }
+}
+
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]') ? 
+           document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}Dashboard Error{% endblock %}
+
+{% block extra_css %}
+<style>
+.error-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    color: white;
+    text-align: center;
+    padding: 3rem;
+    margin: 2rem 0;
+}
+
+.error-content {
+    max-width: 600px;
+}
+
+.error-icon {
+    font-size: 5rem;
+    margin-bottom: 2rem;
+    opacity: 0.8;
+}
+
+.error-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.error-message {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-error {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-error:hover {
+    background: white;
+    color: #667eea;
+    transform: translateY(-2px);
+}
+
+.btn-primary-error {
+    background: white;
+    color: #667eea;
+    border: 2px solid white;
+}
+
+.btn-primary-error:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.error-details {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    text-align: left;
+}
+
+.error-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.error-details pre {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-size: 0.9rem;
+    color: #f8f9fa;
+}
+
+.quick-nav {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-top: 2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.quick-nav h5 {
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.nav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.nav-item {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1rem;
+    text-decoration: none;
+    color: #495057;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.nav-item:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    color: #495057;
+    text-decoration: none;
+}
+
+.nav-item i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="error-container">
+        <div class="error-content">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h1 class="error-title">Dashboard Temporarily Unavailable</h1>
+            <p class="error-message">
+                We're experiencing some technical difficulties loading your dashboard. 
+                Don't worry - your data is safe and other features are still available.
+            </p>
+            
+            <div class="error-actions">
+                <a href="javascript:window.location.reload()" class="btn btn-primary-error">
+                    <i class="fas fa-redo me-2"></i>Try Again
+                </a>
+                <a href="{{ url_for('lms.student_dashboard') }}" class="btn btn-error">
+                    <i class="fas fa-book me-2"></i>Go to Learning
+                </a>
+                <a href="{{ url_for('student_portal.support') }}" class="btn btn-error">
+                    <i class="fas fa-life-ring me-2"></i>Get Help
+                </a>
+            </div>
+
+            {% if error_message %}
+            <div class="error-details">
+                <details>
+                    <summary>
+                        <i class="fas fa-bug me-2"></i>Technical Details (for support)
+                    </summary>
+                    <div class="mt-2">
+                        <strong>Error:</strong> {{ error_message }}
+                        <br><br>
+                        <strong>Student ID:</strong> {{ student_id }}
+                        <br>
+                        <strong>Time:</strong> {{ moment().format('YYYY-MM-DD HH:mm:ss') }}
+                        <br>
+                        <strong>Page:</strong> Student Dashboard
+                    </div>
+                </details>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Navigation -->
+    <div class="quick-nav">
+        <h5><i class="fas fa-compass me-2"></i>Quick Navigation</h5>
+        <div class="nav-grid">
+            <a href="{{ url_for('lms.student_dashboard') }}" class="nav-item">
+                <div><i class="fas fa-book-open"></i></div>
+                <div>My Learning</div>
+            </a>
+            <a href="{{ url_for('student_portal.my_courses') }}" class="nav-item">
+                <div><i class="fas fa-graduation-cap"></i></div>
+                <div>My Courses</div>
+            </a>
+            <a href="{{ url_for('student_portal.my_attendance') }}" class="nav-item">
+                <div><i class="fas fa-calendar-check"></i></div>
+                <div>Attendance</div>
+            </a>
+            <a href="{{ url_for('student_portal.my_fees') }}" class="nav-item">
+                <div><i class="fas fa-credit-card"></i></div>
+                <div>Fees & Payments</div>
+            </a>
+            <a href="{{ url_for('student_portal.my_profile') }}" class="nav-item">
+                <div><i class="fas fa-user"></i></div>
+                <div>My Profile</div>
+            </a>
+            <a href="{{ url_for('student_portal.support') }}" class="nav-item">
+                <div><i class="fas fa-life-ring"></i></div>
+                <div>Support</div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-retry after 30 seconds
+    setTimeout(function() {
+        if (confirm('Would you like to try loading the dashboard again?')) {
+            window.location.reload();
+        }
+    }, 30000);
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            window.location.reload();
+        }
+        if (e.key === 'Escape') {
+            window.location.href = '{{ url_for("lms.student_dashboard") }}';
+        }
+    });
+});
+</script>
+{% endblock %}

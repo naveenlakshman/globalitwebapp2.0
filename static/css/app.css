@@ -1,0 +1,38 @@
+/* app.css */
+/* === Design Tokens === */
+@import url('design-system.css');
+
+/* === Global Components === */
+@import url('components/buttons.css');
+@import url('components/forms.css');
+@import url('components/tables.css');
+@import url('components/modals.css');
+@import url('components/alerts.css');
+
+/* === Layout Styles === */
+@import url('layouts/sidebar.css');
+@import url('layouts/topnav.css');
+@import url('layouts/dashboard.css');
+@import url('layouts/auth-layout.css');
+
+/* === Modules === */
+@import url('modules/lead-management.css');
+@import url('modules/lead-forms.css');
+@import url('modules/lead-view.css');
+@import url('modules/student-management.css');
+@import url('modules/student-batch-management.css');
+@import url('modules/batch-management.css');
+@import url('modules/payment-management.css');
+@import url('modules/invoice-management.css');
+@import url('modules/invoice-creation.css');
+@import url('modules/finance.css');
+@import url('modules/course-management.css');
+@import url('modules/attendance.css');
+@import url('modules/student-attendance.css');
+@import url('modules/attendance-management.css');
+@import url('modules/attendance-reports.css');
+@import url('modules/sms.css');
+@import url('modules/audit-logs.css');
+@import url('modules/franchise-dashboard.css');
+@import url('modules/theme-toggle.css');
+@import url('modules/staff-management-wizard.css');

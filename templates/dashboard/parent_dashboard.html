@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block title %}Parent Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary">
+                        <i class="fas fa-users me-2"></i>Parent Dashboard
+                    </h2>
+                    <p class="text-secondary mb-0">
+                        <i class="fas fa-heart me-1"></i>Monitor your child's academic progress
+                    </p>
+                </div>
+                <div class="text-end">
+                    <small class="text-secondary">Stay connected with your child's education!</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">
+                                Children Enrolled
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">{{ children_enrolled }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">
+                                Total Fees Paid
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">₹{{ "{:,.0f}".format(total_fees_paid) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-rupee-sign fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+                                Pending Fees
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">₹{{ "{:,.0f}".format(pending_fees) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">
+                                Overall Performance
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">Excellent</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Upcoming Events -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-calendar-alt me-2"></i>Upcoming Events
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_events %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in upcoming_events %}
+                                <tr>
+                                    <td>{{ event.title }}</td>
+                                    <td>{{ event.date }}</td>
+                                    <td>{{ event.time }}</td>
+                                    <td>
+                                        {% if event.type == 'class' %}
+                                            <span class="badge bg-primary">Class</span>
+                                        {% elif event.type == 'exam' %}
+                                            <span class="badge bg-warning">Exam</span>
+                                        {% elif event.type == 'meeting' %}
+                                            <span class="badge bg-info">Meeting</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Other</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-secondary mb-3"></i>
+                        <p class="text-secondary">No upcoming events scheduled.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-history me-2"></i>Recent Activities
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_activities %}
+                    <div class="list-group list-group-flush">
+                        {% for activity in recent_activities %}
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">
+                                    {% if activity.type == 'payment' %}
+                                        <i class="fas fa-money-bill text-success me-2"></i>
+                                    {% elif activity.type == 'attendance' %}
+                                        <i class="fas fa-check-circle text-primary me-2"></i>
+                                    {% elif activity.type == 'assignment' %}
+                                        <i class="fas fa-file-alt text-info me-2"></i>
+                                    {% endif %}
+                                    {{ activity.description }}
+                                </div>
+                                <small class="text-secondary">{{ activity.date }}</small>
+                            </div>
+                            <div class="text-end">
+                                {% if activity.amount %}
+                                    <span class="badge bg-success">{{ activity.amount }}</span>
+                                {% elif activity.status %}
+                                    <span class="badge bg-primary">{{ activity.status }}</span>
+                                {% elif activity.grade %}
+                                    <span class="badge bg-info">Grade: {{ activity.grade }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-secondary mb-3"></i>
+                        <p class="text-secondary">No recent activities to display.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Child Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-child me-2"></i>Child Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fas fa-child fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="child-details text-center">
+                        <h5 class="mb-2">Arjun Patel</h5>
+                        <p class="mb-2"><strong>Student ID:</strong> student_001</p>
+                        <p class="mb-2"><strong>Course:</strong> Python Programming</p>
+                        <p class="mb-2"><strong>Batch:</strong> PYT01 - Python Programming</p>
+                        <p class="mb-2"><strong>Branch:</strong> Mumbai Branch</p>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-primary btn-sm">
+                            <i class="fas fa-chart-line me-1"></i>View Progress Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-calendar-check me-1"></i>View Attendance
+                        </a>
+                        <a href="#" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-money-bill me-1"></i>Pay Fees Online
+                        </a>
+                        <a href="#" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-download me-1"></i>Download Report Card
+                        </a>
+                        <a href="#" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-phone me-1"></i>Schedule Parent Meeting
+                        </a>
+                        <a href="#" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-comments me-1"></i>Message Teacher
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Communication Center -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-envelope me-2"></i>Communication
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-bell text-warning me-2"></i>
+                            <small><strong>New Notification</strong></small>
+                        </div>
+                        <p class="text-secondary small mb-0">Monthly fee payment reminder for Python Programming course.</p>
+                        <small class="text-secondary">2 hours ago</small>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            <small><strong>Course Update</strong></small>
+                        </div>
+                        <p class="text-secondary small mb-0">New assignment uploaded for Python Basics module.</p>
+                        <small class="text-secondary">1 day ago</small>
+                    </div>
+                    <div class="text-center">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>View All Messages
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary {
+    border-left: .25rem solid #4e73df!important;
+}
+.border-left-success {
+    border-left: .25rem solid #1cc88a!important;
+}
+.border-left-warning {
+    border-left: .25rem solid #f6c23e!important;
+}
+.border-left-info {
+    border-left: .25rem solid #36b9cc!important;
+}
+.text-gray-800 {
+    color: #5a5c69!important;
+}
+.text-gray-300 {
+    color: #dddfeb!important;
+}
+.child-details p {
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    {% if student %}
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary">
+                        <i class="fas fa-graduation-cap me-2"></i>Student Dashboard
+                    </h2>
+                    <p class="text-secondary mb-0">
+                        <i class="fas fa-user me-1"></i>Welcome back, {{ student.full_name }}!
+                    </p>
+                    <small class="text-secondary">
+                        <i class="fas fa-id-card me-1"></i>Student ID: {{ student.student_id }}
+                        {% if branch %}
+                        | <i class="fas fa-map-marker-alt me-1"></i>{{ branch.branch_name }}
+                        {% endif %}
+                    </small>
+                </div>
+                <div class="text-end">
+                    <small class="text-secondary">Welcome to your dashboard!</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">
+                                Course Progress
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">
+                                {% if course %}{{ course.course_name }}{% else %}Not Assigned{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">
+                                Fees Paid
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">₹{{ "{:,.0f}".format(total_paid) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-rupee-sign fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+                                Outstanding Dues
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">₹{{ "{:,.0f}".format(total_due) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">
+                                Batch Mates
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-primary">{{ batch_mates|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Upcoming Classes -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-calendar-alt me-2"></i>Upcoming Classes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_classes %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Instructor</th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for class in upcoming_classes %}
+                                <tr>
+                                    <td>{{ class.subject }}</td>
+                                    <td>{{ class.date }}</td>
+                                    <td>{{ class.time }}</td>
+                                    <td>{{ class.trainer }}</td>
+                                    <td>{{ class.location }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-secondary mb-3"></i>
+                        <p class="text-secondary">No upcoming classes scheduled.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Payments -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-receipt me-2"></i>Recent Payments
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_payments %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Payment Mode</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in recent_payments %}
+                                <tr>
+                                    <td>{{ payment.paid_on|format_date_indian if payment.paid_on else 'N/A' }}</td>
+                                    <td>₹{{ "{:,.0f}".format(payment.amount) }}</td>
+                                    <td>{{ payment.mode or 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Paid</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-credit-card fa-3x text-secondary mb-3"></i>
+                        <p class="text-secondary">No payment history available.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Student Profile Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-user me-2"></i>My Profile
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        {% if student.photo_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' + student.photo_filename) }}" 
+                             class="rounded-circle" width="80" height="80" alt="Profile Photo">
+                        {% else %}
+                        <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fas fa-user fa-2x text-white"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="profile-details">
+                        <p class="mb-2"><strong>Name:</strong> {{ student.full_name }}</p>
+                        <p class="mb-2"><strong>Email:</strong> {{ student.email or 'Not provided' }}</p>
+                        <p class="mb-2"><strong>Mobile:</strong> {{ student.mobile or 'Not provided' }}</p>
+                        <p class="mb-2"><strong>Guardian:</strong> {{ student.guardian_name or 'Not provided' }}</p>
+                        {% if student.guardian_mobile %}
+                        <p class="mb-2"><strong>Guardian Mobile:</strong> {{ student.guardian_mobile }}</p>
+                        {% endif %}
+                        <p class="mb-2"><strong>Admission Date:</strong> 
+                            {{ student.admission_date.strftime('%d/%m/%Y') if student.admission_date else 'N/A' }}
+                        </p>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Update Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-graduation-cap me-2"></i>Course Details
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if course and batch %}
+                    <p class="mb-2"><strong>Course:</strong> {{ course.course_name }}</p>
+                    <p class="mb-2"><strong>Duration:</strong> {{ course.duration or 'N/A' }}</p>
+                    <p class="mb-2"><strong>Batch:</strong> {{ batch.name }}</p>
+                    <p class="mb-2"><strong>Timing:</strong> {{ batch.timing or 'Not scheduled' }}</p>
+                    {% if batch.start_date %}
+                    <p class="mb-2"><strong>Start Date:</strong> {{ batch.start_date }}</p>
+                    {% endif %}
+                    <p class="mb-2"><strong>Fee:</strong> ₹{{ "{:,.0f}".format(course.fee) if course.fee else 'N/A' }}</p>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-exclamation-circle fa-2x text-secondary mb-2"></i>
+                        <p class="text-secondary">Course information not available.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-download me-1"></i>Download Fee Receipt
+                        </a>
+                        <a href="#" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-calendar me-1"></i>View Attendance
+                        </a>
+                        <a href="#" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-chart-line me-1"></i>View Progress
+                        </a>
+                        <a href="#" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-question-circle me-1"></i>Contact Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Error State -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-left-danger shadow">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
+                    <h4 class="text-danger">Access Denied</h4>
+                    <p class="text-secondary">{{ error_message or 'Unable to load student dashboard. Please contact administration.' }}</p>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt me-1"></i>Login Again
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.border-left-primary {
+    border-left: .25rem solid #4e73df!important;
+}
+.border-left-success {
+    border-left: .25rem solid #1cc88a!important;
+}
+.border-left-warning {
+    border-left: .25rem solid #f6c23e!important;
+}
+.border-left-info {
+    border-left: .25rem solid #36b9cc!important;
+}
+.border-left-danger {
+    border-left: .25rem solid #e74a3b!important;
+}
+.text-gray-800 {
+    color: #5a5c69!important;
+}
+.text-gray-300 {
+    color: #dddfeb!important;
+}
+.profile-details p {
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}

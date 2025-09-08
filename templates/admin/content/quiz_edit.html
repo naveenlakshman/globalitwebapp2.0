@@ -1,0 +1,176 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Edit Quiz - {{ quiz.quiz_title }}{% endblock %}
+{% block page_icon %}fas fa-edit{% endblock %}
+{% block page_title %}Edit Quiz{% endblock %}
+{% block page_description %}{{ quiz.quiz_title }} - Edit quiz settings{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>Edit Quiz Settings
+                </h5>
+                <a href="{{ url_for('lms_content_management.quiz_detail', quiz_id=quiz.id) }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Quiz
+                </a>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('lms_content_management.quiz_edit_process', quiz_id=quiz.id) }}">
+                    <!-- Course and Module (Read-only) -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Course</label>
+                            <input type="text" class="form-control" value="{{ quiz.course.course_name }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Module</label>
+                            <input type="text" class="form-control" value="{{ quiz.module.module_name }}" readonly>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Placement Type -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="quiz_placement" class="form-label">Quiz Placement *</label>
+                            <select id="quiz_placement" name="quiz_placement" class="form-select" required>
+                                <option value="section" {{ 'selected' if quiz.quiz_placement == 'section' else '' }}>Section Level - Quiz for specific section</option>
+                                <option value="module" {{ 'selected' if quiz.quiz_placement == 'module' else '' }}>Module Level - Quiz after completing all sections</option>
+                            </select>
+                            <div class="form-text">Choose when students should take this quiz</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="placement_order" class="form-label">Order</label>
+                            <input type="number" id="placement_order" name="placement_order" 
+                                   class="form-control" value="{{ quiz.placement_order }}" min="1" max="10">
+                            <div class="form-text">Order within the placement level</div>
+                        </div>
+                    </div>
+
+                    <!-- Section Selection (conditional) -->
+                    <div class="row mb-4" id="section_selection" style="{{ 'display: none;' if quiz.quiz_placement == 'module' else '' }}">
+                        <div class="col-md-6">
+                            <label for="section_id" class="form-label">Section <span id="section_required">*</span></label>
+                            <select id="section_id" name="section_id" class="form-select">
+                                <option value="">Select Section</option>
+                                {% if quiz.section %}
+                                <option value="{{ quiz.section.id }}" selected>{{ quiz.section.section_name }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <label for="quiz_title" class="form-label">Quiz Title *</label>
+                            <input type="text" id="quiz_title" name="quiz_title" class="form-control" 
+                                   value="{{ quiz.quiz_title }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="passing_score" class="form-label">Passing Score (%) *</label>
+                            <input type="number" id="passing_score" name="passing_score" class="form-control" 
+                                   value="{{ quiz.passing_score }}" min="1" max="100" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="quiz_description" class="form-label">Description</label>
+                        <textarea id="quiz_description" name="quiz_description" class="form-control" 
+                                  rows="3">{{ quiz.quiz_description or '' }}</textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="instructions" class="form-label">Instructions</label>
+                        <textarea id="instructions" name="instructions" class="form-control" 
+                                  rows="4">{{ quiz.instructions or '' }}</textarea>
+                    </div>
+
+                    <!-- Quiz Settings -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Quiz Settings</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="time_limit_minutes" class="form-label">Time Limit (minutes)</label>
+                                        <input type="number" id="time_limit_minutes" name="time_limit_minutes" 
+                                               class="form-control" value="{{ quiz.time_limit_minutes }}" min="1" max="300">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="max_attempts" class="form-label">Maximum Attempts</label>
+                                        <input type="number" id="max_attempts" name="max_attempts" 
+                                               class="form-control" value="{{ quiz.max_attempts }}" min="1" max="10">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="is_mandatory" value="1" 
+                                               id="is_mandatory" {{ 'checked' if quiz.is_mandatory else '' }}>
+                                        <label class="form-check-label" for="is_mandatory">Mandatory Quiz</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="shuffle_questions" value="1" 
+                                               id="shuffle_questions" {{ 'checked' if quiz.shuffle_questions else '' }}>
+                                        <label class="form-check-label" for="shuffle_questions">Shuffle Questions</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="shuffle_options" value="1" 
+                                               id="shuffle_options" {{ 'checked' if quiz.shuffle_options else '' }}>
+                                        <label class="form-check-label" for="shuffle_options">Shuffle Answer Options</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="show_results_immediately" value="1" 
+                                               id="show_results_immediately" {{ 'checked' if quiz.show_results_immediately else '' }}>
+                                        <label class="form-check-label" for="show_results_immediately">Show Results Immediately</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="show_correct_answers" value="1" 
+                                               id="show_correct_answers" {{ 'checked' if quiz.show_correct_answers else '' }}>
+                                        <label class="form-check-label" for="show_correct_answers">Show Correct Answers</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="requires_video_completion" value="1" 
+                                               id="requires_video_completion" {{ 'checked' if quiz.requires_video_completion else '' }}>
+                                        <label class="form-check-label" for="requires_video_completion">Requires Video Completion</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('lms_content_management.quiz_detail', quiz_id=quiz.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('quiz_placement').addEventListener('change', function() {
+    const sectionSelection = document.getElementById('section_selection');
+    const sectionRequired = document.getElementById('section_required');
+    const sectionSelect = document.getElementById('section_id');
+    
+    if (this.value === 'module') {
+        sectionSelection.style.display = 'none';
+        sectionRequired.style.display = 'none';
+        sectionSelect.required = false;
+    } else {
+        sectionSelection.style.display = 'block';
+        sectionRequired.style.display = 'inline';
+        sectionSelect.required = true;
+    }
+});
+</script>
+{% endblock %}

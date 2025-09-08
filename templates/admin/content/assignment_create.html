@@ -1,0 +1,499 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Create Assignment{% endblock %}
+{% block page_icon %}fas fa-plus-circle{% endblock %}
+{% block page_title %}Create New Assignment{% endblock %}
+{% block page_description %}Design and configure educational assignments for course assessment{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('lms_content_management.assignment_list') }}" class="btn btn-outline-secondary">
+    <i class="fas fa-arrow-left me-2"></i>Back to Assignments
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Assignment Creation Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2 text-primary"></i>Assignment Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="assignmentForm">
+                    <!-- Course Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="course_id" class="form-label">Course *</label>
+                            <select id="course_id" name="course_id" class="form-select" required onchange="loadModules()">
+                                <option value="">Select Course</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.course_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="module_id" class="form-label">Module *</label>
+                            <select id="module_id" name="module_id" class="form-select" required onchange="loadSections()">
+                                <option value="">Select Module</option>
+                                <!-- Modules will be loaded via JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Assignment Placement -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="assignment_placement" class="form-label">Assignment Placement *</label>
+                            <select id="assignment_placement" name="assignment_placement" class="form-select" required onchange="toggleSectionField()">
+                                <option value="section">Section-level Assignment</option>
+                                <option value="module">Module-level Assignment</option>
+                            </select>
+                            <small class="form-text text-muted">Choose where this assignment appears in the course structure</small>
+                        </div>
+                        <div class="col-md-6" id="section_field">
+                            <label for="section_id" class="form-label">Section *</label>
+                            <select id="section_id" name="section_id" class="form-select">
+                                <option value="">Select Section</option>
+                                <!-- Sections will be loaded via JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Assignment Details -->
+                    <div class="mb-4">
+                        <label for="assignment_title" class="form-label">Assignment Title *</label>
+                        <input type="text" class="form-control" id="assignment_title" name="assignment_title" 
+                               placeholder="Enter assignment title" required maxlength="200">
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="assignment_description" class="form-label">Assignment Description</label>
+                        <textarea class="form-control" id="assignment_description" name="assignment_description" 
+                                  rows="3" placeholder="Brief description of the assignment purpose"></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="detailed_instructions" class="form-label">Detailed Instructions</label>
+                        <textarea class="form-control" id="detailed_instructions" name="detailed_instructions" 
+                                  rows="6" placeholder="Provide comprehensive step-by-step instructions for students"></textarea>
+                    </div>
+
+                    <!-- Assignment Configuration -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="assignment_type" class="form-label">Assignment Type *</label>
+                            <select id="assignment_type" name="assignment_type" class="form-select" required>
+                                <option value="project">Project</option>
+                                <option value="essay">Essay</option>
+                                <option value="practical">Practical</option>
+                                <option value="presentation">Presentation</option>
+                                <option value="research">Research</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="max_score" class="form-label">Maximum Score *</label>
+                            <input type="number" class="form-control" id="max_score" name="max_score" 
+                                   value="100" min="1" max="1000" required>
+                        </div>
+                    </div>
+
+                    <!-- Timing & Placement -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="due_date" class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="due_date" name="due_date">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="placement_order" class="form-label">Placement Order</label>
+                            <input type="number" class="form-control" id="placement_order" name="placement_order" 
+                                   value="1" min="1" max="100">
+                            <small class="form-text text-muted">Order within the selected placement level</small>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Settings -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-cog me-2"></i>Advanced Settings
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="is_mandatory" name="is_mandatory" checked>
+                                        <label class="form-check-label" for="is_mandatory">
+                                            Mandatory Assignment
+                                        </label>
+                                        <small class="form-text text-muted d-block">Required for course completion</small>
+                                    </div>
+                                    
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="requires_video_completion" name="requires_video_completion">
+                                        <label class="form-check-label" for="requires_video_completion">
+                                            Require Video Completion
+                                        </label>
+                                        <small class="form-text text-muted d-block">Students must watch videos before accessing</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="group_assignment" name="group_assignment">
+                                        <label class="form-check-label" for="group_assignment">
+                                            Group Assignment
+                                        </label>
+                                        <small class="form-text text-muted d-block">Allow team collaboration</small>
+                                    </div>
+                                    
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="late_submission_allowed" name="late_submission_allowed">
+                                        <label class="form-check-label" for="late_submission_allowed">
+                                            Allow Late Submissions
+                                        </label>
+                                        <small class="form-text text-muted d-block">Accept submissions after due date</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submission Requirements -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-upload me-2"></i>Submission Requirements
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="submission_format" class="form-label">Submission Format</label>
+                                    <input type="text" class="form-control" id="submission_format" name="submission_format" 
+                                           placeholder="e.g., PDF, DOC, ZIP" value="PDF">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="max_file_size_mb" class="form-label">Max File Size (MB)</label>
+                                    <input type="number" class="form-control" id="max_file_size_mb" name="max_file_size_mb" 
+                                           value="50" min="1" max="500">
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <label for="min_word_count" class="form-label">Minimum Word Count</label>
+                                    <input type="number" class="form-control" id="min_word_count" name="min_word_count" 
+                                           placeholder="Optional" min="0">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="max_word_count" class="form-label">Maximum Word Count</label>
+                                    <input type="number" class="form-control" id="max_word_count" name="max_word_count" 
+                                           placeholder="Optional" min="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('lms_content_management.assignment_list') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <div>
+                            <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-save me-2"></i>Save as Draft
+                            </button>
+                            <button type="submit" name="action" value="save_and_review" class="btn btn-success">
+                                <i class="fas fa-check me-2"></i>Save & Submit for Review
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Sidebar -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2 text-warning"></i>Assignment Creation Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="help-section mb-4">
+                    <h6><i class="fas fa-target text-primary"></i> Clear Objectives</h6>
+                    <p class="small text-muted">Define specific learning outcomes and assessment criteria in your instructions.</p>
+                </div>
+                
+                <div class="help-section mb-4">
+                    <h6><i class="fas fa-clock text-info"></i> Realistic Timeline</h6>
+                    <p class="small text-muted">Set due dates that allow adequate time for research, completion, and quality work.</p>
+                </div>
+                
+                <div class="help-section mb-4">
+                    <h6><i class="fas fa-file-alt text-success"></i> Submission Format</h6>
+                    <p class="small text-muted">Specify required file formats, naming conventions, and size limits clearly.</p>
+                </div>
+                
+                <div class="help-section mb-4">
+                    <h6><i class="fas fa-star text-warning"></i> Grading Rubric</h6>
+                    <p class="small text-muted">Consider adding detailed grading criteria after assignment creation.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignment Types Guide -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2 text-info"></i>Assignment Types
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="assignment-type mb-3">
+                    <strong class="text-primary">Project</strong>
+                    <p class="small text-muted mb-1">Comprehensive practical work demonstrating applied knowledge</p>
+                </div>
+                
+                <div class="assignment-type mb-3">
+                    <strong class="text-success">Essay</strong>
+                    <p class="small text-muted mb-1">Written analysis or research-based academic writing</p>
+                </div>
+                
+                <div class="assignment-type mb-3">
+                    <strong class="text-info">Practical</strong>
+                    <p class="small text-muted mb-1">Hands-on exercises and skill demonstrations</p>
+                </div>
+                
+                <div class="assignment-type mb-3">
+                    <strong class="text-warning">Presentation</strong>
+                    <p class="small text-muted mb-1">Oral or multimedia presentations to demonstrate understanding</p>
+                </div>
+                
+                <div class="assignment-type mb-3">
+                    <strong class="text-danger">Research</strong>
+                    <p class="small text-muted mb-1">In-depth investigation and analysis of specific topics</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation and dynamic loading
+let modules = [];
+let sections = [];
+
+async function loadModules() {
+    const courseId = document.getElementById('course_id').value;
+    const moduleSelect = document.getElementById('module_id');
+    const sectionSelect = document.getElementById('section_id');
+    
+    // Clear existing options
+    moduleSelect.innerHTML = '<option value="">Select Module</option>';
+    sectionSelect.innerHTML = '<option value="">Select Section</option>';
+    
+    if (!courseId) return;
+    
+    try {
+        const response = await fetch(`/admin/content/api/modules/${courseId}`);
+        modules = await response.json();
+        
+        modules.forEach(module => {
+            const option = document.createElement('option');
+            option.value = module.id;
+            option.textContent = module.module_name;
+            moduleSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading modules:', error);
+    }
+}
+
+async function loadSections() {
+    const moduleId = document.getElementById('module_id').value;
+    const sectionSelect = document.getElementById('section_id');
+    
+    // Clear existing options
+    sectionSelect.innerHTML = '<option value="">Select Section</option>';
+    
+    if (!moduleId) return;
+    
+    try {
+        const response = await fetch(`/admin/content/api/sections/${moduleId}?type=assignment`);
+        sections = await response.json();
+        
+        sections.forEach(section => {
+            const option = document.createElement('option');
+            option.value = section.id;
+            option.textContent = section.section_name;
+            sectionSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading sections:', error);
+    }
+}
+
+function toggleSectionField() {
+    const placement = document.getElementById('assignment_placement').value;
+    const sectionField = document.getElementById('section_field');
+    const sectionSelect = document.getElementById('section_id');
+    
+    if (placement === 'module') {
+        sectionField.style.display = 'none';
+        sectionSelect.removeAttribute('required');
+    } else {
+        sectionField.style.display = 'block';
+        sectionSelect.setAttribute('required', 'required');
+    }
+}
+
+// Form submission handling
+document.getElementById('assignmentForm').addEventListener('submit', function(e) {
+    const courseId = document.getElementById('course_id').value;
+    const moduleId = document.getElementById('module_id').value;
+    const assignmentTitle = document.getElementById('assignment_title').value;
+    const placement = document.getElementById('assignment_placement').value;
+    const sectionId = document.getElementById('section_id').value;
+    
+    // Basic validation
+    if (!courseId || !moduleId || !assignmentTitle) {
+        e.preventDefault();
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    // Section validation for section-level assignments
+    if (placement === 'section' && !sectionId) {
+        e.preventDefault();
+        alert('Please select a section for section-level assignments');
+        return;
+    }
+    
+    // Word count validation
+    const minWords = parseInt(document.getElementById('min_word_count').value) || 0;
+    const maxWords = parseInt(document.getElementById('max_word_count').value) || 0;
+    
+    if (minWords > 0 && maxWords > 0 && minWords >= maxWords) {
+        e.preventDefault();
+        alert('Minimum word count must be less than maximum word count');
+        return;
+    }
+    
+    // Due date validation
+    const dueDate = document.getElementById('due_date').value;
+    if (dueDate) {
+        const dueDateObj = new Date(dueDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (dueDateObj < today) {
+            const confirmPast = confirm('The due date is in the past. Are you sure you want to continue?');
+            if (!confirmPast) {
+                e.preventDefault();
+                return;
+            }
+        }
+    }
+    
+    // Show loading state
+    const submitButtons = document.querySelectorAll('button[type="submit"]');
+    submitButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+    });
+});
+
+// Auto-save functionality
+let autoSaveTimer;
+function setupAutoSave() {
+    const formInputs = document.querySelectorAll('#assignmentForm input, #assignmentForm textarea, #assignmentForm select');
+    
+    formInputs.forEach(input => {
+        input.addEventListener('input', () => {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(saveFormData, 2000); // Auto-save after 2 seconds of inactivity
+        });
+    });
+}
+
+function saveFormData() {
+    const formData = new FormData(document.getElementById('assignmentForm'));
+    localStorage.setItem('assignmentDraft', JSON.stringify(Object.fromEntries(formData)));
+    
+    // Show save indicator
+    showToast('Draft saved automatically', 'info');
+}
+
+function loadFormData() {
+    const savedData = localStorage.getItem('assignmentDraft');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        Object.keys(data).forEach(key => {
+            const element = document.querySelector(`[name="${key}"]`);
+            if (element) {
+                if (element.type === 'checkbox') {
+                    element.checked = data[key] === 'on';
+                } else {
+                    element.value = data[key];
+                }
+            }
+        });
+    }
+}
+
+function clearFormData() {
+    localStorage.removeItem('assignmentDraft');
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `toast position-fixed top-0 end-0 m-3`;
+    toast.innerHTML = `
+        <div class="toast-body bg-${type === 'info' ? 'info' : type === 'success' ? 'success' : 'danger'} text-white">
+            ${message}
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    setTimeout(() => {
+        document.body.removeChild(toast);
+    }, 3000);
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    toggleSectionField();
+    setupAutoSave();
+    loadFormData();
+    
+    // Clear draft on successful submission
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('created') === 'true') {
+        clearFormData();
+    }
+});
+
+// Warn user about unsaved changes
+window.addEventListener('beforeunload', function(e) {
+    const formData = new FormData(document.getElementById('assignmentForm'));
+    const hasData = Array.from(formData.values()).some(value => value.trim() !== '');
+    
+    if (hasData) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+    }
+});
+</script>
+{% endblock %}

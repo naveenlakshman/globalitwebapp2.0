@@ -1,0 +1,68 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}No Course Assigned{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="text-center">
+            <div class="mb-4">
+                <i class="fas fa-graduation-cap fa-5x text-muted"></i>
+            </div>
+            
+            <h2 class="mb-3">Welcome to the Learning Management System</h2>
+            <p class="lead text-muted mb-4">
+                You haven't been assigned to any course yet. Please contact your administrator to get enrolled in a course.
+            </p>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        What happens next?
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center p-3">
+                                <i class="fas fa-user-tie fa-2x text-primary mb-2"></i>
+                                <h6>Contact Admin</h6>
+                                <p class="small text-muted">Reach out to your administrator or training coordinator</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3">
+                                <i class="fas fa-book fa-2x text-success mb-2"></i>
+                                <h6>Course Assignment</h6>
+                                <p class="small text-muted">You'll be enrolled in appropriate courses for your program</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3">
+                                <i class="fas fa-play fa-2x text-warning mb-2"></i>
+                                <h6>Start Learning</h6>
+                                <p class="small text-muted">Begin your educational journey with video lessons and materials</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>Go to Dashboard
+                </a>
+                <a href="mailto:support@globalit.edu" class="btn btn-outline-primary">
+                    <i class="fas fa-envelope me-2"></i>Contact Support
+                </a>
+            </div>
+            
+            <div class="mt-4">
+                <small class="text-muted">
+                    Student ID: {{ student.student_id }} | 
+                    Enrolled: {{ student.enrollment_date.strftime('%d/%m/%Y') if student.enrollment_date else 'N/A' }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

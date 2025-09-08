@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+
+{% block title %}Installment Management - Global IT Education{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    
+    <!-- Regional Manager Access Notification -->
+    {% if session.get('role') == 'regional_manager' %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Showing data for your assigned branches: Mumbai and Delhi</strong>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Installment Management</h1>
+                    <p class="text-muted">Track and manage student fee installments</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('finance.dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Finance
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-group" role="group" aria-label="Status filters">
+                <a href="{{ url_for('finance.installments_list') }}" 
+                   class="btn {{ 'btn-primary' if not request.args.get('status') else 'btn-outline-primary' }}">
+                    All Installments
+                </a>
+                <a href="{{ url_for('finance.installments_list', status='pending') }}" 
+                   class="btn {{ 'btn-warning' if request.args.get('status') == 'pending' else 'btn-outline-warning' }}">
+                    Pending
+                </a>
+                <a href="{{ url_for('finance.installments_list', status='overdue') }}" 
+                   class="btn {{ 'btn-danger' if request.args.get('status') == 'overdue' else 'btn-outline-danger' }}">
+                    Overdue
+                </a>
+                <a href="{{ url_for('finance.installments_list', status='paid') }}" 
+                   class="btn {{ 'btn-success' if request.args.get('status') == 'paid' else 'btn-outline-success' }}">
+                    Paid
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Pending</h6>
+                            <h3 class="mb-0">{{ pending_count }}</h3>
+                            <small>₹{{ "{:,.2f}".format(pending_amount) }}</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Overdue</h6>
+                            <h3 class="mb-0">{{ overdue_count }}</h3>
+                            <small>₹{{ "{:,.2f}".format(overdue_amount) }}</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Paid</h6>
+                            <h3 class="mb-0">{{ paid_count }}</h3>
+                            <small>₹{{ "{:,.2f}".format(paid_amount) }}</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total</h6>
+                            <h3 class="mb-0">{{ total_count }}</h3>
+                            <small>₹{{ "{:,.2f}".format(total_amount) }}</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <input type="hidden" name="status" value="{{ request.args.get('status', '') }}">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search Student</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ request.args.get('search', '') }}" 
+                                   placeholder="Name or Student ID">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="branch_id" class="form-label">Branch</label>
+                            <select class="form-select" id="branch_id" name="branch_id">
+                                <option value="">All Branches</option>
+                                {% for branch in branches %}
+                                <option value="{{ branch.id }}" {{ 'selected' if request.args.get('branch_id') == branch.id|string }}>
+                                    {{ branch.branch_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="course" class="form-label">Course</label>
+                            <input type="text" class="form-control" id="course" name="course" 
+                                   value="{{ request.args.get('course', '') }}" placeholder="Course name">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="due_from" class="form-label">Due From</label>
+                            <input type="date" class="form-control" id="due_from" name="due_from" 
+                                   value="{{ request.args.get('due_from', '') }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="due_to" class="form-label">Due To</label>
+                            <input type="date" class="form-control" id="due_to" name="due_to" 
+                                   value="{{ request.args.get('due_to', '') }}">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Installments Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>Installments
+                        {% if request.args.get('status') %}
+                        - {{ request.args.get('status').title() }}
+                        {% endif %}
+                    </h5>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm" onclick="sendBulkReminders()">
+                            <i class="fas fa-bell me-2"></i>Send Bulk Reminders
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if installments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAll" class="form-check-input">
+                                    </th>
+                                    <th>Student</th>
+                                    <th>Course</th>
+                                    <th>Installment</th>
+                                    <th>Due Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for installment in installments %}
+                                <tr class="{{ 'table-danger' if installment.is_overdue() else 'table-warning' if installment.status == 'pending' else '' }}">
+                                    <td>
+                                        <input type="checkbox" class="form-check-input installment-checkbox" 
+                                               value="{{ installment.id }}">
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ installment.invoice.student.full_name }}</strong><br>
+                                            <small class="text-muted">{{ installment.invoice.student.student_id }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {{ installment.invoice.course_name }}<br>
+                                        <small class="text-muted">{{ installment.invoice.student.branch.branch_name if installment.invoice.student.branch else 'No Branch' }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>#{{ installment.installment_number }}</strong>
+                                        <span class="badge bg-secondary ms-1">{{ installment.installment_number }}/{{ installment.invoice.total_installments if installment.invoice else 1 }}</span>
+                                    </td>
+                                    <td>
+                                        {{ installment.due_date.strftime('%d-%m-%Y') }}
+                                        {% if installment.is_overdue() %}
+                                        <br><small class="text-danger">{{ installment.get_days_overdue() }} days overdue</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>₹{{ "{:,.2f}".format(installment.balance_amount) }}</strong>
+                                        {% if installment.amount != installment.balance_amount %}
+                                        <br><small class="text-muted">Original: ₹{{ "{:,.2f}".format(installment.amount) }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if installment.status == 'paid' %}
+                                        <span class="badge bg-success">Paid</span>
+                                        {% elif installment.is_overdue() %}
+                                        <span class="badge bg-danger">Overdue</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                        
+                                        {% if installment.payments %}
+                                        <br><small class="text-success">{{ installment.payments|length }} payment(s)</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            {% if installment.status != 'paid' %}
+                                            <a href="{{ url_for('finance.collect_payment', installment_id=installment.id) }}" 
+                                               class="btn btn-outline-primary" title="Collect Payment">
+                                                <i class="fas fa-money-bill"></i>
+                                            </a>
+                                            {% endif %}
+                                            <button type="button" class="btn btn-outline-info" 
+                                                    title="View Details" data-bs-toggle="modal" 
+                                                    data-bs-target="#installmentModal{{ installment.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-warning" 
+                                                    title="Send Reminder" 
+                                                    onclick="sendReminder({{ installment.id }})">
+                                                <i class="fas fa-bell"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Installment Details Modal -->
+                                <div class="modal fade" id="installmentModal{{ installment.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Installment Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <h6>Student Information</h6>
+                                                        <p><strong>Name:</strong> {{ installment.invoice.student.full_name }}</p>
+                                                        <p><strong>Student ID:</strong> {{ installment.invoice.student.student_id }}</p>
+                                                        <p><strong>Phone:</strong> {{ installment.invoice.student.mobile }}</p>
+                                                        <p><strong>Branch:</strong> {{ installment.invoice.student.branch.branch_name if installment.invoice.student.branch else 'No Branch' }}</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h6>Installment Details</h6>
+                                                        <p><strong>Course:</strong> {{ installment.invoice.course_name }}</p>
+                                                        <p><strong>Installment:</strong> #{{ installment.installment_number }} of {{ installment.invoice.total_installments if installment.invoice else 1 }}</p>
+                                                        <p><strong>Due Date:</strong> {{ installment.due_date.strftime('%d-%m-%Y') }}</p>
+                                                        <p><strong>Amount:</strong> ₹{{ "{:,.2f}".format(installment.amount) }}</p>
+                                                        <p><strong>Balance:</strong> ₹{{ "{:,.2f}".format(installment.balance_amount) }}</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                {% if installment.payments %}
+                                                <h6 class="mt-3">Payment History</h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Date</th>
+                                                                <th>Amount</th>
+                                                                <th>Method</th>
+                                                                <th>Receipt</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for payment in installment.payments %}
+                                                            <tr>
+                                                                <td>{{ (payment.payment_date or payment.paid_on).strftime('%d-%m-%Y') if (payment.payment_date or payment.paid_on) else 'N/A' }}</td>
+                                                                <td>₹{{ "{:,.2f}".format(payment.amount) }}</td>
+                                                                <td>{{ payment.mode.title() if payment.mode else 'N/A' }}</td>
+                                                                <td>RCP-{{ payment.id }}</td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                {% if installment.status != 'paid' %}
+                                                <a href="{{ url_for('finance.collect_payment', installment_id=installment.id) }}" 
+                                                   class="btn btn-primary">
+                                                    <i class="fas fa-money-bill me-2"></i>Collect Payment
+                                                </a>
+                                                {% endif %}
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if pagination %}
+                    <nav aria-label="Installment pagination" class="mt-3">
+                        <ul class="pagination justify-content-center">
+                            {% if pagination.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('finance.installments_list', page=pagination.prev_num, **request.args) }}">Previous</a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page_num in pagination.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != pagination.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('finance.installments_list', page=page_num, **request.args) }}">{{ page_num }}</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                    {% endif %}
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if pagination.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('finance.installments_list', page=pagination.next_num, **request.args) }}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No installments found</h5>
+                        <p class="text-muted">No installments match your current filters.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all checkbox functionality
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const installmentCheckboxes = document.querySelectorAll('.installment-checkbox');
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            installmentCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    }
+
+    // Update select all checkbox when individual checkboxes change
+    installmentCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const allChecked = Array.from(installmentCheckboxes).every(cb => cb.checked);
+            const someChecked = Array.from(installmentCheckboxes).some(cb => cb.checked);
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allChecked;
+                selectAllCheckbox.indeterminate = someChecked && !allChecked;
+            }
+        });
+    });
+});
+
+function sendReminder(installmentId) {
+    if (!confirm('Send payment reminder to this student?')) {
+        return;
+    }
+
+    fetch(`/finance/send-reminder/${installmentId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Reminder sent successfully!');
+        } else {
+            alert('Failed to send reminder: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send reminder');
+    });
+}
+
+function sendBulkReminders() {
+    const selectedCheckboxes = document.querySelectorAll('.installment-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one installment to send reminders.');
+        return;
+    }
+
+    if (!confirm(`Send payment reminders to ${selectedCheckboxes.length} student(s)?`)) {
+        return;
+    }
+
+    const installmentIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+    fetch('/finance/send-bulk-reminders', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ installment_ids: installmentIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Reminders sent successfully to ${data.sent_count} student(s)!`);
+            // Uncheck all checkboxes
+            selectedCheckboxes.forEach(cb => cb.checked = false);
+            document.getElementById('selectAll').checked = false;
+        } else {
+            alert('Failed to send reminders: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send bulk reminders');
+    });
+}
+</script>
+{% endblock %}

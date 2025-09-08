@@ -1,0 +1,6 @@
+/* Alerts */
+.alert{border:none; border-radius:var(--radius-lg); padding:var(--space-md) var(--space-lg); display:flex; gap:var(--space-sm); box-shadow:var(--shadow-sm)}
+.alert-success{background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(16,185,129,.06)); color:#047857; border-left:4px solid #10B981}
+.alert-warning{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.06)); color:#92400e; border-left:4px solid #F59E0B}
+.alert-danger{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.06)); color:#991b1b; border-left:4px solid #EF4444}
+.alert-info{background:linear-gradient(135deg,rgba(56,113,193,.12),rgba(56,113,193,.06)); color:#1e3a8a; border-left:4px solid var(--brand-secondary)}

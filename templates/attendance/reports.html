@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Reports{% endblock %}
+
+{% block extra_css %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+<!-- App CSS with attendance reports module -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="attendance-reports">
+<div class="page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-chart-line me-3"></i>Attendance Reports
+                </h1>
+                <p class="mb-0 opacity-75">Comprehensive attendance analytics and insights</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                    {% if session.role == 'admin' %}
+                        <a href="{{ url_for('dashboard_bp.admin_dashboard') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Dashboard
+                        </a>
+                    {% elif session.role in ['franchise_owner', 'franchise'] %}
+                        <a href="{{ url_for('dashboard_bp.franchise_dashboard') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Dashboard
+                        </a>
+                    {% elif session.role in ['branch_manager', 'staff'] %}
+                        <a href="{{ url_for('dashboard_bp.branch_manager_dashboard') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Dashboard
+                        </a>
+                    {% elif session.role == 'trainer' %}
+                        <a href="{{ url_for('dashboard_bp.trainer_dashboard') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Dashboard
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Date Range Filter -->
+    <div class="card filter-card">
+        <div class="card-body">
+            <form method="GET" class="filter-form row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="start_date" class="form-label fw-bold">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="end_date" class="form-label fw-bold">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="branch_filter" class="form-label fw-bold">Branch</label>
+                    <select class="form-select" id="branch_filter" name="branch_id">
+                        <option value="">All Branches</option>
+                        {% for branch in branches %}
+                            <option value="{{ branch.id }}" 
+                                {% if request.args.get('branch_id')|int == branch.id %}selected
+                                {% elif not request.args.get('branch_id') and session.user_branch_id == branch.id %}selected
+                                {% endif %}>
+                                {{ branch.branch_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="batch_status_filter" class="form-label fw-bold">Batch Status</label>
+                    <select class="form-select" id="batch_status_filter" name="batch_status">
+                        <option value="">All Status</option>
+                        <option value="Active" {% if request.args.get('batch_status') == 'Active' %}selected{% endif %}>Active</option>
+                        <option value="Completed" {% if request.args.get('batch_status') == 'Completed' %}selected{% endif %}>Completed</option>
+                        <option value="Suspended" {% if request.args.get('batch_status') == 'Suspended' %}selected{% endif %}>Suspended</option>
+                        <option value="Inactive" {% if request.args.get('batch_status') == 'Inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="batch_filter" class="form-label fw-bold">Batch</label>
+                    <select class="form-select" id="batch_filter" name="batch_id">
+                        <option value="">All Batches</option>
+                        {% for batch in batches %}
+                            {% if batch and batch.id %}
+                            <option value="{{ batch.id }}" {% if request.args.get('batch_id')|int == batch.id %}selected{% endif %}>
+                                {{ batch.name or 'Unnamed Batch' }} ({{ batch.status or 'Unknown' }})
+                            </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex flex-column">
+                    <label class="form-label fw-bold">&nbsp;</label>
+                    <div class="d-flex gap-1">
+                        <button type="submit" class="btn btn-primary btn-filter flex-fill">
+                            <i class="fas fa-filter me-1"></i>Apply
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-filter" onclick="clearFilters()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-filter" onclick="simpleTest()" title="Simple Test">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <div class="stats-icon mx-auto">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stats-value">{{ total_students }}</div>
+                    <div class="stats-label">Total Students</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <div class="stats-icon mx-auto">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stats-value">{{ present_count + late_count }}</div>
+                    <div class="stats-label">Present Days</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <div class="stats-icon mx-auto">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <div class="stats-value">{{ absent_count }}</div>
+                    <div class="stats-label">Absent Days</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <div class="stats-icon mx-auto">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="stats-value">{{ attendance_rate }}%</div>
+                    <div class="stats-label">Attendance Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="chart-container">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>Daily Attendance Trend
+                </h5>
+                <canvas id="attendanceChart"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="chart-container">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-pie me-2 text-primary"></i>Attendance Distribution
+                </h5>
+                <canvas id="distributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Performance -->
+    <div class="row">
+        <div class="col-12">
+            <div class="table-container">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h5 class="mb-0 text-dark">
+                        <i class="fas fa-layer-group me-2"></i>Batch Performance Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if batch_attendance %}
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="batchTable">
+                                <thead>
+                                    <tr>
+                                        <th>Batch Name</th>
+                                        <th>Course</th>
+                                        <th>Students</th>
+                                        <th>Attendance Rate</th>
+                                        <th>Total Records</th>
+                                        <th>Present Count</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in batch_attendance %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-layer-group text-primary me-2"></i>
+                                                <strong>{{ item.batch.name }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ item.batch.course_name }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ item.student_count }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="me-2 fw-bold
+                                                    {% if item.attendance_rate >= 90 %}attendance-text-excellent
+                                                    {% elif item.attendance_rate >= 75 %}attendance-text-good
+                                                    {% elif item.attendance_rate >= 60 %}attendance-text-average
+                                                    {% else %}attendance-text-poor{% endif %}">
+                                                    {{ item.attendance_rate }}%
+                                                </span>
+                                                <div class="attendance-rate-bar flex-grow-1">
+                                                    <div class="attendance-rate-fill
+                                                        {% if item.attendance_rate >= 90 %}rate-excellent
+                                                        {% elif item.attendance_rate >= 75 %}rate-good
+                                                        {% elif item.attendance_rate >= 60 %}rate-average
+                                                        {% else %}rate-poor{% endif %}"
+                                                        style="width: {{ item.attendance_rate }}%">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ item.total_records }}</td>
+                                        <td>{{ item.present_count }}</td>
+                                        <td>
+                                            {% if item.batch and item.batch.id %}
+                                            <a href="{{ url_for('attendance_reports.batch_attendance_report', batch_id=item.batch.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-chart-bar me-1"></i>View Details
+                                            </a>
+                                            {% else %}
+                                            <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-chart-line empty-state-icon"></i>
+                            <h5 class="empty-state-title">No Attendance Data Found</h5>
+                            <p class="empty-state-text">No attendance records found for the selected date range.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    console.log('Attendance Reports - JavaScript loaded');
+    
+    // Store all batches data from backend
+    const allBatches = [
+        {% for batch in batches %}
+        {
+            id: {{ batch.id }},
+            name: '{{ batch.name|e }}',
+            status: '{{ batch.status|e }}',
+            branch_id: {{ batch.branch_id or 'null' }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    console.log('Available batches loaded:', allBatches.length);
+    
+    // Dynamic batch filtering based on status
+    function updateBatchDropdown() {
+        const statusFilter = $('#batch_status_filter').val();
+        const batchFilter = $('#batch_filter');
+        const currentBatchId = '{{ request.args.get("batch_id", "") }}';
+        
+        console.log('Filtering batches by status:', statusFilter);
+        
+        // Clear existing options (keep "All Batches")
+        batchFilter.find('option:not(:first)').remove();
+        
+        // Filter batches based on selected status
+        let filteredBatches = allBatches;
+        if (statusFilter && statusFilter !== 'All') {
+            filteredBatches = allBatches.filter(batch => batch.status === statusFilter);
+        }
+        
+        console.log('Filtered batches count:', filteredBatches.length);
+        
+        // Add filtered batches to dropdown
+        filteredBatches.forEach(function(batch) {
+            const option = $('<option></option>')
+                .attr('value', batch.id)
+                .text(batch.name + ' (' + batch.status + ')');
+            
+            // Maintain selection if it matches
+            if (batch.id.toString() === currentBatchId) {
+                option.attr('selected', 'selected');
+            }
+            
+            batchFilter.append(option);
+        });
+        
+        console.log('Batch dropdown updated with', filteredBatches.length, 'options');
+    }
+    
+    // Add event listener for status filter change
+    $('#batch_status_filter').on('change', function() {
+        console.log('Status filter changed to:', $(this).val());
+        updateBatchDropdown();
+    });
+    
+    // Initialize on page load
+    updateBatchDropdown();
+});
+
+// Clear all filters
+function clearFilters() {
+    console.log('Clearing all filters');
+    $('#start_date').val('');
+    $('#end_date').val('');
+    $('#branch_filter').val('');
+    $('#batch_status_filter').val('All');
+    $('#batch_filter').val('');
+    
+    // Trigger status change to update batch dropdown
+    $('#batch_status_filter').trigger('change');
+}
+
+// Test function for manual verification
+function testFiltering() {
+    console.log('=== TESTING FILTERING ===');
+    console.log('Current status filter:', $('#batch_status_filter').val());
+    console.log('Current batch filter:', $('#batch_filter').val());
+    console.log('Batch options count:', $('#batch_filter option').length);
+    
+    // Test setting to "Completed"
+    $('#batch_status_filter').val('Completed').trigger('change');
+    
+    setTimeout(function() {
+        console.log('After setting to Completed:');
+        console.log('Batch options count:', $('#batch_filter option').length);
+        $('#batch_filter option').each(function() {
+            console.log('- Option:', $(this).text());
+        });
+    }, 100);
+}
+</script>
+{% endblock %}

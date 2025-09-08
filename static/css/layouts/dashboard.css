@@ -1,0 +1,44 @@
+/* Generic dashboard sections */
+.content-area{padding:var(--space-xl)}
+.card{border:1px solid var(--gray-200); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); transition:.15s transform,.15s box-shadow}
+.card:hover{transform:translateY(-2px); box-shadow:var(--shadow-md)}
+.section-title{color:var(--brand-primary); font-weight:var(--font-semibold)}
+
+/* Dark mode enhancements for dashboard */
+@media (prefers-color-scheme: dark) {
+  .content-area {
+    background: var(--bg-primary);
+  }
+
+  .card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--gray-200);
+    color: var(--text-primary);
+  }
+
+  .card:hover {
+    background: var(--gray-100);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .section-title {
+    color: var(--brand-secondary);
+  }
+
+  .card-header {
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--text-primary);
+  }
+
+  .card-body {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+
+  .card-footer {
+    background: var(--bg-primary);
+    border-top: 1px solid var(--gray-200);
+    color: var(--text-secondary);
+  }
+}

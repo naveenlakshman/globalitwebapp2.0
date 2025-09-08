@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+
+{% block title %}Course Management - Global IT{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3><i class="fas fa-graduation-cap"></i> Course Management</h3>
+  <div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCourseModal">
+      <i class="fas fa-plus"></i> Add New Course
+    </button>
+    <a href="{{ url_for('branch.list_branches') }}" class="btn btn-secondary">
+      <i class="fas fa-building"></i> Back to Branches
+    </a>
+  </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card bg-primary text-white">
+      <div class="card-body">
+        <h5 class="card-title">Total Courses</h5>
+        <h3>{{ course_stats|length }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-success text-white">
+      <div class="card-body">
+        <h5 class="card-title">Active Courses</h5>
+        <h3>{{ course_stats|selectattr('course.status', 'equalto', 'Active')|list|length }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-info text-white">
+      <div class="card-body">
+        <h5 class="card-title">Total Students</h5>
+        <h3>{{ course_stats|sum(attribute='student_count') }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-warning text-white">
+      <div class="card-body">
+        <h5 class="card-title">Total Batches</h5>
+        <h3>{{ course_stats|sum(attribute='batch_count') }}</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Course Filter -->
+<div class="row mb-3">
+  <div class="col-md-6">
+    <input type="text" class="form-control" id="searchCourse" placeholder="Search courses...">
+  </div>
+  <div class="col-md-3">
+    <select class="form-select" id="filterStatus">
+      <option value="">All Status</option>
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+    </select>
+  </div>
+  <div class="col-md-3">
+    <select class="form-select" id="sortBy">
+      <option value="name">Sort by Name</option>
+      <option value="fee">Sort by Fee</option>
+      <option value="students">Sort by Students</option>
+    </select>
+  </div>
+</div>
+
+<!-- Courses Table -->
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover" id="courseTable">
+        <thead class="table-dark">
+          <tr>
+            <th>Course Name</th>
+            <th>Duration</th>
+            <th>Fee</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Batches</th>
+            <th>Students</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stat in course_stats %}
+          <tr data-status="{{ stat.course.status }}" data-course-id="{{ stat.course.id }}">
+            <td>
+              <strong>{{ stat.course.course_name }}</strong>
+            </td>
+            <td>
+              <span class="badge bg-info">{{ stat.course.duration }}</span>
+            </td>
+            <td>
+              <strong>₹{{ "{:,.2f}".format(stat.course.fee) }}</strong>
+            </td>
+            <td>
+              <small>{{ stat.course.description or 'No description' }}</small>
+            </td>
+            <td>
+              <span class="badge bg-{{ 'success' if stat.course.status == 'Active' else 'danger' }}">
+                {{ stat.course.status }}
+              </span>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark">{{ stat.batch_count }}</span>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark">{{ stat.student_count }}</span>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-warning btn-sm" 
+                        onclick="editCourse({{ stat.course.id }})" title="Edit">
+                  <i class="fas fa-edit"></i>
+                </button>
+                {% if stat.batch_count == 0 and stat.student_count == 0 %}
+                <button class="btn btn-outline-danger btn-sm" 
+                        onclick="deleteCourse({{ stat.course.id }}, '{{ stat.course.course_name }}')" 
+                        title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Create Course Modal -->
+<div class="modal fade" id="createCourseModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Course</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="createCourseForm">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label"><strong>Course Name</strong> <span class="text-danger">*</span></label>
+              <input type="text" name="course_name" class="form-control" required 
+                     placeholder="e.g., Advanced Excel with MIS">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><strong>Duration</strong> <span class="text-danger">*</span></label>
+              <input type="text" name="duration" class="form-control" required 
+                     placeholder="e.g., 3 months">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><strong>Course Fee</strong> <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input type="number" name="fee" class="form-control" required 
+                       step="0.01" min="0" placeholder="0.00">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><strong>Status</strong></label>
+              <select name="status" class="form-select">
+                <option value="Active" selected>Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label"><strong>Course Description</strong></label>
+              <textarea name="description" class="form-control" rows="3" 
+                        placeholder="Brief description of course content and objectives"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Course</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Course Modal -->
+<div class="modal fade" id="editCourseModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Course</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="editCourseForm">
+        <div class="modal-body">
+          <input type="hidden" id="editCourseId" name="course_id">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label"><strong>Course Name</strong> <span class="text-danger">*</span></label>
+              <input type="text" id="editCourseName" name="course_name" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><strong>Duration</strong> <span class="text-danger">*</span></label>
+              <input type="text" id="editDuration" name="duration" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><strong>Course Fee</strong> <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input type="number" id="editFee" name="fee" class="form-control" required step="0.01" min="0">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><strong>Status</strong></label>
+              <select id="editStatus" name="status" class="form-select">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label"><strong>Course Description</strong></label>
+              <textarea id="editDescription" name="description" class="form-control" rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">Update Course</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Search and filter functionality
+document.getElementById('searchCourse').addEventListener('keyup', filterTable);
+document.getElementById('filterStatus').addEventListener('change', filterTable);
+
+function filterTable() {
+  const searchValue = document.getElementById('searchCourse').value.toLowerCase();
+  const statusFilter = document.getElementById('filterStatus').value;
+  const rows = document.querySelectorAll('#courseTable tbody tr');
+
+  rows.forEach(row => {
+    const courseName = row.cells[0].textContent.toLowerCase();
+    const description = row.cells[3].textContent.toLowerCase();
+    const status = row.dataset.status;
+
+    const matchesSearch = courseName.includes(searchValue) || description.includes(searchValue);
+    const matchesStatus = !statusFilter || status === statusFilter;
+
+    row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+  });
+}
+
+// Create course form submission
+document.getElementById('createCourseForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  
+  fetch('/branches/courses/create', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(data.success);
+      location.reload();
+    } else {
+      alert('Error: ' + data.error);
+    }
+  })
+  .catch(error => {
+    alert('Error: ' + error);
+  });
+});
+
+// Edit course function
+function editCourse(courseId) {
+  // Find the course data from the table
+  const row = document.querySelector(`tr[data-course-id="${courseId}"]`);
+  const courseName = row.cells[0].textContent.trim();
+  const duration = row.cells[1].textContent.trim();
+  const feeText = row.cells[2].textContent.trim();
+  const fee = feeText.replace('₹', '').replace(/,/g, '');
+  const description = row.cells[3].textContent.trim();
+  const status = row.dataset.status;
+  
+  // Populate edit form
+  document.getElementById('editCourseId').value = courseId;
+  document.getElementById('editCourseName').value = courseName;
+  document.getElementById('editDuration').value = duration;
+  document.getElementById('editFee').value = fee;
+  document.getElementById('editDescription').value = description === 'No description' ? '' : description;
+  document.getElementById('editStatus').value = status;
+  
+  // Show modal
+  new bootstrap.Modal(document.getElementById('editCourseModal')).show();
+}
+
+// Edit course form submission
+document.getElementById('editCourseForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  const courseId = document.getElementById('editCourseId').value;
+  
+  fetch(`/branches/courses/edit/${courseId}`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(data.success);
+      location.reload();
+    } else {
+      alert('Error: ' + data.error);
+    }
+  })
+  .catch(error => {
+    alert('Error: ' + error);
+  });
+});
+
+// Delete course function
+function deleteCourse(courseId, courseName) {
+  if (confirm(`Are you sure you want to delete "${courseName}"? This action cannot be undone.`)) {
+    fetch(`/branches/courses/delete/${courseId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert(data.success);
+        location.reload();
+      } else {
+        alert('Error: ' + data.error);
+      }
+    })
+    .catch(error => {
+      alert('Error: ' + error);
+    });
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,139 @@
+"""
+Enhanced Follow-up Completion Modal with Dynamic Outcome Options
+This replaces the free-text outcome field with structured, context-aware dropdowns
+"""
+
+def get_followup_outcome_template():
+    return '''
+    <!-- Enhanced Follow-up Completion Modal -->
+    <div class="modal fade" id="completeFollowupModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-check-circle"></i> Complete Follow-up
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="completeFollowupForm">
+                        <!-- Follow-up Info Display -->
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Follow-up Type:</strong>
+                                        <span id="followupTypeDisplay" class="text-primary ms-2"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Scheduled:</strong>
+                                        <span id="followupDateDisplay" class="text-muted ms-2"></span>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <strong>Original Notes:</strong>
+                                    <p id="followupNotesDisplay" class="text-muted mb-0 mt-1"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Outcome Selection -->
+                        <div class="mb-4">
+                            <label class="form-label required">
+                                <i class="fas fa-clipboard-check"></i> How did this follow-up go?
+                            </label>
+                            
+                            <!-- Outcome Category Buttons -->
+                            <div id="outcomeCategories" class="row g-2 mb-3">
+                                <!-- Will be populated dynamically based on follow-up type -->
+                            </div>
+
+                            <!-- Selected Outcome Display -->
+                            <div id="selectedOutcome" class="alert alert-info d-none">
+                                <strong>Selected Outcome:</strong> <span id="selectedOutcomeText"></span>
+                            </div>
+                            
+                            <!-- Hidden input for selected outcome -->
+                            <input type="hidden" id="selectedOutcomeCategory" name="outcome_category">
+                        </div>
+
+                        <!-- Additional Notes -->
+                        <div class="mb-3">
+                            <label for="outcomeNotes" class="form-label">
+                                <i class="fas fa-sticky-note"></i> Additional Details (Optional)
+                            </label>
+                            <textarea class="form-control" id="outcomeNotes" name="outcome_notes" rows="3"
+                                      placeholder="Add any specific details, quotes, or important points from this conversation..."></textarea>
+                            <div class="form-text">Use this space for additional context that helps with future follow-ups.</div>
+                        </div>
+
+                        <!-- Next Action Section -->
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fas fa-forward"></i> What's Next?</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="scheduleNextAction">
+                                    <label class="form-check-label" for="scheduleNextAction">
+                                        Schedule another follow-up
+                                    </label>
+                                </div>
+
+                                <div id="nextActionSection" class="d-none">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Next Follow-up Type</label>
+                                            <select class="form-select" id="nextActionType" name="next_action_type">
+                                                <option value="">Select Type</option>
+                                                <!-- Will be populated with suggested options based on outcome -->
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">When?</label>
+                                            <input type="datetime-local" class="form-control" id="nextActionDate" name="next_action_date">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Notes for Next Follow-up</label>
+                                        <textarea class="form-control" id="nextActionNotes" name="next_action_notes" rows="2"
+                                                  placeholder="What should be discussed in the next follow-up?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="submitFollowupCompletion()">
+                        <i class="fas fa-check"></i> Complete Follow-up
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .outcome-option {
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    .outcome-option:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .outcome-option.selected {
+        border-color: var(--bs-primary);
+        background-color: var(--bs-primary);
+        color: white;
+    }
+    .outcome-option.success { border-left: 4px solid #28a745; }
+    .outcome-option.warning { border-left: 4px solid #ffc107; }
+    .outcome-option.danger { border-left: 4px solid #dc3545; }
+    .outcome-option.info { border-left: 4px solid #17a2b8; }
+    </style>
+    '''

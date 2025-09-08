@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+{% block title %}Add New Expense{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary">
+                        <i class="fas fa-plus-circle me-2"></i>Add New Expense
+                    </h2>
+                    <p class="text-secondary mb-0">Record a new business expense</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('expenses.expense_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Form -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">Expense Details</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="expenseForm">
+                        <div class="row">
+                            <!-- Date and Category -->
+                            <div class="col-md-6 mb-3">
+                                <label for="expense_date" class="form-label">
+                                    <i class="fas fa-calendar me-1"></i>Expense Date <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" class="form-control" id="expense_date" name="expense_date" 
+                                       value="{{ current_date.strftime('%Y-%m-%d') if current_date else '' }}" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="expense_category" class="form-label">
+                                    <i class="fas fa-tags me-1"></i>Category <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="expense_category" name="expense_category" required>
+                                    <option value="">Select Category</option>
+                                    {% for category in expense_categories %}
+                                    <option value="{{ category }}">{{ category }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Branch Selection -->
+                        {% if can_select_branch %}
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="branch_id" class="form-label">
+                                    <i class="fas fa-building me-1"></i>Branch/Franchise
+                                </label>
+                                <select class="form-select" id="branch_id" name="branch_id">
+                                    <option value="">Select Branch</option>
+                                    {% for branch in user_branches %}
+                                    <option value="{{ branch.id }}">{{ branch.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Select the branch/franchise this expense belongs to</div>
+                            </div>
+                        </div>
+                        {% elif user_branches %}
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-building me-1"></i>Branch/Franchise
+                                </label>
+                                <input type="hidden" name="branch_id" value="{{ user_branches[0].id }}">
+                                <div class="form-control-plaintext fw-bold text-primary">
+                                    {{ user_branches[0].name }}
+                                </div>
+                                <div class="form-text">Expense will be assigned to your branch</div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Description <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                      placeholder="Brief but clear description of the expense" required></textarea>
+                        </div>
+
+                        <div class="row">
+                            <!-- Vendor/Supplier -->
+                            <div class="col-md-6 mb-3">
+                                <label for="vendor_supplier" class="form-label">
+                                    <i class="fas fa-building me-1"></i>Vendor/Supplier
+                                </label>
+                                <input type="text" class="form-control" id="vendor_supplier" name="vendor_supplier" 
+                                       placeholder="Name of vendor or payee">
+                            </div>
+
+                            <!-- Invoice/Bill Number -->
+                            <div class="col-md-6 mb-3">
+                                <label for="invoice_bill_number" class="form-label">
+                                    <i class="fas fa-file-invoice me-1"></i>Invoice/Bill Number
+                                </label>
+                                <input type="text" class="form-control" id="invoice_bill_number" name="invoice_bill_number" 
+                                       placeholder="Invoice or bill reference number">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Payment Method -->
+                            <div class="col-md-6 mb-3">
+                                <label for="payment_method" class="form-label">
+                                    <i class="fas fa-credit-card me-1"></i>Payment Method <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="payment_method" name="payment_method" required>
+                                    <option value="">Select Payment Method</option>
+                                    {% for method in payment_methods %}
+                                    <option value="{{ method }}">{{ method }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Payment Status -->
+                            <div class="col-md-6 mb-3">
+                                <label for="payment_status" class="form-label">
+                                    <i class="fas fa-check-circle me-1"></i>Payment Status <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="payment_status" name="payment_status" required>
+                                    {% for status in payment_statuses %}
+                                    <option value="{{ status }}" {% if status == 'Unpaid' %}selected{% endif %}>{{ status }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Amount Calculation Section -->
+                        <div class="card mb-3" style="background-color: #f8f9fc;">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary">
+                                    <i class="fas fa-calculator me-1"></i>Amount Calculation
+                                </h6>
+                                
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="amount" class="form-label">
+                                            Base Amount (₹) <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="number" class="form-control" id="amount" name="amount" 
+                                               step="0.01" min="0" placeholder="0.00" required>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label for="gst_percentage" class="form-label">
+                                            GST (%)
+                                        </label>
+                                        <input type="number" class="form-control" id="gst_percentage" name="gst_percentage" 
+                                               step="0.01" min="0" max="100" placeholder="0.00" value="0">
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">GST Amount (₹)</label>
+                                        <input type="text" class="form-control" id="gst_amount_display" readonly 
+                                               placeholder="₹0.00" style="background-color: #e9ecef;">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">
+                                            <strong>Total Amount (₹)</strong>
+                                        </label>
+                                        <input type="text" class="form-control fw-bold" id="total_amount_display" readonly 
+                                               placeholder="₹0.00" style="background-color: #e9ecef; font-size: 1.1em;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Linked Ledger Account -->
+                            <div class="col-md-6 mb-3">
+                                <label for="linked_ledger_account" class="form-label">
+                                    <i class="fas fa-link me-1"></i>Linked Ledger Account
+                                </label>
+                                <select class="form-select" id="linked_ledger_account" name="linked_ledger_account">
+                                    <option value="">Select Account</option>
+                                    {% for account in ledger_accounts %}
+                                    <option value="{{ account }}">{{ account }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Branch/Location -->
+                            <div class="col-md-6 mb-3">
+                                <label for="branch_location" class="form-label">
+                                    <i class="fas fa-map-marker-alt me-1"></i>Branch/Location
+                                </label>
+                                <select class="form-select" id="branch_location" name="branch_location">
+                                    <option value="">Select Location</option>
+                                    {% for location in branch_locations %}
+                                    <option value="{{ location }}">{{ location }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Department/Project -->
+                        <div class="mb-3">
+                            <label for="department_project" class="form-label">
+                                <i class="fas fa-sitemap me-1"></i>Department/Project
+                            </label>
+                            <select class="form-select" id="department_project" name="department_project">
+                                <option value="">Select Department</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept }}">{{ dept }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- File Attachment -->
+                        <div class="mb-3">
+                            <label for="attachment" class="form-label">
+                                <i class="fas fa-paperclip me-1"></i>Attachment
+                            </label>
+                            <input type="file" class="form-control" id="attachment" name="attachment" 
+                                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                            <div class="form-text">
+                                Upload scanned copy of bill/receipt. Accepted formats: PDF, JPG, PNG, DOC, XLS (Max 10MB)
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">
+                                <i class="fas fa-sticky-note me-1"></i>Notes
+                            </label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="Any additional remarks or comments"></textarea>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('expenses.expense_dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Expense
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Guide -->
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-success">
+                        <i class="fas fa-lightbulb me-1"></i>Quick Guide
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-primary">Required Fields</h6>
+                        <ul class="small">
+                            <li>Expense Date</li>
+                            <li>Category</li>
+                            <li>Description</li>
+                            <li>Payment Method</li>
+                            <li>Base Amount</li>
+                            <li>Payment Status</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-primary">Tips</h6>
+                        <ul class="small">
+                            <li>Use clear, descriptive titles</li>
+                            <li>Include vendor details for tracking</li>
+                            <li>Set GST to 0 if not applicable</li>
+                            <li>Upload bills for better record keeping</li>
+                            <li>Add notes for future reference</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>Auto-Generated:</strong>
+                        <br>
+                        <small>Expense ID will be automatically generated in format EXP-YYYY-NNNN</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-calculate GST and total amount
+function calculateAmounts() {
+    const amount = parseFloat(document.getElementById('amount').value) || 0;
+    const gstPercentage = parseFloat(document.getElementById('gst_percentage').value) || 0;
+    
+    const gstAmount = (amount * gstPercentage) / 100;
+    const totalAmount = amount + gstAmount;
+    
+    document.getElementById('gst_amount_display').value = `₹${gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    document.getElementById('total_amount_display').value = `₹${totalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+}
+
+// Add event listeners for amount calculation
+document.getElementById('amount').addEventListener('input', calculateAmounts);
+document.getElementById('gst_percentage').addEventListener('input', calculateAmounts);
+
+// Form validation
+document.getElementById('expenseForm').addEventListener('submit', function(e) {
+    const amount = parseFloat(document.getElementById('amount').value);
+    if (!amount || amount <= 0) {
+        e.preventDefault();
+        alert('Please enter a valid amount greater than 0');
+        document.getElementById('amount').focus();
+        return false;
+    }
+});
+
+// Set today's date as default
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('expense_date').value = today;
+});
+</script>
+{% endblock %}

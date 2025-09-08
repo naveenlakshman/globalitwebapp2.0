@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}Expense Audit Detail - {{ expense.expense_id }} - Global IT Education{% endblock %}
+
+{% block extra_css %}
+<style>
+    .expense-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 20px;
+        border-left: 4px solid;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -40px;
+        top: 20px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #dee2e6;
+    }
+    
+    .timeline-item.CREATE { border-left-color: #28a745; }
+    .timeline-item.CREATE::before { background-color: #28a745; }
+    
+    .timeline-item.UPDATE { border-left-color: #ffc107; }
+    .timeline-item.UPDATE::before { background-color: #ffc107; }
+    
+    .timeline-item.DELETE { border-left-color: #dc3545; }
+    .timeline-item.DELETE::before { background-color: #dc3545; }
+    
+    .action-icon {
+        font-size: 1.2rem;
+        margin-right: 8px;
+    }
+    
+    .field-changes {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .field-change {
+        margin-bottom: 10px;
+        padding: 8px;
+        background: white;
+        border-radius: 4px;
+        border-left: 3px solid #007bff;
+    }
+    
+    .old-value {
+        color: #dc3545;
+        background: #f8d7da;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+    }
+    
+    .new-value {
+        color: #28a745;
+        background: #d4edda;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+    }
+    
+    .json-viewer {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        overflow-x: auto;
+        max-height: 300px;
+    }
+    
+    .expense-summary {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="expense-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-receipt"></i> Expense Audit Detail</h2>
+                <p class="mb-0">Complete audit trail for {{ expense.expense_id }}</p>
+            </div>
+            <div class="text-end">
+                <a href="{{ url_for('expenses.expense_audit') }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left"></i> Back to Audit Trail
+                </a>
+                <a href="{{ url_for('expenses.view_expense', expense_id=expense.expense_id) }}" class="btn btn-light ms-2">
+                    <i class="fas fa-eye"></i> View Expense
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Expense Summary -->
+    <div class="expense-summary">
+        <div class="row">
+            <div class="col-md-6">
+                <h5><i class="fas fa-info-circle"></i> Expense Information</h5>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Expense ID:</strong></td>
+                        <td>{{ expense.expense_id }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Date:</strong></td>
+                        <td>{{ expense.expense_date.strftime('%d %B %Y') if expense.expense_date else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Category:</strong></td>
+                        <td>{{ expense.expense_category }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Description:</strong></td>
+                        <td>{{ expense.description }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h5><i class="fas fa-rupee-sign"></i> Amount Details</h5>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Amount:</strong></td>
+                        <td>₹{{ expense.amount|round(2) if expense.amount else '0.00' }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>GST ({{ expense.gst_percentage }}%):</strong></td>
+                        <td>₹{{ expense.gst_amount|round(2) if expense.gst_amount else '0.00' }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Amount:</strong></td>
+                        <td><strong>₹{{ expense.total_amount|round(2) if expense.total_amount else '0.00' }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Payment Status:</strong></td>
+                        <td>
+                            <span class="badge {% if expense.payment_status == 'Paid' %}bg-success{% elif expense.payment_status == 'Unpaid' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ expense.payment_status }}
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audit Timeline -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-history"></i> Audit Timeline 
+                <span class="badge bg-secondary ms-2">{{ audit_records|length }} events</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if audit_records %}
+                <div class="timeline">
+                    {% for record in audit_records %}
+                    <div class="timeline-item {{ record.action_type }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if record.action_type == 'CREATE' %}
+                                        <i class="fas fa-plus-circle action-icon text-success"></i>
+                                    {% elif record.action_type == 'UPDATE' %}
+                                        <i class="fas fa-edit action-icon text-warning"></i>
+                                    {% elif record.action_type == 'DELETE' %}
+                                        <i class="fas fa-trash-alt action-icon text-danger"></i>
+                                    {% elif record.action_type == 'APPROVE' %}
+                                        <i class="fas fa-check-circle action-icon text-info"></i>
+                                    {% elif record.action_type == 'REJECT' %}
+                                        <i class="fas fa-times-circle action-icon text-secondary"></i>
+                                    {% endif %}
+                                    
+                                    <strong>{{ record.action_type.title() }} Action</strong>
+                                    {% if record.field_changed %}
+                                        <span class="badge bg-light text-dark ms-2">{{ record.field_changed }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if record.change_reason %}
+                                <p class="mb-2"><strong>Reason:</strong> {{ record.change_reason }}</p>
+                                {% endif %}
+                                
+                                {% if record.field_changed and record.old_value and record.new_value %}
+                                <div class="field-changes">
+                                    <h6><i class="fas fa-exchange-alt"></i> Field Changes</h6>
+                                    <div class="field-change">
+                                        <strong>{{ record.field_changed|title }}:</strong><br>
+                                        <span class="old-value">{{ record.old_value }}</span> 
+                                        <i class="fas fa-arrow-right mx-2"></i> 
+                                        <span class="new-value">{{ record.new_value }}</span>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if record.amount_change %}
+                                <div class="field-changes">
+                                    <h6><i class="fas fa-rupee-sign"></i> Amount Change</h6>
+                                    <div class="field-change">
+                                        <strong>Amount Impact:</strong> 
+                                        <span class="{% if record.amount_change > 0 %}new-value{% else %}old-value{% endif %}">
+                                            {% if record.amount_change > 0 %}+{% endif %}₹{{ record.amount_change|round(2) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if record.status_change %}
+                                <div class="field-changes">
+                                    <h6><i class="fas fa-toggle-on"></i> Status Change</h6>
+                                    <div class="field-change">
+                                        <strong>Payment Status:</strong> {{ record.status_change }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if record.file_operation %}
+                                <div class="field-changes">
+                                    <h6><i class="fas fa-file"></i> File Operation</h6>
+                                    <div class="field-change">
+                                        <strong>Operation:</strong> {{ record.file_operation }}
+                                        {% if record.file_name %}
+                                            <br><strong>File:</strong> {{ record.file_name }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Show complete record data for CREATE action -->
+                                {% if record.action_type == 'CREATE' and record.updated_data %}
+                                <div class="field-changes">
+                                    <h6><i class="fas fa-database"></i> Created Record Data</h6>
+                                    <div class="json-viewer">{{ record.updated_data|safe }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="text-end ms-3">
+                                <div class="text-muted">
+                                    <strong>{{ record.user.full_name or record.user.username if record.user else 'Unknown User' }}</strong><br>
+                                    <small>{{ record.get_formatted_changed_at() }}</small><br>
+                                    {% if record.ip_address %}
+                                        <small><i class="fas fa-map-marker-alt"></i> {{ record.ip_address }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-history fa-3x text-muted"></i>
+                    <h4 class="mt-3 text-muted">No audit records found</h4>
+                    <p class="text-muted">This expense has no audit trail.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Format JSON in viewers
+    document.querySelectorAll('.json-viewer').forEach(viewer => {
+        try {
+            const jsonData = JSON.parse(viewer.textContent);
+            viewer.innerHTML = JSON.stringify(jsonData, null, 2);
+        } catch (e) {
+            // Keep original content if not valid JSON
+        }
+    });
+</script>
+{% endblock %}

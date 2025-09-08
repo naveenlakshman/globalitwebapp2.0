@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Module - {{ module.module_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('lms.admin_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('courses.list_courses') }}">Courses</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('courses.course_modules', course_id=module.course_id) }}">{{ module.course.course_name }} - Modules</a></li>
+                    <li class="breadcrumb-item active">Edit Module</li>
+                </ol>
+            </nav>
+
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-edit"></i> Edit Module</h4>
+                    <p class="mb-0 text-muted">Course: {{ module.course.course_name }}</p>
+                </div>
+                <div class="card-body">
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('courses.edit_module', module_id=module.id) }}">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="module_name" class="form-label">Module Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="module_name" name="module_name" 
+                                           value="{{ module.module_name }}" placeholder="Enter module name" required maxlength="255">
+                                    <div class="form-text">Give your module a clear, descriptive name</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="module_description" class="form-label">Module Description</label>
+                                    <textarea class="form-control" id="module_description" name="module_description" 
+                                              rows="4" placeholder="Describe what this module covers...">{{ module.module_description or '' }}</textarea>
+                                    <div class="form-text">Provide a detailed description of the module content and objectives</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="estimated_duration_hours" class="form-label">Estimated Duration (Hours)</label>
+                                    <input type="number" class="form-control" id="estimated_duration_hours" 
+                                           name="estimated_duration_hours" min="0" step="0.5" 
+                                           value="{{ module.estimated_duration_hours or 0 }}" placeholder="e.g., 5">
+                                    <div class="form-text">How many hours to complete this module?</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Module Type</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_mandatory" name="is_mandatory"
+                                               {% if module.is_mandatory %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_mandatory">
+                                            <strong>Mandatory Module</strong>
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Check if this module is required for course completion</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="learning_objectives" class="form-label">Learning Objectives</label>
+                                    <textarea class="form-control" id="learning_objectives" name="learning_objectives" 
+                                              rows="3" placeholder="What will students learn from this module?">{{ module.learning_objectives or '' }}</textarea>
+                                    <div class="form-text">List the key learning outcomes for this module</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="prerequisites" class="form-label">Prerequisites</label>
+                                    <textarea class="form-control" id="prerequisites" name="prerequisites" 
+                                              rows="2" placeholder="Any prior knowledge or modules required?">{{ module.prerequisites or '' }}</textarea>
+                                    <div class="form-text">Specify any knowledge or modules students need before starting this module</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('courses.course_modules', course_id=module.course_id) }}" 
+                                       class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Update Module
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Module Statistics -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar"></i> Module Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-primary">{{ module.sections|length }}</h4>
+                                <small class="text-muted">Total Sections</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-info">{{ module.module_order }}</h4>
+                                <small class="text-muted">Module Order</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-{{ 'success' if module.is_mandatory else 'warning' }}">
+                                    {{ 'Mandatory' if module.is_mandatory else 'Optional' }}
+                                </h4>
+                                <small class="text-muted">Module Type</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-success">Active</h4>
+                                <small class="text-muted">Status</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{{ url_for('courses.module_sections', module_id=module.id) }}" 
+                               class="btn btn-outline-primary btn-block">
+                                <i class="fas fa-list"></i> Manage Sections
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('courses.create_section_form', module_id=module.id) }}" 
+                               class="btn btn-outline-success btn-block">
+                                <i class="fas fa-plus"></i> Add New Section
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

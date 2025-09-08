@@ -1,0 +1,409 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Content Workflows - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">Content Workflows</h1>
+                    <p class="text-muted">Manage content approval and review processes</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('lms_content_management.dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Content Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Pending Review</h6>
+                            <h3 class="mb-0">{{ stats.pending_review if stats else 0 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">In Progress</h6>
+                            <h3 class="mb-0">{{ stats.in_progress if stats else 0 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-tasks fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Approved Today</h6>
+                            <h3 class="mb-0">{{ stats.approved_today if stats else 0 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Overdue</h6>
+                            <h3 class="mb-0">{{ stats.overdue if stats else 0 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="all" {{ 'selected' if current_status == 'all' else '' }}>All Statuses</option>
+                        <option value="draft" {{ 'selected' if current_status == 'draft' else '' }}>Draft</option>
+                        <option value="review" {{ 'selected' if current_status == 'review' else '' }}>Under Review</option>
+                        <option value="approved" {{ 'selected' if current_status == 'approved' else '' }}>Approved</option>
+                        <option value="published" {{ 'selected' if current_status == 'published' else '' }}>Published</option>
+                        <option value="rejected" {{ 'selected' if current_status == 'rejected' else '' }}>Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="content_type" class="form-label">Content Type</label>
+                    <select name="content_type" id="content_type" class="form-select">
+                        <option value="all" {{ 'selected' if current_content_type == 'all' else '' }}>All Types</option>
+                        <option value="video" {{ 'selected' if current_content_type == 'video' else '' }}>Videos</option>
+                        <option value="document" {{ 'selected' if current_content_type == 'document' else '' }}>Documents</option>
+                        <option value="quiz" {{ 'selected' if current_content_type == 'quiz' else '' }}>Quizzes</option>
+                        <option value="assignment" {{ 'selected' if current_content_type == 'assignment' else '' }}>Assignments</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="priority" class="form-label">Priority</label>
+                    <select name="priority" id="priority" class="form-select">
+                        <option value="all" {{ 'selected' if current_priority == 'all' else '' }}>All Priorities</option>
+                        <option value="urgent" {{ 'selected' if current_priority == 'urgent' else '' }}>Urgent</option>
+                        <option value="high" {{ 'selected' if current_priority == 'high' else '' }}>High</option>
+                        <option value="normal" {{ 'selected' if current_priority == 'normal' else '' }}>Normal</option>
+                        <option value="low" {{ 'selected' if current_priority == 'low' else '' }}>Low</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="assigned_to" class="form-label">Assigned To</label>
+                    <select name="assigned_to" id="assigned_to" class="form-select">
+                        <option value="all" {{ 'selected' if current_assigned_to == 'all' else '' }}>All Reviewers</option>
+                        <option value="me" {{ 'selected' if current_assigned_to == 'me' else '' }}>Assigned to Me</option>
+                        <option value="unassigned" {{ 'selected' if current_assigned_to == 'unassigned' else '' }}>Unassigned</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    <a href="{{ url_for('lms_content_management.workflow_list') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Workflows Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                Content Workflows
+                {% if workflows and workflows.total %}
+                    <span class="badge bg-secondary">{{ workflows.total }} total</span>
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if workflows and workflows.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Content</th>
+                                <th>Type</th>
+                                <th>Stage</th>
+                                <th>Priority</th>
+                                <th>Creator</th>
+                                <th>Assigned To</th>
+                                <th>Created</th>
+                                <th>Due Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for workflow in workflows.items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            {% if workflow.content_type == 'video' %}
+                                                <i class="fas fa-video text-danger fa-lg"></i>
+                                            {% elif workflow.content_type == 'document' %}
+                                                <i class="fas fa-file-alt text-primary fa-lg"></i>
+                                            {% elif workflow.content_type == 'quiz' %}
+                                                <i class="fas fa-question-circle text-warning fa-lg"></i>
+                                            {% elif workflow.content_type == 'assignment' %}
+                                                <i class="fas fa-tasks text-success fa-lg"></i>
+                                            {% else %}
+                                                <i class="fas fa-file text-secondary fa-lg"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ workflow.get_content_title() or 'Untitled Content' }}</div>
+                                            <small class="text-muted">ID: {{ workflow.content_id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if workflow.content_type == 'video' %}bg-danger
+                                        {% elif workflow.content_type == 'document' %}bg-primary
+                                        {% elif workflow.content_type == 'quiz' %}bg-warning
+                                        {% elif workflow.content_type == 'assignment' %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ workflow.content_type.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if workflow.workflow_stage == 'draft' %}bg-secondary
+                                        {% elif workflow.workflow_stage == 'review' %}bg-warning
+                                        {% elif workflow.workflow_stage == 'approved' %}bg-info
+                                        {% elif workflow.workflow_stage == 'published' %}bg-success
+                                        {% elif workflow.workflow_stage == 'rejected' %}bg-danger
+                                        {% else %}bg-light text-dark{% endif %}">
+                                        {{ workflow.workflow_stage.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if workflow.priority == 'urgent' %}bg-danger
+                                        {% elif workflow.priority == 'high' %}bg-warning
+                                        {% elif workflow.priority == 'normal' %}bg-info
+                                        {% elif workflow.priority == 'low' %}bg-secondary
+                                        {% else %}bg-light text-dark{% endif %}">
+                                        {{ workflow.priority.title() }}
+                                    </span>
+                                    {% if workflow.is_urgent %}
+                                        <i class="fas fa-exclamation-triangle text-danger ms-1" title="Urgent"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if workflow.creator %}
+                                        <div class="fw-bold">{{ workflow.creator.full_name or workflow.creator.username }}</div>
+                                        <small class="text-muted">{{ workflow.creator.role }}</small>
+                                    {% else %}
+                                        <span class="text-muted">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if workflow.reviewer %}
+                                        <div class="fw-bold">{{ workflow.reviewer.full_name or workflow.reviewer.username }}</div>
+                                        {% if workflow.assigned_at %}
+                                            <small class="text-muted">Assigned {{ workflow.assigned_at.strftime('%m/%d') }}</small>
+                                        {% endif %}
+                                    {% elif workflow.workflow_stage == 'review' %}
+                                        <span class="text-warning">
+                                            <i class="fas fa-user-clock"></i> Unassigned
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div>{{ workflow.created_at.strftime('%m/%d/%Y') }}</div>
+                                    <small class="text-muted">{{ workflow.created_at.strftime('%I:%M %p') }}</small>
+                                </td>
+                                <td>
+                                    {% if workflow.due_date %}
+                                        <div class="{% if workflow.due_date < now() %}text-danger{% elif workflow.due_date < now() + timedelta(days=1) %}text-warning{% endif %}">
+                                            {{ workflow.due_date.strftime('%m/%d/%Y') }}
+                                        </div>
+                                        <small class="text-muted">{{ workflow.due_date.strftime('%I:%M %p') }}</small>
+                                    {% else %}
+                                        <span class="text-muted">No deadline</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('lms_content_management.workflow_detail', workflow_id=workflow.id) }}" 
+                                           class="btn btn-outline-primary" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if workflow.workflow_stage == 'review' and (not workflow.assigned_to or workflow.assigned_to == session.user_id) %}
+                                            <a href="{{ url_for('lms_content_management.workflow_review', workflow_id=workflow.id) }}" 
+                                               class="btn btn-outline-success" title="Review">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if workflow.workflow_stage in ['draft', 'rejected'] and workflow.created_by == session.user_id %}
+                                            <a href="{{ url_for('lms_content_management.workflow_edit', workflow_id=workflow.id) }}" 
+                                               class="btn btn-outline-warning" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if workflows.pages > 1 %}
+                <div class="card-footer">
+                    <nav aria-label="Workflows pagination">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            {% if workflows.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('lms_content_management.workflow_list', page=workflows.prev_num, status=current_status, content_type=current_content_type, priority=current_priority, assigned_to=current_assigned_to) }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in workflows.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != workflows.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('lms_content_management.workflow_list', page=page_num, status=current_status, content_type=current_content_type, priority=current_priority, assigned_to=current_assigned_to) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if workflows.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('lms_content_management.workflow_list', page=workflows.next_num, status=current_status, content_type=current_content_type, priority=current_priority, assigned_to=current_assigned_to) }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                    <h5>No Workflows Found</h5>
+                    <p class="text-muted">
+                        {% if current_status != 'all' or current_content_type != 'all' or current_priority != 'all' or current_assigned_to != 'all' %}
+                            No workflows match your current filters. Try adjusting the filters above.
+                        {% else %}
+                            No content workflows have been created yet.
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('lms_content_management.dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Content
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+    background-color: #f8f9fa;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.btn-group-sm > .btn, .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.text-truncate {
+    max-width: 200px;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 2px;
+        border-radius: 0.25rem !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh for workflows in review
+{% if current_status == 'review' %}
+setTimeout(function() {
+    location.reload();
+}, 30000); // Refresh every 30 seconds
+{% endif %}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

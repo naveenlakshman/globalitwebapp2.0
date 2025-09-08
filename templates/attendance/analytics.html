@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Analytics - {{ batch.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<style>
+    .analytics-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        transition: all 0.3s;
+    }
+    
+    .analytics-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.25);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 20px;
+    }
+    
+    .metric-icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+    
+    .trend-up { color: #28a745; }
+    .trend-down { color: #dc3545; }
+    .trend-stable { color: #6c757d; }
+    
+    .student-risk-card {
+        border-left: 4px solid;
+        margin-bottom: 10px;
+    }
+    
+    .risk-high { border-left-color: #dc3545; }
+    .risk-medium { border-left-color: #ffc107; }
+    .risk-low { border-left-color: #28a745; }
+    
+    .session-type-chart {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-chart-bar text-primary me-2"></i>Attendance Analytics Dashboard
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-book me-1"></i><strong>{{ batch.name }}</strong> • 
+                <i class="fas fa-building me-1"></i>{{ batch.branch.branch_name if batch.branch else 'Unknown Branch' }}
+                • <i class="fas fa-calendar me-1"></i>{{ date_range }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" id="dateRangeFilter" onchange="updateDateRange()">
+                <option value="30">Last 30 Days</option>
+                <option value="60">Last 60 Days</option>
+                <option value="90">Last 90 Days</option>
+                <option value="all">All Time</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="exportAnalytics()">
+                <i class="fas fa-download me-1"></i>Export Report
+            </button>
+            <a href="{{ url_for('batches.batch_attendance', batch_id=batch.id) }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Attendance
+            </a>
+        </div>
+    </div>
+
+    <!-- Key Metrics Overview -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card analytics-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1 opacity-75">
+                                Overall Attendance Rate
+                            </div>
+                            <div class="h4 mb-0 font-weight-bold">{{ "%.1f"|format(overall_stats.attendance_rate) }}%</div>
+                            <div class="text-xs">
+                                <i class="fas fa-arrow-{{ 'up trend-up' if overall_stats.trend > 0 else 'down trend-down' if overall_stats.trend < 0 else 'right trend-stable' }}"></i>
+                                {{ "%.1f"|format(abs(overall_stats.trend)) }}% from last period
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line metric-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Students At Risk
+                            </div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ at_risk_students|length }}</div>
+                            <div class="text-xs text-muted">
+                                <i class="fas fa-exclamation-triangle text-warning"></i> Below 65% attendance
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-times fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Punctuality Rate
+                            </div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ "%.1f"|format(punctuality_stats.rate) }}%</div>
+                            <div class="text-xs text-muted">
+                                <i class="fas fa-clock"></i> Avg late: {{ punctuality_stats.avg_late_minutes }} min
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Certification Ready
+                            </div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ certification_ready|length }}</div>
+                            <div class="text-xs text-muted">
+                                <i class="fas fa-graduation-cap"></i> ≥75% attendance
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Attendance Trend Chart -->
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line me-2"></i>Attendance Trend Over Time
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="attendanceTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Type Distribution -->
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-pie me-2"></i>Session Type Distribution
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="session-type-chart">
+                        <canvas id="sessionTypeChart"></canvas>
+                    </div>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small">Regular Sessions</span>
+                            <span class="badge bg-primary">{{ session_stats.regular }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small">Theory Sessions</span>
+                            <span class="badge bg-info">{{ session_stats.theory }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small">Practical Sessions</span>
+                            <span class="badge bg-success">{{ session_stats.practical }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small">Assessment Sessions</span>
+                            <span class="badge bg-warning">{{ session_stats.assessment }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Analytics Row -->
+    <div class="row mb-4">
+        <!-- Student Performance Breakdown -->
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-users me-2"></i>Student Performance Breakdown
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="studentPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Attendance Pattern -->
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-calendar-week me-2"></i>Weekly Attendance Pattern
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="weeklyPatternChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- At-Risk Students Alert -->
+    {% if at_risk_students %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-warning">
+            <h6 class="m-0 font-weight-bold text-white">
+                <i class="fas fa-exclamation-triangle me-2"></i>Students Requiring Attention
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for student in at_risk_students %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card student-risk-card risk-{{ 'high' if student.attendance_rate < 50 else 'medium' if student.attendance_rate < 65 else 'low' }}">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ student.full_name }}</h6>
+                                    <p class="text-muted mb-1 small">{{ student.student_id }}</p>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-{{ 'danger' if student.attendance_rate < 50 else 'warning' }}">
+                                            {{ "%.1f"|format(student.attendance_rate) }}%
+                                        </span>
+                                        <small class="text-muted ms-2">
+                                            {{ student.absent_days }} absent days
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{{ url_for('attendance.student_history', student_id=student.id, batch_id=batch.id) }}">View History</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="notifyParent({{ student.id }})">Notify Parent</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="scheduleIntervention({{ student.id }})">Schedule Intervention</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Detailed Statistics Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-table me-2"></i>Detailed Student Statistics
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="analyticsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Total Sessions</th>
+                            <th>Present</th>
+                            <th>Late</th>
+                            <th>Absent</th>
+                            <th>Attendance %</th>
+                            <th>Practical Hours</th>
+                            <th>Theory Hours</th>
+                            <th>Avg Late Minutes</th>
+                            <th>Last Absence</th>
+                            <th>Risk Level</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student_stat in student_statistics %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ student_stat.student.full_name }}</div>
+                                <small class="text-muted">{{ student_stat.student.student_id }}</small>
+                            </td>
+                            <td class="text-center">{{ student_stat.total_sessions }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-success">{{ student_stat.present_count }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-warning">{{ student_stat.late_count }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-danger">{{ student_stat.absent_count }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-{{ 'success' if student_stat.attendance_rate >= 75 else 'warning' if student_stat.attendance_rate >= 60 else 'danger' }}">
+                                    {{ "%.1f"|format(student_stat.attendance_rate) }}%
+                                </span>
+                            </td>
+                            <td class="text-center">{{ student_stat.practical_hours }}h</td>
+                            <td class="text-center">{{ student_stat.theory_hours }}h</td>
+                            <td class="text-center">{{ student_stat.avg_late_minutes }}m</td>
+                            <td>{{ student_stat.last_absence_date.strftime('%d/%m/%Y') if student_stat.last_absence_date else 'None' }}</td>
+                            <td class="text-center">
+                                {% if student_stat.attendance_rate >= 75 %}
+                                    <span class="badge bg-success">Low</span>
+                                {% elif student_stat.attendance_rate >= 60 %}
+                                    <span class="badge bg-warning">Medium</span>
+                                {% else %}
+                                    <span class="badge bg-danger">High</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="{{ url_for('attendance.student_history', student_id=student_stat.student.id, batch_id=batch.id) }}" 
+                                       class="btn btn-sm btn-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if student_stat.attendance_rate < 65 %}
+                                    <button class="btn btn-sm btn-warning" onclick="interventionAction({{ student_stat.student.id }})" title="Intervention">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#analyticsTable').DataTable({
+        "pageLength": 25,
+        "order": [[5, "asc"]], // Sort by attendance percentage ascending (worst first)
+        "columnDefs": [
+            { "orderable": false, "targets": [11] } // Actions column
+        ]
+    });
+
+    // Initialize Charts
+    initializeCharts();
+});
+
+function initializeCharts() {
+    // Attendance Trend Chart
+    const trendCtx = document.getElementById('attendanceTrendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: {{ trend_data.labels|tojson }},
+            datasets: [{
+                label: 'Attendance Rate',
+                data: {{ trend_data.attendance_rates|tojson }},
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Daily Attendance Trend'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Session Type Chart
+    const sessionCtx = document.getElementById('sessionTypeChart').getContext('2d');
+    new Chart(sessionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Regular', 'Theory', 'Practical', 'Assessment'],
+            datasets: [{
+                data: [
+                    {{ session_stats.regular }},
+                    {{ session_stats.theory }},
+                    {{ session_stats.practical }},
+                    {{ session_stats.assessment }}
+                ],
+                backgroundColor: ['#007bff', '#17a2b8', '#28a745', '#ffc107'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Student Performance Chart
+    const performanceCtx = document.getElementById('studentPerformanceChart').getContext('2d');
+    new Chart(performanceCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ performance_data.student_names|tojson }},
+            datasets: [{
+                label: 'Attendance Percentage',
+                data: {{ performance_data.attendance_rates|tojson }},
+                backgroundColor: function(context) {
+                    const value = context.parsed.y;
+                    return value >= 75 ? '#28a745' : value >= 60 ? '#ffc107' : '#dc3545';
+                },
+                borderColor: '#fff',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Individual Student Performance'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Weekly Pattern Chart
+    const weeklyCtx = document.getElementById('weeklyPatternChart').getContext('2d');
+    new Chart(weeklyCtx, {
+        type: 'radar',
+        data: {
+            labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            datasets: [{
+                label: 'Average Attendance',
+                data: {{ weekly_pattern|tojson }},
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.2)',
+                pointBackgroundColor: '#4e73df',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#4e73df'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            elements: {
+                line: {
+                    borderWidth: 3
+                }
+            },
+            scales: {
+                r: {
+                    angleLines: {
+                        display: false
+                    },
+                    suggestedMin: 0,
+                    suggestedMax: 100
+                }
+            }
+        }
+    });
+}
+
+function updateDateRange() {
+    const range = document.getElementById('dateRangeFilter').value;
+    window.location.href = `{{ url_for('attendance.analytics', batch_id=batch.id) }}?range=${range}`;
+}
+
+function exportAnalytics() {
+    const range = document.getElementById('dateRangeFilter').value;
+    window.open(`{{ url_for('attendance.export_analytics', batch_id=batch.id) }}?range=${range}`, '_blank');
+}
+
+function notifyParent(studentId) {
+    if (confirm('Send attendance notification to parent/guardian?')) {
+        // Implementation for parent notification
+        console.log('Notify parent for student:', studentId);
+    }
+}
+
+function scheduleIntervention(studentId) {
+    // Implementation for scheduling intervention
+    console.log('Schedule intervention for student:', studentId);
+}
+
+function interventionAction(studentId) {
+    // Implementation for intervention action
+    console.log('Intervention action for student:', studentId);
+}
+</script>
+{% endblock %}

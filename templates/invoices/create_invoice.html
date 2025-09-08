@@ -1,0 +1,916 @@
+{% extends "base.html" %}
+
+{% block title %}Create Invoice{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-plus-circle"></i> Create New Invoice</h2>
+                <a href="{{ url_for('invoices.list_invoices') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Invoices
+                </a>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-receipt-cutoff me-2"></i> Invoice Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" id="invoiceForm">
+                        <!-- Hidden field to track actual installment count -->
+                        <input type="hidden" name="installment_count" id="hidden_installment_count" value="1">
+                        
+                        <!-- Section 1: Basic Information -->
+                        <div class="invoice-form-section mb-4">
+                            <h5 class="mb-3">
+                                <i class="bi bi-person-circle me-2"></i>Student & Course Information
+                            </h5>
+                            <div class="row">
+                                <!-- Student Selection -->
+                                <div class="col-lg-6 mb-3">
+                                    <label for="student_id" class="form-label required">
+                                        <i class="bi bi-person-search me-1"></i>Select Student
+                                    </label>
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control form-control-lg" id="studentSearch" 
+                                               placeholder="Search students by name or ID..." autocomplete="off">
+                                        <div class="position-absolute top-50 end-0 translate-middle-y pe-3">
+                                            <i class="bi bi-search text-muted"></i>
+                                        </div>
+                                        
+                                        <!-- Student Search Results -->
+                                        <div class="student-search-results" id="studentResults" style="display: none;">
+                                            <div class="card border-primary">
+                                                <div class="card-header bg-primary bg-opacity-10 py-2">
+                                                    <small class="text-primary fw-bold">
+                                                        <i class="bi bi-people me-1"></i>Search Results
+                                                    </small>
+                                                </div>
+                                                <div class="list-group list-group-flush" id="studentResultsList">
+                                                    <!-- Dynamic student results will be inserted here -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <select class="form-select form-select-lg mt-2" name="student_id" id="student_id" required style="display: none;">
+                                        <option value="">Choose a student...</option>
+                                        {% for student in students %}
+                                        <option value="{{ student.student_id }}" 
+                                                data-name="{{ student.full_name }}" 
+                                                data-branch="{{ student.branch.branch_name if student.branch else 'Unknown' }}"
+                                                data-phone="{{ student.phone_number or '' }}">
+                                            {{ student.full_name }} (ID: {{ student.student_id }}) - {{ student.branch.branch_name if student.branch else 'Unknown Branch' }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    
+                                    <!-- Selected Student Display -->
+                                    <div class="selected-student-display mt-2" id="selectedStudent" style="display: none;">
+                                        <div class="alert alert-success border-success bg-success bg-opacity-10">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-person-check fs-4 me-3 text-success"></i>
+                                                    <div>
+                                                        <h6 class="mb-1" id="selectedStudentName">Student Name</h6>
+                                                        <small class="text-muted" id="selectedStudentDetails">Student Details</small>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearStudentSelection()">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="invalid-feedback">Please select a student.</div>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Search and select the student for whom you want to create an invoice
+                                    </div>
+                                </div>
+
+                                <!-- Course Selection -->
+                                <div class="col-lg-6 mb-3">
+                                    <label for="course_search" class="form-label required">
+                                        <i class="bi bi-book-half me-1"></i>Select Courses
+                                    </label>
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control form-control-lg" id="courseSearch" 
+                                               placeholder="Search courses by name..." autocomplete="off">
+                                        <div class="position-absolute top-50 end-0 translate-middle-y pe-3">
+                                            <i class="bi bi-search text-muted"></i>
+                                        </div>
+                                        
+                                        <!-- Course Search Results -->
+                                        <div class="course-search-results" id="courseResults" style="display: none;">
+                                            <div class="card border-info">
+                                                <div class="card-header bg-info bg-opacity-10 py-2">
+                                                    <small class="text-info fw-bold">
+                                                        <i class="bi bi-mortarboard me-1"></i>Available Courses
+                                                    </small>
+                                                </div>
+                                                <div class="list-group list-group-flush" id="courseResultsList" style="max-height: 300px; overflow-y: auto;">
+                                                    {% for course in courses %}
+                                                    <div class="course-search-item" 
+                                                         data-course-id="{{ course.id }}" 
+                                                         data-course-name="{{ course.course_name }}"
+                                                         data-course-fee="{{ course.fee }}"
+                                                         data-course-duration="{{ course.duration }}">
+                                                        <div class="course-info">
+                                                            <div class="course-name">{{ course.course_name }}</div>
+                                                            <div class="course-details">Duration: {{ course.duration }}</div>
+                                                        </div>
+                                                        <div class="course-fee">₹{{ "{:,.0f}".format(course.fee) }}</div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Search and click to add courses. You can select multiple courses.
+                                    </div>
+                                </div>
+
+                                <!-- Selected Courses Display -->
+                                <div class="col-12 mb-3">
+                                    <div class="selected-courses-display" id="selectedCourses" style="display: none;">
+                                        <h6 class="text-primary fw-bold mb-3">
+                                            <i class="bi bi-mortarboard-fill me-2"></i>Selected Courses
+                                        </h6>
+                                        <div class="row" id="selectedCoursesList">
+                                            <!-- Dynamic course cards will be inserted here -->
+                                        </div>
+                                        <div class="text-end mt-3">
+                                            <div class="card border-success bg-success bg-opacity-10">
+                                                <div class="card-body p-3">
+                                                    <h6 class="text-success mb-1">
+                                                        <i class="bi bi-calculator me-1"></i>Total Course Fees
+                                                    </h6>
+                                                    <h4 class="text-success mb-0" id="totalCourseFees">₹0</h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Pricing Information -->
+                        <div class="invoice-form-section mb-4">
+                            <h5 class="mb-3">
+                                <i class="bi bi-currency-rupee me-2"></i>Pricing & Payment Details
+                            </h5>
+                            <div class="row">
+                                <!-- Course Fee Display -->
+                                <div class="col-lg-4 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-tag me-1"></i>Total Course Fees
+                                    </label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-primary text-white">
+                                            <i class="bi bi-currency-rupee"></i>
+                                        </span>
+                                        <input type="number" class="form-control bg-light fw-bold" id="course_fee_display" name="total_amount" readonly>
+                                    </div>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Total fees for all selected courses
+                                    </div>
+                                </div>
+
+                                <!-- Discount -->
+                                <div class="col-lg-4 mb-3">
+                                    <label for="discount" class="form-label">
+                                        <i class="bi bi-percent me-1"></i>Discount Amount
+                                    </label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text text-success bg-success bg-opacity-10">
+                                            <i class="bi bi-currency-rupee"></i>
+                                        </span>
+                                        <input type="number" class="form-control" name="discount" id="discount" 
+                                               step="0.01" min="0" value="0" placeholder="0.00" onchange="calculateDueAmount()">
+                                    </div>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Optional: Enter discount amount (if any)
+                                    </div>
+                                </div>
+
+                                <!-- Amount Summary Card -->
+                                <div class="col-lg-4 mb-3">
+                                    <div class="amount-summary-card">
+                                        <div class="card border-primary h-100">
+                                            <div class="card-header bg-primary text-white">
+                                                <h6 class="mb-0">
+                                                    <i class="bi bi-calculator me-1"></i>Invoice Summary
+                                                </h6>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Course Fee:</span>
+                                                    <span class="fw-bold" id="totalAmountDisplay">₹0.00</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Discount:</span>
+                                                    <span class="text-success fw-bold" id="discountDisplay">₹0.00</span>
+                                                </div>
+                                                <hr class="my-2">
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="fw-bold text-primary">Final Amount:</span>
+                                                    <span class="fw-bold text-primary fs-5" id="dueAmountDisplay">₹0.00</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden Fields -->
+                        <input type="hidden" id="due_amount_display">
+
+                        <!-- Section 3: Payment Schedule -->
+                        <div class="invoice-form-section mb-4">
+                            <h5 class="mb-3">
+                                <i class="bi bi-calendar-event me-2"></i>Payment Schedule
+                            </h5>
+                            <div class="row">
+                                <!-- Payment Type Selection -->
+                                <div class="col-12 mb-4">
+                                    <div class="payment-option-wrapper">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="payment-type-option active" data-value="1" onclick="selectPaymentType(1)">
+                                                    <div class="icon">
+                                                        <i class="bi bi-cash-coin"></i>
+                                                    </div>
+                                                    <div class="title">Single Payment</div>
+                                                    <div class="description">Pay the full amount in one go</div>
+                                                    <div class="form-check d-flex justify-content-center">
+                                                        <input class="form-check-input" type="radio" name="installment_count" value="1" id="single_payment" checked>
+                                                    </div>
+                                                    <div class="badge">✓ Recommended</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="payment-type-option" data-value="multiple" onclick="selectPaymentType('multiple')">
+                                                    <div class="icon">
+                                                        <i class="bi bi-calendar3"></i>
+                                                    </div>
+                                                    <div class="title">Installments</div>
+                                                    <div class="description">Split payment into multiple installments</div>
+                                                    <div class="form-check d-flex justify-content-center">
+                                                        <input class="form-check-input" type="radio" name="payment_type" value="installments" id="installment_payment">
+                                                    </div>
+                                                    <div class="badge">💳 Flexible</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Installment Options (Hidden by default) -->
+                                <div class="col-12 installment-options d-none" id="installmentOptions">
+                                    <div class="alert alert-primary border-0 bg-gradient mb-4" role="alert">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-info-circle fs-4 me-3"></i>
+                                            <div>
+                                                <h6 class="alert-heading mb-1">Installment Payment Selected</h6>
+                                                <p class="mb-0">Choose the number of installments and set custom due dates for each payment.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-lg-4 mb-3">
+                                            <label for="installment_count_select" class="form-label fw-bold">
+                                                <i class="bi bi-hash me-1"></i>Number of Installments
+                                            </label>
+                                            <select class="form-select form-select-lg" name="installment_count" id="installment_count_select" onchange="updateInstallmentInputs()">
+                                                <option value="2">2 Installments</option>
+                                                <option value="3">3 Installments</option>
+                                                <option value="4">4 Installments</option>
+                                                <option value="6">6 Installments</option>
+                                                <option value="12">12 Installments</option>
+                                            </select>
+                                            <div class="form-text">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Select how many installments to split the payment
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <div class="installment-preview-card">
+                                                <div class="card border-info bg-info bg-opacity-10">
+                                                    <div class="card-body p-3">
+                                                        <h6 class="card-title text-info mb-1">
+                                                            <i class="bi bi-calculator me-1"></i>Installment Preview
+                                                        </h6>
+                                                        <div class="row text-center">
+                                                            <div class="col-4">
+                                                                <div class="fw-bold fs-5 text-primary" id="installmentCountDisplay">2</div>
+                                                                <small class="text-muted">Installments</small>
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <div class="fw-bold fs-5 text-success" id="perInstallmentDisplay">₹0</div>
+                                                                <small class="text-muted">Per Installment</small>
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <div class="fw-bold fs-5 text-warning" id="totalInstallmentDisplay">₹0</div>
+                                                                <small class="text-muted">Total Amount</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Custom Installment Dates -->
+                                    <div id="customInstallmentDates" class="mt-4">
+                                        <h6 class="mb-3 text-primary fw-bold">
+                                            <i class="bi bi-calendar-event me-2"></i>Set Custom Due Dates
+                                        </h6>
+                                        <div class="row" id="installmentDatesContainer">
+                                            <!-- Dynamic installment date inputs will be added here -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Single Payment Due Date -->
+                                <div class="col-lg-6 mb-3" id="singlePaymentDate">
+                                    <label for="start_date_single" class="form-label">Payment Due Date</label>
+                                    <input type="date" class="form-control form-control-lg" name="start_date" id="start_date_single" 
+                                           value="{{ default_date }}">
+                                    <div class="form-text">When should the payment be due?</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Additional Information -->
+                        <div class="invoice-form-section mb-4">
+                            <h5 class="mb-3">
+                                <i class="bi bi-journal-text me-2"></i>Additional Information
+                            </h5>
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="notes" class="form-label">Notes & Terms</label>
+                                    <textarea class="form-control" name="notes" id="notes" rows="4" 
+                                              placeholder="Enter any special terms, conditions, or notes for this invoice..."></textarea>
+                                    <div class="form-text">Optional: Add any special payment terms, late fee policies, or other important notes</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row justify-content-center mt-5">
+                            <div class="col-md-8 col-lg-6">
+                                <div class="card border-0 shadow-sm bg-light">
+                                    <div class="card-body p-4 text-center">
+                                        <div class="d-grid gap-3">
+                                            <button type="submit" class="btn btn-success btn-lg py-3 fw-bold shadow" id="createInvoiceBtn" disabled>
+                                                <i class="bi bi-exclamation-circle me-2 fs-5"></i>
+                                                Complete Required Fields
+                                            </button>
+                                            <a href="{{ url_for('invoices.list_invoices') }}" class="btn btn-outline-secondary btn-lg py-2">
+                                                <i class="bi bi-arrow-left me-2"></i>
+                                                Cancel & Return
+                                            </a>
+                                        </div>
+                                        <div class="mt-3">
+                                            <small class="text-muted">
+                                                <i class="bi bi-shield-check me-1"></i>
+                                                All invoice data is securely processed and stored
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables
+let currentPaymentType = 'single';
+let selectedCourses = [];
+let selectedStudent = null;
+
+// Initialize form
+document.addEventListener('DOMContentLoaded', function() {
+    initializeStudentSearch();
+    initializeCourseSearch();
+    selectPaymentType(1);
+    initializeFormValidation();
+});
+
+// ================================
+// STUDENT SEARCH FUNCTIONALITY
+// ================================
+
+function initializeStudentSearch() {
+    const studentSearch = document.getElementById('studentSearch');
+    const studentResults = document.getElementById('studentResults');
+    const studentSelect = document.getElementById('student_id');
+    
+    if (!studentSearch || !studentResults || !studentSelect) {
+        console.error('Student search elements not found');
+        return;
+    }
+    
+    studentSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        if (searchTerm.length < 2) {
+            studentResults.style.display = 'none';
+            return;
+        }
+        
+        const resultsList = document.getElementById('studentResultsList');
+        if (!resultsList) {
+            console.error('Student results list not found');
+            return;
+        }
+        
+        resultsList.innerHTML = '';
+        
+        // Filter students based on search term
+        const options = studentSelect.querySelectorAll('option[value]');
+        let hasResults = false;
+        
+        options.forEach(option => {
+            const name = (option.getAttribute('data-name') || '').toLowerCase();
+            const branch = (option.getAttribute('data-branch') || '').toLowerCase();
+            const phone = (option.getAttribute('data-phone') || '').toLowerCase();
+            const studentId = option.value.toLowerCase();
+            
+            if (name.includes(searchTerm) || branch.includes(searchTerm) || phone.includes(searchTerm) || studentId.includes(searchTerm)) {
+                hasResults = true;
+                const resultItem = document.createElement('div');
+                resultItem.className = 'student-search-item list-group-item list-group-item-action';
+                resultItem.setAttribute('data-student-id', option.value);
+                resultItem.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${option.getAttribute('data-name') || 'Unknown'}</h6>
+                            <small class="text-muted">ID: ${option.value} | Branch: ${option.getAttribute('data-branch') || 'Unknown'}</small>
+                            ${option.getAttribute('data-phone') ? `<small class="text-muted d-block">Phone: ${option.getAttribute('data-phone')}</small>` : ''}
+                        </div>
+                        <i class="bi bi-arrow-right text-primary"></i>
+                    </div>
+                `;
+                
+                resultItem.addEventListener('click', function() {
+                    selectStudent(
+                        option.value, 
+                        option.getAttribute('data-name'), 
+                        option.getAttribute('data-branch'), 
+                        option.getAttribute('data-phone')
+                    );
+                });
+                
+                resultsList.appendChild(resultItem);
+            }
+        });
+        
+        if (hasResults) {
+            studentResults.style.display = 'block';
+        } else {
+            resultsList.innerHTML = '<div class="list-group-item text-muted text-center">No students found matching your search</div>';
+            studentResults.style.display = 'block';
+        }
+    });
+    
+    // Hide results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!studentSearch.contains(e.target) && !studentResults.contains(e.target)) {
+            studentResults.style.display = 'none';
+        }
+    });
+}
+
+function selectStudent(studentId, name, branch, phone) {
+    selectedStudent = { id: studentId, name, branch, phone };
+    
+    // Update hidden select
+    document.getElementById('student_id').value = studentId;
+    
+    // Clear search
+    document.getElementById('studentSearch').value = '';
+    document.getElementById('studentResults').style.display = 'none';
+    
+    // Show selected student
+    document.getElementById('selectedStudentName').textContent = name;
+    document.getElementById('selectedStudentDetails').textContent = `ID: ${studentId} | Branch: ${branch}${phone ? ` | Phone: ${phone}` : ''}`;
+    document.getElementById('selectedStudent').style.display = 'block';
+    
+    checkFormValidation();
+}
+
+function clearStudentSelection() {
+    selectedStudent = null;
+    document.getElementById('student_id').value = '';
+    document.getElementById('selectedStudent').style.display = 'none';
+    checkFormValidation();
+}
+
+// ================================
+// COURSE SEARCH FUNCTIONALITY
+// ================================
+
+function initializeCourseSearch() {
+    const courseSearch = document.getElementById('courseSearch');
+    const courseResults = document.getElementById('courseResults');
+    
+    if (!courseSearch || !courseResults) {
+        console.error('Course search elements not found');
+        return;
+    }
+    
+    // Show courses when search field is focused
+    courseSearch.addEventListener('focus', function() {
+        courseResults.style.display = 'block';
+    });
+    
+    // Filter courses as user types
+    courseSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const courseOptions = document.querySelectorAll('.course-search-item');
+        
+        courseOptions.forEach(option => {
+            const courseName = option.getAttribute('data-course-name');
+            if (!searchTerm || (courseName && courseName.toLowerCase().includes(searchTerm))) {
+                option.style.display = 'flex';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        
+        courseResults.style.display = 'block';
+    });
+    
+    // Add click handlers to course options using event delegation
+    courseResults.addEventListener('click', function(e) {
+        const courseItem = e.target.closest('.course-search-item');
+        if (courseItem) {
+            const courseId = courseItem.getAttribute('data-course-id');
+            const courseName = courseItem.getAttribute('data-course-name');
+            const courseFee = parseFloat(courseItem.getAttribute('data-course-fee'));
+            const courseDuration = courseItem.getAttribute('data-course-duration');
+            
+            addCourse(courseId, courseName, courseFee, courseDuration);
+        }
+    });
+    
+    // Hide results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!courseSearch.contains(e.target) && !courseResults.contains(e.target)) {
+            courseResults.style.display = 'none';
+        }
+    });
+}
+
+function addCourse(courseId, courseName, courseFee, courseDuration) {
+    // Check if course already selected
+    if (selectedCourses.find(course => course.id === courseId)) {
+        alert('This course is already selected!');
+        return;
+    }
+    
+    // Add to selected courses array
+    selectedCourses.push({
+        id: courseId,
+        name: courseName,
+        fee: courseFee,
+        duration: courseDuration
+    });
+    
+    // Clear search
+    document.getElementById('courseSearch').value = '';
+    document.getElementById('courseResults').style.display = 'none';
+    
+    // Update display
+    updateSelectedCoursesDisplay();
+    updateTotalAmount();
+    checkFormValidation();
+}
+
+function removeCourse(courseId) {
+    selectedCourses = selectedCourses.filter(course => course.id !== courseId);
+    updateSelectedCoursesDisplay();
+    updateTotalAmount();
+    checkFormValidation();
+}
+
+function updateSelectedCoursesDisplay() {
+    const container = document.getElementById('selectedCoursesList');
+    const selectedCoursesDiv = document.getElementById('selectedCourses');
+    
+    if (selectedCourses.length === 0) {
+        selectedCoursesDiv.style.display = 'none';
+        return;
+    }
+    
+    selectedCoursesDiv.style.display = 'block';
+    container.innerHTML = '';
+    
+    selectedCourses.forEach(course => {
+        const courseCard = document.createElement('div');
+        courseCard.className = 'col-md-6 col-lg-4 mb-3';
+        courseCard.innerHTML = `
+            <div class="card border-success h-100">
+                <div class="card-header bg-success bg-opacity-10 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 text-success">
+                        <i class="bi bi-mortarboard me-1"></i>${course.name}
+                    </h6>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCourse('${course.id}')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Duration:</small>
+                        <span class="badge bg-info">${course.duration}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Fee:</small>
+                        <span class="badge bg-success fs-6">₹${course.fee.toLocaleString()}</span>
+                    </div>
+                    <input type="hidden" name="course_ids[]" value="${course.id}">
+                    <input type="hidden" name="course_fees[]" value="${course.fee}">
+                </div>
+            </div>
+        `;
+        container.appendChild(courseCard);
+    });
+}
+
+function updateTotalAmount() {
+    const total = selectedCourses.reduce((sum, course) => sum + course.fee, 0);
+    document.getElementById('totalCourseFees').textContent = `₹${total.toLocaleString()}`;
+    document.getElementById('course_fee_display').value = total.toFixed(2);
+    calculateDueAmount();
+}
+
+// Calculate and update amounts
+function calculateDueAmount() {
+    const courseFee = parseFloat(document.getElementById('course_fee_display').value) || 0;
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    
+    const dueAmount = Math.max(0, courseFee - discount);
+    
+    // Update display amounts
+    document.getElementById('totalAmountDisplay').textContent = '₹' + courseFee.toLocaleString('en-IN', {minimumFractionDigits: 2});
+    document.getElementById('discountDisplay').textContent = '₹' + discount.toLocaleString('en-IN', {minimumFractionDigits: 2});
+    document.getElementById('dueAmountDisplay').textContent = '₹' + dueAmount.toLocaleString('en-IN', {minimumFractionDigits: 2});
+    
+    // Update installment preview if needed
+    if (currentPaymentType === 'multiple') {
+        updateInstallmentPreview();
+    }
+    
+    // Update button state
+    updateSubmitButton();
+}
+
+// Payment type selection
+function selectPaymentType(type) {
+    const singleCard = document.querySelector('[data-value="1"]');
+    const multipleCard = document.querySelector('[data-value="multiple"]');
+    const installmentOptions = document.getElementById('installmentOptions');
+    const singlePaymentDate = document.getElementById('singlePaymentDate');
+    const installmentPreview = document.getElementById('installmentPreview');
+    
+    // Remove active states
+    singleCard.classList.remove('active');
+    multipleCard.classList.remove('active');
+    
+    if (type === 1) {
+        // Single payment selected
+        singleCard.classList.add('active');
+        document.getElementById('single_payment').checked = true;
+        installmentOptions.classList.add('d-none');
+        singlePaymentDate.classList.remove('d-none');
+        if (installmentPreview) installmentPreview.classList.add('d-none');
+        currentPaymentType = 'single';
+        
+        // Ensure installment_count is set to 1 for single payment
+        document.getElementById('installment_count_select').disabled = true;
+        document.getElementById('hidden_installment_count').value = 1;
+        
+    } else {
+        // Installments selected
+        multipleCard.classList.add('active');
+        document.getElementById('installment_payment').checked = true;
+        installmentOptions.classList.remove('d-none');
+        singlePaymentDate.classList.add('d-none');
+        currentPaymentType = 'multiple';
+        
+        // Enable installment count selection
+        document.getElementById('installment_count_select').disabled = false;
+        
+        updateInstallmentInputs();
+    }
+}
+
+// Update installment date inputs based on selected count
+function updateInstallmentInputs() {
+    const installmentCount = parseInt(document.getElementById('installment_count_select').value) || 2;
+    const container = document.getElementById('installmentDatesContainer');
+    const dueAmount = parseFloat(document.getElementById('course_fee_display').value) || 0;
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const totalDue = Math.max(0, dueAmount - discount);
+    const perInstallment = (totalDue / installmentCount).toFixed(2);
+    
+    // Update the hidden field with the actual installment count
+    document.getElementById('hidden_installment_count').value = installmentCount;
+    
+    // Update preview displays
+    document.getElementById('installmentCountDisplay').textContent = installmentCount;
+    document.getElementById('perInstallmentDisplay').textContent = `₹${parseFloat(perInstallment).toLocaleString()}`;
+    document.getElementById('totalInstallmentDisplay').textContent = `₹${totalDue.toLocaleString()}`;
+    
+    container.innerHTML = '';
+    
+    for (let i = 1; i <= installmentCount; i++) {
+        const colDiv = document.createElement('div');
+        colDiv.className = 'col-lg-4 col-md-6 mb-3';
+        
+        // Calculate suggested date (current date + months)
+        const suggestedDate = new Date();
+        suggestedDate.setMonth(suggestedDate.getMonth() + (i - 1));
+        const formattedDate = suggestedDate.toISOString().split('T')[0];
+        
+        colDiv.innerHTML = `
+            <div class="card border-primary border-opacity-25 h-100">
+                <div class="card-header bg-primary bg-opacity-10 py-2">
+                    <h6 class="card-title mb-0 text-primary">
+                        <i class="bi bi-${i === 1 ? 'calendar-check' : 'calendar-event'} me-1"></i>
+                        Installment ${i}
+                    </h6>
+                </div>
+                <div class="card-body p-3">
+                    <label for="installment_date_${i}" class="form-label fw-bold">Due Date</label>
+                    <input type="date" 
+                           class="form-control form-control-lg" 
+                           name="installment_dates[]" 
+                           id="installment_date_${i}" 
+                           value="${formattedDate}"
+                           required>
+                    <div class="mt-2 text-center">
+                        <span class="badge bg-success fs-6 px-3 py-2">₹${parseFloat(perInstallment).toLocaleString()}</span>
+                    </div>
+                    <div class="form-text text-center">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Payment ${i} amount
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(colDiv);
+    }
+}
+
+// Update installment preview
+function updateInstallmentPreview() {
+    // This function can be used for future preview functionality
+    // For now, the custom date inputs provide the preview
+}
+
+// Update submit button state
+function updateSubmitButton() {
+    const submitBtn = document.getElementById('createInvoiceBtn');
+    const totalAmount = parseFloat(document.getElementById('course_fee_display').value) || 0;
+    const studentSelected = document.getElementById('student_id').value;
+    const coursesSelected = selectedCourses.length > 0;
+    
+    if (studentSelected && coursesSelected && totalAmount > 0) {
+        submitBtn.disabled = false;
+        submitBtn.className = 'btn btn-success btn-lg py-3 fw-bold shadow';
+        submitBtn.innerHTML = '<i class="bi bi-receipt-cutoff me-2 fs-5"></i>Create Invoice';
+    } else {
+        submitBtn.disabled = true;
+        submitBtn.className = 'btn btn-secondary btn-lg py-3 fw-bold';
+        submitBtn.innerHTML = '<i class="bi bi-exclamation-circle me-2 fs-5"></i>Complete Required Fields';
+    }
+}
+
+// Form validation helper
+function checkFormValidation() {
+    updateSubmitButton();
+}
+
+// Form validation
+function initializeFormValidation() {
+    const form = document.getElementById('invoiceForm');
+    
+    // Real-time validation
+    form.addEventListener('input', function(e) {
+        validateField(e.target);
+        updateSubmitButton();
+    });
+    
+    form.addEventListener('change', function(e) {
+        validateField(e.target);
+        updateSubmitButton();
+        
+        if (e.target.id === 'discount') {
+            calculateDueAmount();
+        }
+        
+        if (e.target.id === 'installment_count_select') {
+            updateInstallmentInputs();
+        }
+    });
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+            showFormErrors();
+        }
+    });
+}
+
+function validateField(field) {
+    const value = field.value.trim();
+    
+    // Remove existing validation classes
+    field.classList.remove('is-valid', 'is-invalid');
+    
+    if (field.hasAttribute('required') && !value) {
+        field.classList.add('is-invalid');
+        return false;
+    } else if (field.hasAttribute('required') && value) {
+        field.classList.add('is-valid');
+    }
+    
+    // Special validations
+    if (field.type === 'number' && value) {
+        const numValue = parseFloat(value);
+        if (numValue < 0) {
+            field.classList.add('is-invalid');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+function validateForm() {
+    const requiredFields = document.querySelectorAll('[required]');
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        if (!validateField(field)) {
+            isValid = false;
+        }
+    });
+    
+    // Additional business logic validation
+    const totalAmount = parseFloat(document.getElementById('course_fee_display').value) || 0;
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    
+    if (discount > totalAmount) {
+        document.getElementById('discount').classList.add('is-invalid');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+function showFormErrors() {
+    const firstInvalidField = document.querySelector('.is-invalid');
+    if (firstInvalidField) {
+        firstInvalidField.focus();
+        firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+// Event listeners for payment option cards
+document.addEventListener('DOMContentLoaded', function() {
+    // Make payment option cards clickable
+    document.querySelectorAll('.payment-type-option').forEach(card => {
+        card.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            selectPaymentType(value === '1' ? 1 : 'multiple');
+        });
+    });
+});
+</script>
+
+{% endblock %}

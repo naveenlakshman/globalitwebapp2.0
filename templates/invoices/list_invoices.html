@@ -1,0 +1,644 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice Management{% endblock %}
+{% block page_title %}Invoice Management{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Invoice List - Clean UI with Dark/Light Mode Support */
+.invoice-list {
+  padding: var(--space-lg);
+}
+
+.section-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  margin-bottom: var(--space-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.section-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.section-header {
+  background: var(--gradient-primary);
+  color: var(--text-white);
+  padding: var(--space-md) var(--space-xl);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.section-body {
+  padding: var(--space-xl);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.table {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+.table th {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--gray-200);
+  font-weight: var(--font-semibold);
+}
+
+.table td {
+  border-color: var(--gray-200);
+  color: var(--text-primary);
+}
+
+.table-hover tbody tr:hover {
+  background-color: var(--gray-50);
+}
+
+.btn-outline-primary {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--text-white);
+}
+
+.btn-outline-success {
+  border-color: var(--brand-success);
+  color: var(--brand-success);
+}
+
+.btn-outline-success:hover {
+  background-color: var(--brand-success);
+  border-color: var(--brand-success);
+  color: var(--text-white);
+}
+
+.btn-outline-secondary {
+  border-color: var(--gray-400);
+  color: var(--text-secondary);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--gray-400);
+  border-color: var(--gray-400);
+  color: var(--text-white);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 0.2rem rgba(var(--brand-primary-rgb), 0.15);
+}
+
+/* Dark mode support */
+html[data-theme="dark"] .section-card {
+  background: var(--bg-secondary) !important;
+  border-color: var(--gray-200) !important;
+}
+
+html[data-theme="dark"] .section-body {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .table {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .table th {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--gray-200) !important;
+}
+
+html[data-theme="dark"] .table td {
+  border-color: var(--gray-200) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .table-hover tbody tr:hover {
+  background-color: var(--gray-100) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .invoice-list {
+    padding: var(--space-md);
+  }
+  
+  .section-header {
+    padding: var(--space-sm) var(--space-md);
+  }
+  
+  .section-body {
+    padding: var(--space-md);
+  }
+}
+
+/* Dynamic search highlighting */
+.highlight {
+  background-color: var(--brand-warning);
+  color: var(--text-white);
+  padding: 1px 2px;
+  border-radius: 2px;
+  font-weight: bold;
+}
+
+.table-row-hidden {
+  display: none !important;
+}
+
+.search-no-results {
+  background-color: var(--bg-secondary);
+  border: 2px dashed var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  text-align: center;
+  margin: 1rem 0;
+  color: var(--text-secondary);
+}
+
+/* Enhanced search input styling */
+#searchInput:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 0.25rem rgba(var(--brand-primary-rgb), 0.25);
+}
+
+.input-group:focus-within .input-group-text {
+  border-color: var(--brand-primary);
+  background-color: rgba(var(--brand-primary-rgb), 0.1);
+}
+
+/* Loading spinner animation */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Result count animation */
+#searchResults {
+  transition: all 0.3s ease;
+}
+
+/* Table row fade effect */
+tbody tr {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.table-row-hidden {
+  opacity: 0;
+}
+
+/* Clear button hover effect */
+.btn-outline-secondary:hover {
+  transform: translateY(-1px);
+  transition: transform 0.2s ease;
+}
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            {% if session.role == 'admin' %}
+                <a href="{{ url_for('dashboard_bp.admin_dashboard') }}">
+            {% elif session.role == 'regional_manager' %}
+                <a href="{{ url_for('dashboard_bp.admin_dashboard') }}">
+            {% elif session.role in ['franchise', 'franchise_owner'] %}
+                <a href="{{ url_for('dashboard_bp.franchise_dashboard') }}">
+            {% elif session.role == 'branch_manager' %}
+                <a href="{{ url_for('dashboard_bp.branch_manager_dashboard') }}">
+            {% elif session.role == 'staff' %}
+                <a href="{{ url_for('dashboard_bp.branch_manager_dashboard') }}">
+            {% else %}
+                <a href="{{ url_for('students.register_student') }}">
+            {% endif %}
+                <i class="fas fa-home"></i> Home
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="fas fa-file-invoice"></i> Invoices
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid invoice-list">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-file-invoice text-primary me-2"></i>
+                        Invoice Management
+                    </h1>
+                    <p class="text-muted mb-0">Manage and track all invoices and payments</p>
+                </div>
+                <div>
+                    {% if session.role == 'admin' %}
+                    <a href="{{ url_for('invoices.create_invoice_form') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-plus me-1"></i> Create Invoice
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('invoices.overdue_invoices') }}" class="btn btn-warning">
+                        <i class="fas fa-exclamation-triangle me-1"></i> Overdue
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="section-card mb-4">
+                <div class="section-header">
+                    <i class="fas fa-filter"></i>
+                    Filter Invoices
+                </div>
+                <div class="section-body">
+                    <form method="GET" class="row g-3" id="filterForm">
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" name="status" id="statusFilter" onchange="applyFilters()">
+                                <option value="all">All Invoices</option>
+                                <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="paid" {% if request.args.get('status') == 'paid' %}selected{% endif %}>Paid</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search Student</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="search" id="searchInput" 
+                                       placeholder="Type to search student name or ID..." 
+                                       value="{{ request.args.get('search', '') }}"
+                                       oninput="performDynamicSearch()"
+                                       autocomplete="off"
+                                       aria-label="Search students"
+                                       aria-describedby="searchHelp">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search" id="searchIcon"></i>
+                                    <div class="spinner-border spinner-border-sm d-none" id="searchSpinner" role="status" aria-label="Searching">
+                                        <span class="visually-hidden">Searching...</span>
+                                    </div>
+                                </span>
+                            </div>
+                            <div class="form-text" id="searchHelp">
+                                <span id="searchResults">{{ invoices|length }} invoice(s) found</span>
+                                <span class="text-muted ms-2">• Use Ctrl+F to focus • Escape to clear</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label>&nbsp;</label>
+                            <button type="button" class="btn btn-outline-secondary d-block" onclick="clearFilters()">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Invoices Table -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="fas fa-list-ul"></i>
+                    Invoices 
+                    <span class="badge bg-light text-dark ms-2" id="invoiceCountBadge">{{ invoices|length }}</span>
+                </div>
+                <div class="section-body">
+                    {% if invoices %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Invoice ID</th>
+                                    <th>Student</th>
+                                    <th>Course</th>
+                                    <th>Total Amount</th>
+                                    <th>Paid Amount</th>
+                                    <th>Due Amount</th>
+                                    <th>Status</th>
+                                    <th>Created Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in invoices %}
+                                <tr>
+                                    <td>
+                                        <strong>INV-{{ item.invoice.id }}</strong>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ item.student.full_name }}</strong><br>
+                                            <small class="text-muted">ID: {{ item.student.student_id }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ item.invoice.course.course_name if item.invoice.course else 'N/A' }}</strong><br>
+                                            <small class="text-muted">{{ item.invoice.course.duration if item.invoice.course else 'N/A' }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-primary">₹{{ "{:,.2f}".format(item.invoice.total_amount) }}</span>
+                                        {% if item.invoice.discount > 0 %}
+                                        <br><small class="text-success">Discount: ₹{{ "{:,.2f}".format(item.invoice.discount) }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-success">₹{{ "{:,.2f}".format(item.invoice.paid_amount) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold {% if item.invoice.due_amount > 0 %}text-danger{% else %}text-success{% endif %}">
+                                            ₹{{ "{:,.2f}".format(item.invoice.due_amount) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if item.invoice.due_amount <= 0 %}
+                                        <span class="badge bg-success">Paid</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ item.invoice.created_at|format_date_indian if item.invoice.created_at else 'N/A' }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('invoices.view_invoice', invoice_id=item.invoice.id) }}" 
+                                               class="btn btn-outline-primary" title="View Invoice">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            
+                                            <!-- Print dropdown -->
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-info dropdown-toggle" 
+                                                        data-bs-toggle="dropdown" title="Print Options">
+                                                    <i class="bi bi-printer"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="{{ url_for('invoices.print_invoice', invoice_id=item.invoice.id) }}" target="_blank">
+                                                        <i class="bi bi-printer me-1"></i> Print View
+                                                    </a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('invoices.download_invoice_pdf', invoice_id=item.invoice.id) }}">
+                                                        <i class="bi bi-file-pdf me-1"></i> Download PDF
+                                                    </a></li>
+                                                </ul>
+                                            </div>
+                                            
+                                            {% if item.invoice.due_amount > 0 %}
+                                            <a href="{{ url_for('invoices.payment_form', invoice_id=item.invoice.id) }}" 
+                                               class="btn btn-outline-success" title="Record Payment">
+                                                <i class="bi bi-credit-card"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if session.role == 'admin' %}
+                                            <a href="{{ url_for('invoices.edit_invoice_form', invoice_id=item.invoice.id) }}" 
+                                               class="btn btn-outline-secondary" title="Edit Invoice">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-receipt" style="font-size: 3rem; color: var(--text-secondary);"></i>
+                        <p class="text-muted mt-3">No invoices found.</p>
+                        {% if session.role == 'admin' %}
+                        <a href="{{ url_for('invoices.create_invoice_form') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Create First Invoice
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let searchTimeout;
+let allRows = [];
+let filteredCount = 0;
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Store all table rows for filtering
+    const tableBody = document.querySelector('tbody');
+    if (tableBody) {
+        allRows = Array.from(tableBody.querySelectorAll('tr'));
+        filteredCount = allRows.length;
+    }
+    
+    // Apply initial filters if any
+    applyFilters();
+});
+
+function performDynamicSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchIcon = document.getElementById('searchIcon');
+    const searchSpinner = document.getElementById('searchSpinner');
+    
+    // Show loading spinner
+    searchIcon.classList.add('d-none');
+    searchSpinner.classList.remove('d-none');
+    
+    // Clear previous timeout
+    clearTimeout(searchTimeout);
+    
+    // Set new timeout for debounced search
+    searchTimeout = setTimeout(() => {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        filterTable(searchTerm);
+        
+        // Hide loading spinner
+        searchSpinner.classList.add('d-none');
+        searchIcon.classList.remove('d-none');
+        
+        // Add subtle visual feedback
+        const searchResults = document.getElementById('searchResults');
+        searchResults.style.transform = 'scale(1.05)';
+        setTimeout(() => {
+            searchResults.style.transform = 'scale(1)';
+        }, 200);
+        
+    }, 300); // 300ms delay for better performance
+}
+
+function filterTable(searchTerm) {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const searchResults = document.getElementById('searchResults');
+    const tableBody = document.querySelector('tbody');
+    
+    if (!tableBody || allRows.length === 0) return;
+    
+    filteredCount = 0;
+    let visibleRows = 0;
+    
+    allRows.forEach(row => {
+        const studentName = row.querySelector('td:nth-child(2) strong').textContent.toLowerCase();
+        const studentId = row.querySelector('td:nth-child(2) small').textContent.toLowerCase();
+        const dueAmount = parseFloat(row.querySelector('td:nth-child(6) span').textContent.replace(/[₹,]/g, ''));
+        
+        // Check search criteria
+        const matchesSearch = searchTerm === '' || 
+                            studentName.includes(searchTerm) || 
+                            studentId.includes(searchTerm);
+        
+        // Check status filter
+        let matchesStatus = true;
+        if (statusFilter === 'pending') {
+            matchesStatus = dueAmount > 0;
+        } else if (statusFilter === 'paid') {
+            matchesStatus = dueAmount <= 0;
+        }
+        
+        // Show/hide row based on filters
+        if (matchesSearch && matchesStatus) {
+            row.classList.remove('table-row-hidden');
+            visibleRows++;
+            
+            // Highlight search terms
+            if (searchTerm !== '') {
+                highlightSearchTerm(row, searchTerm);
+            } else {
+                removeHighlight(row);
+            }
+        } else {
+            row.classList.add('table-row-hidden');
+            removeHighlight(row);
+        }
+    });
+    
+    // Update results count
+    const invoiceCountBadge = document.getElementById('invoiceCountBadge');
+    searchResults.textContent = `${visibleRows} invoice(s) found`;
+    if (invoiceCountBadge) {
+        invoiceCountBadge.textContent = visibleRows;
+    }
+    
+    // Show/hide no results message
+    toggleNoResultsMessage(visibleRows === 0);
+    
+    filteredCount = visibleRows;
+}
+
+function highlightSearchTerm(row, searchTerm) {
+    const studentNameElement = row.querySelector('td:nth-child(2) strong');
+    const studentIdElement = row.querySelector('td:nth-child(2) small');
+    
+    // Remove existing highlights
+    removeHighlight(row);
+    
+    // Highlight in student name
+    if (studentNameElement) {
+        const originalText = studentNameElement.getAttribute('data-original') || studentNameElement.textContent;
+        if (!studentNameElement.getAttribute('data-original')) {
+            studentNameElement.setAttribute('data-original', originalText);
+        }
+        const highlightedText = originalText.replace(
+            new RegExp(searchTerm, 'gi'), 
+            match => `<span class="highlight">${match}</span>`
+        );
+        studentNameElement.innerHTML = highlightedText;
+    }
+    
+    // Highlight in student ID
+    if (studentIdElement) {
+        const originalText = studentIdElement.getAttribute('data-original') || studentIdElement.textContent;
+        if (!studentIdElement.getAttribute('data-original')) {
+            studentIdElement.setAttribute('data-original', originalText);
+        }
+        const highlightedText = originalText.replace(
+            new RegExp(searchTerm, 'gi'), 
+            match => `<span class="highlight">${match}</span>`
+        );
+        studentIdElement.innerHTML = highlightedText;
+    }
+}
+
+function removeHighlight(row) {
+    const studentNameElement = row.querySelector('td:nth-child(2) strong');
+    const studentIdElement = row.querySelector('td:nth-child(2) small');
+    
+    if (studentNameElement && studentNameElement.getAttribute('data-original')) {
+        studentNameElement.textContent = studentNameElement.getAttribute('data-original');
+    }
+    
+    if (studentIdElement && studentIdElement.getAttribute('data-original')) {
+        studentIdElement.textContent = studentIdElement.getAttribute('data-original');
+    }
+}
+
+function toggleNoResultsMessage(show) {
+    let noResultsDiv = document.querySelector('.search-no-results');
+    const tableContainer = document.querySelector('.table-responsive');
+    
+    if (show && !noResultsDiv) {
+        // Create no results message
+        noResultsDiv = document.createElement('div');
+        noResultsDiv.className = 'search-no-results';
+        noResultsDiv.innerHTML = `
+            <i class="bi bi-search" style="font-size: 3rem; color: #6c757d;"></i>
+            <p class="text-muted mt-3 mb-0">No invoices match your search criteria.</p>
+            <small class="text-muted">Try adjusting your search terms or filters.</small>
+        `;
+        tableContainer.parentNode.insertBefore(noResultsDiv, tableContainer);
+    }
+    
+    if (noResultsDiv) {
+        noResultsDiv.style.display = show ? 'block' : 'none';
+    }
+    
+    if (tableContainer) {
+        tableContainer.style.display = show ? 'none' : 'block';
+    }
+}
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+    filterTable(searchTerm);
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = 'all';
+    filterTable('');
+}
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + F to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        document.getElementById('searchInput').focus();
+    }
+    
+    // Escape to clear search
+    if (e.key === 'Escape') {
+        const searchInput = document.getElementById('searchInput');
+        if (document.activeElement === searchInput) {
+            clearFilters();
+            searchInput.blur();
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.full_name }} - Student Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-user text-primary me-2"></i>Student Details
+            </h1>
+            {% if session.get('role') == 'trainer' %}
+                <small class="text-muted">
+                    <i class="fas fa-eye me-1"></i>Read-only access - Contact your branch manager to edit student information
+                </small>
+            {% endif %}
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('students.list_students') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Students
+            </a>
+            {% if session.get('role') in ['franchise', 'franchise_owner', 'branch_manager', 'admin'] %}
+                <a href="{{ url_for('students.edit_student', student_id=student.student_id) }}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit me-1"></i>Edit Student
+                </a>
+            {% endif %}
+            {% if session.get('role') in ['franchise', 'franchise_owner', 'branch_manager', 'admin', 'staff'] %}
+                <a href="#" onclick="viewPayments('{{ student.student_id }}')" class="btn btn-success btn-sm">
+                    <i class="fas fa-rupee-sign me-1"></i>View Payments
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Student Information Card -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-user-circle me-2"></i>Personal Information
+                    </h6>
+                    <span class="badge badge-primary">{{ student.student_id }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted"><strong>Full Name</strong></label>
+                                <p class="form-control-plaintext">{{ student.full_name }}</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted"><strong>Gender</strong></label>
+                                <p class="form-control-plaintext">{{ student.gender or 'Not specified' }}</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted"><strong>Date of Birth</strong></label>
+                                <p class="form-control-plaintext">{{ student.dob or 'Not provided' }}</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted"><strong>Mobile Number</strong></label>
+                                <p class="form-control-plaintext">
+                                    {% if student.mobile %}
+                                        <a href="tel:{{ student.mobile }}" class="text-decoration-none">
+                                            <i class="fas fa-phone me-1"></i>{{ student.mobile }}
+                                        </a>
+                                    {% else %}
+                                        Not provided
+                                    {% endif %}
+                                </p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted"><strong>Email Address</strong></label>
+                                <p class="form-control-plaintext">
+                                    {% if student.email %}
+                                        <a href="mailto:{{ student.email }}" class="text-decoration-none">
+                                            <i class="fas fa-envelope me-1"></i>{{ student.email }}
+                                        </a>
+                                    {% else %}
+                                        Not provided
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted"><strong>Guardian Name</strong></label>
+                                <p class="form-control-plaintext">{{ student.guardian_name or 'Not provided' }}</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted"><strong>Guardian Mobile</strong></label>
+                                <p class="form-control-plaintext">
+                                    {% if student.guardian_mobile %}
+                                        <a href="tel:{{ student.guardian_mobile }}" class="text-decoration-none">
+                                            <i class="fas fa-phone me-1"></i>{{ student.guardian_mobile }}
+                                        </a>
+                                    {% else %}
+                                        Not provided
+                                    {% endif %}
+                                </p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted"><strong>Qualification</strong></label>
+                                <p class="form-control-plaintext">{{ student.qualification or 'Not specified' }}</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted"><strong>Address</strong></label>
+                                <p class="form-control-plaintext">{{ student.address or 'Not provided' }}</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted"><strong>Admission Mode</strong></label>
+                                <p class="form-control-plaintext">{{ student.admission_mode or 'Not specified' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Information Card -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-graduation-cap me-2"></i>Academic Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted"><strong>Course</strong></label>
+                        <p class="form-control-plaintext">
+                            {% if student.course_name %}
+                                <span class="badge bg-success">{{ student.course_name }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Not assigned</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted"><strong>Batch</strong></label>
+                        <p class="form-control-plaintext">
+                            {% if student.batch_id %}
+                                <span class="badge bg-info">Batch {{ student.batch_id }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Not assigned</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted"><strong>Branch</strong></label>
+                        <p class="form-control-plaintext">
+                            {% if branch_name %}
+                                <span class="badge bg-primary">{{ branch_name }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Not specified</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted"><strong>Admission Date</strong></label>
+                        <p class="form-control-plaintext">
+                            {% if student.admission_date %}
+                                {{ student.admission_date | format_date_indian }}
+                                <br><small class="text-muted">{{ student.admission_date | format_time_indian }}</small>
+                            {% else %}
+                                Not recorded
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted"><strong>Student Status</strong></label>
+                        <p class="form-control-plaintext">
+                            {% if student.status %}
+                                {% if student.status == 'Active' %}
+                                    <span class="badge bg-success fs-6">{{ student.status }}</span>
+                                    <small class="text-muted ms-2">Currently enrolled and attending classes</small>
+                                {% elif student.status == 'Hold' %}
+                                    <span class="badge bg-warning fs-6">{{ student.status }}</span>
+                                    <small class="text-muted ms-2">Temporarily paused (fees pending, personal reasons, etc.)</small>
+                                {% elif student.status == 'Inactive' %}
+                                    <span class="badge bg-secondary fs-6">{{ student.status }}</span>
+                                    <small class="text-muted ms-2">Not attending for a longer period</small>
+                                {% elif student.status == 'Dropout' %}
+                                    <span class="badge bg-danger fs-6">{{ student.status }}</span>
+                                    <small class="text-muted ms-2">Officially left/discontinued</small>
+                                {% elif student.status == 'Completed' %}
+                                    <span class="badge bg-primary fs-6">{{ student.status }}</span>
+                                    <small class="text-muted ms-2">Successfully finished the course</small>
+                                {% else %}
+                                    <span class="badge bg-light text-dark fs-6">{{ student.status }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">Unknown</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted"><strong>Referred By</strong></label>
+                        <p class="form-control-plaintext">{{ student.referred_by or 'Direct admission' }}</p>
+                    </div>
+                    
+                    {% if student.registered_by %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted"><strong>Registered By</strong></label>
+                        <p class="form-control-plaintext">{{ student.registered_by }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Documents Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-file-alt me-2"></i>Documents
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted"><strong>Photo</strong></label>
+                        {% if student.photo_filename %}
+                            <div class="text-center">
+                                <img src="{{ url_for('static', filename='uploads/' + student.photo_filename) }}" 
+                                     class="img-thumbnail" style="max-width: 120px; max-height: 120px;" 
+                                     alt="Student Photo">
+                            </div>
+                        {% else %}
+                            <p class="form-control-plaintext text-muted">No photo uploaded</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted"><strong>ID Proof</strong></label>
+                        {% if student.id_proof_filename %}
+                            <p class="form-control-plaintext">
+                                <a href="{{ url_for('static', filename='uploads/' + student.id_proof_filename) }}" 
+                                   target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-file-pdf me-1"></i>View Document
+                                </a>
+                            </p>
+                        {% else %}
+                            <p class="form-control-plaintext text-muted">No ID proof uploaded</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-tasks me-2"></i>{% if session.get('role') == 'trainer' %}Contact Actions{% else %}Quick Actions{% endif %}
+                    </h6>
+                    {% if session.get('role') == 'trainer' %}
+                        <small class="text-muted">Communication tools for student contact</small>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% if session.get('role') in ['franchise', 'franchise_owner', 'branch_manager', 'admin'] %}
+                            <a href="{{ url_for('students.edit_student', student_id=student.student_id) }}" class="btn btn-warning">
+                                <i class="fas fa-edit me-1"></i>Edit Student
+                            </a>
+                        {% endif %}
+                        {% if session.get('role') in ['franchise', 'franchise_owner', 'branch_manager', 'admin', 'staff'] %}
+                            <a href="#" onclick="viewPayments('{{ student.student_id }}')" class="btn btn-success">
+                                <i class="fas fa-rupee-sign me-1"></i>View Payments
+                            </a>
+                        {% endif %}
+                        {% if session.get('role') in ['franchise', 'franchise_owner', 'branch_manager', 'admin', 'staff', 'trainer'] %}
+                            <a href="#" onclick="sendSMS('{{ student.student_id }}')" class="btn btn-info">
+                                <i class="fas fa-sms me-1"></i>Send SMS
+                            </a>
+                            <a href="mailto:{{ student.email }}?subject=Global IT Education" class="btn btn-secondary">
+                                <i class="fas fa-envelope me-1"></i>Send Email
+                            </a>
+                            <a href="tel:{{ student.mobile }}" class="btn btn-primary">
+                                <i class="fas fa-phone me-1"></i>Call Student
+                            </a>
+                        {% endif %}
+                    </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewPayments(studentId) {
+    // Redirect to payments page (when implemented)
+    alert('Payment history will be implemented soon for student: ' + studentId);
+}
+
+function sendSMS(studentId) {
+    // Redirect to SMS page (when implemented)
+    alert('SMS functionality will be implemented soon for student: ' + studentId);
+}
+</script>
+{% endblock %}

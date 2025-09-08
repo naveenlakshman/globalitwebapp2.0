@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Module Sections - {{ module.module_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('lms.admin_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('courses.list_courses') }}">Courses</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('courses.course_modules', course_id=module.course_id) }}">{{ module.course.course_name }} - Modules</a></li>
+                    <li class="breadcrumb-item active">{{ module.module_name }} - Sections</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Module Sections</h2>
+                    <h5 class="text-muted">{{ module.module_name }}</h5>
+                    <p class="text-muted">{{ module.module_description }}</p>
+                </div>
+                <a href="{{ url_for('courses.create_section_form', module_id=module.id) }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add New Section
+                </a>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Module Info Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-puzzle-piece"></i> Module Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Module Order:</strong> {{ module.module_order }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Duration:</strong> 
+                            {% if module.estimated_duration_hours %}
+                                {{ module.estimated_duration_hours }} hours
+                            {% else %}
+                                Not set
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Type:</strong>
+                            {% if module.is_mandatory %}
+                                <span class="badge bg-danger">Mandatory</span>
+                            {% else %}
+                                <span class="badge bg-info">Optional</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Status:</strong>
+                            {% if module.is_published %}
+                                <span class="badge bg-success">Published</span>
+                            {% else %}
+                                <span class="badge bg-warning">Draft</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>{{ sections|length }}</h5>
+                            <p class="mb-0">Total Sections</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>{{ sections|selectattr('is_published')|list|length }}</h5>
+                            <p class="mb-0">Published Sections</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <h5>{{ sections|rejectattr('is_published')|list|length }}</h5>
+                            <p class="mb-0">Draft Sections</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5>{{ sections|selectattr('is_mandatory')|list|length }}</h5>
+                            <p class="mb-0">Mandatory Sections</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sections List -->
+            {% if sections %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Module Sections</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Order</th>
+                                        <th>Section Name</th>
+                                        <th>Type</th>
+                                        <th>Duration</th>
+                                        <th>Mandatory</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for section in sections %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ section.section_order }}</span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ section.section_name }}</strong>
+                                            {% if section.section_description %}
+                                                <br><small class="text-muted">{{ section.section_description[:100] }}{% if section.section_description|length > 100 %}...{% endif %}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if section.section_type == 'video' %}
+                                                <span class="badge bg-primary"><i class="fas fa-video"></i> Video</span>
+                                            {% elif section.section_type == 'quiz' %}
+                                                <span class="badge bg-warning"><i class="fas fa-question-circle"></i> Quiz</span>
+                                            {% elif section.section_type == 'assignment' %}
+                                                <span class="badge bg-info"><i class="fas fa-tasks"></i> Assignment</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary"><i class="fas fa-file-text"></i> Content</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if section.estimated_duration_minutes %}
+                                                {{ section.estimated_duration_minutes }} min
+                                            {% else %}
+                                                <em class="text-muted">Not set</em>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if section.is_mandatory %}
+                                                <span class="badge bg-danger">Yes</span>
+                                            {% else %}
+                                                <span class="badge bg-success">No</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if section.is_published %}
+                                                <span class="badge bg-success">Published</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Draft</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="View Content">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" title="Edit Section">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" title="Delete Section" 
+                                                        onclick="confirmDelete('{{ section.section_name }}', '{{ section.id }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="py-5">
+                            <i class="fas fa-list fa-3x text-muted mb-3"></i>
+                            <h5>No Sections Found</h5>
+                            <p class="text-muted">This module doesn't have any sections yet.</p>
+                            <a href="{{ url_for('courses.create_section_form', module_id=module.id) }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create First Section
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('courses.course_modules', course_id=module.course_id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Modules
+                </a>
+                <div>
+                    <a href="{{ url_for('lms_content_management.video_upload_form') }}?course_id={{ module.course_id }}&module_id={{ module.id }}" class="btn btn-success">
+                        <i class="fas fa-upload"></i> Upload Content
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the section "<span id="sectionNameToDelete"></span>"?</p>
+                <p class="text-warning"><strong>Warning:</strong> This will also delete all content within this section.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-danger">Delete Section</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(sectionName, sectionId) {
+    document.getElementById('sectionNameToDelete').textContent = sectionName;
+    document.getElementById('deleteForm').action = '{{ url_for("courses.module_sections", module_id=module.id) }}/' + sectionId + '/delete';
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

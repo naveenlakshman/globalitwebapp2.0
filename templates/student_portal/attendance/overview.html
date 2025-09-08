@@ -1,0 +1,493 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}My Attendance - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<!-- Attendance Header -->
+<div class="welcome-header mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-2">
+                <i class="fas fa-calendar-check me-2"></i>My Attendance
+            </h1>
+            <p class="mb-0 opacity-75">
+                Track your attendance and maintain excellent academic standing
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="text-white">
+                <i class="fas fa-percentage me-2"></i>{{ attendance_percentage }}% Overall Attendance
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Stats -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon attendance-icon text-white">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <h3 class="mb-1">{{ present_days }}</h3>
+            <p class="text-muted mb-0">Present Days</p>
+            <small class="text-success">
+                <i class="fas fa-check me-1"></i>Great attendance!
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon progress-icon text-white">
+                <i class="fas fa-calendar-times"></i>
+            </div>
+            <h3 class="mb-1">{{ absent_days }}</h3>
+            <p class="text-muted mb-0">Absent Days</p>
+            <small class="text-{% if absent_days > 5 %}warning{% else %}success{% endif %}">
+                <i class="fas fa-{% if absent_days > 5 %}exclamation-triangle{% else %}check{% endif %} me-1"></i>
+                {% if absent_days > 5 %}Need improvement{% else %}Good record{% endif %}
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon fees-icon text-white">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="mb-1">{{ late_days }}</h3>
+            <p class="text-muted mb-0">Late Arrivals</p>
+            <small class="text-info">
+                <i class="fas fa-clock me-1"></i>This month
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon courses-icon text-white">
+                <i class="fas fa-calendar-week"></i>
+            </div>
+            <h3 class="mb-1">{{ this_week_attendance }}%</h3>
+            <p class="text-muted mb-0">This Week</p>
+            <small class="text-primary">
+                <i class="fas fa-chart-line me-1"></i>Current week
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Content -->
+<div class="row">
+    <!-- Left Column - Calendar and Records -->
+    <div class="col-lg-8">
+        <!-- Monthly Calendar -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-alt me-2 text-primary"></i>Monthly Attendance Calendar
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-primary" onclick="previousMonth()">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary">
+                                <span id="currentMonth">{{ current_month }}</span>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="nextMonth()">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="attendance-calendar">
+                    <div class="calendar-header row text-center mb-3">
+                        <div class="col">Sun</div>
+                        <div class="col">Mon</div>
+                        <div class="col">Tue</div>
+                        <div class="col">Wed</div>
+                        <div class="col">Thu</div>
+                        <div class="col">Fri</div>
+                        <div class="col">Sat</div>
+                    </div>
+                    
+                    <div id="calendar-days">
+                        <!-- Calendar will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Legend -->
+                <div class="calendar-legend mt-3 d-flex justify-content-center gap-4">
+                    <div class="legend-item">
+                        <span class="legend-color bg-success"></span>
+                        <small>Present</small>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color bg-danger"></span>
+                        <small>Absent</small>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color bg-warning"></span>
+                        <small>Late</small>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color bg-secondary"></span>
+                        <small>Holiday</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Attendance Records -->
+        <div class="student-card">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2 text-success"></i>Recent Attendance Records
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_attendance %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Day</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Status</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in recent_attendance %}
+                                <tr>
+                                    <td>{{ record.date.strftime('%b %d, %Y') }}</td>
+                                    <td>{{ record.date.strftime('%A') }}</td>
+                                    <td>
+                                        {% if record.check_in %}
+                                            <span class="text-success">{{ record.check_in.strftime('%I:%M %p') }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if record.check_out %}
+                                            <span class="text-info">{{ record.check_out.strftime('%I:%M %p') }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if record.status == 'present' else 'danger' if record.status == 'absent' else 'warning' }}">
+                                            {{ record.status.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if record.duration %}
+                                            {{ record.duration }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times text-muted mb-3" style="font-size: 3rem;"></i>
+                        <p class="text-muted">No attendance records found</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column - Summary and Actions -->
+    <div class="col-lg-4">
+        <!-- Attendance Summary -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2 text-info"></i>Attendance Summary
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="progress-ring mb-3" data-percentage="{{ attendance_percentage }}">
+                    <svg width="120" height="120">
+                        <circle cx="60" cy="60" r="50" stroke="#e9ecef" stroke-width="8" fill="none"/>
+                        <circle cx="60" cy="60" r="50" stroke="#28a745" stroke-width="8" fill="none" 
+                                class="progress-ring-circle" stroke-dasharray="314 314" stroke-dashoffset="314"
+                                style="transform: rotate(-90deg); transform-origin: 60px 60px;"/>
+                        <text x="60" y="65" text-anchor="middle" class="progress-text">{{ attendance_percentage }}%</text>
+                    </svg>
+                </div>
+                <h6>Overall Attendance</h6>
+                <p class="text-muted small">{{ total_classes }} total classes</p>
+                
+                {% if attendance_percentage >= 75 %}
+                    <div class="alert alert-success small">
+                        <i class="fas fa-check-circle me-1"></i>
+                        Excellent attendance! Keep it up!
+                    </div>
+                {% elif attendance_percentage >= 65 %}
+                    <div class="alert alert-warning small">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Good attendance. Try to improve!
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger small">
+                        <i class="fas fa-times-circle me-1"></i>
+                        Low attendance. Action required!
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="student-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-warning"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-success" onclick="markAttendance()">
+                        <i class="fas fa-check me-2"></i>Mark Today's Attendance
+                    </button>
+                    <a href="#" class="btn btn-outline-primary">
+                        <i class="fas fa-download me-2"></i>Download Report
+                    </a>
+                    <a href="#" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar me-2"></i>View Analytics
+                    </a>
+                    <a href="{{ url_for('student_portal.support') }}" class="btn btn-outline-warning">
+                        <i class="fas fa-question-circle me-2"></i>Report Issue
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Goals -->
+        <div class="student-card">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-target me-2 text-success"></i>Attendance Goals
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="goal-item mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">Monthly Goal</span>
+                        <span class="text-success">{{ monthly_progress }}%</span>
+                    </div>
+                    <div class="progress mb-1" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: {{ monthly_progress }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ monthly_target }}% target for this month</small>
+                </div>
+                
+                <div class="goal-item">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">Semester Goal</span>
+                        <span class="text-info">{{ semester_progress }}%</span>
+                    </div>
+                    <div class="progress mb-1" style="height: 8px;">
+                        <div class="progress-bar bg-info" style="width: {{ semester_progress }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ semester_target }}% target for semester</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .attendance-calendar {
+        max-width: 100%;
+    }
+    
+    .calendar-header {
+        font-weight: bold;
+        color: #6c757d;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 10px;
+    }
+    
+    .calendar-day {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 2px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .calendar-day:hover {
+        transform: scale(1.1);
+    }
+    
+    .calendar-day.present {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .calendar-day.absent {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .calendar-day.late {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .calendar-day.holiday {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .calendar-day.today {
+        border: 2px solid #007bff;
+        font-weight: bold;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .legend-color {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    
+    .progress-ring circle {
+        transition: stroke-dashoffset 2s ease;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Calendar functionality
+    function generateCalendar(year, month) {
+        const calendarDays = document.getElementById('calendar-days');
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        calendarDays.innerHTML = '';
+        
+        // Add empty cells for days before the first day of the month
+        for (let i = 0; i < firstDay; i++) {
+            const emptyDay = document.createElement('div');
+            emptyDay.className = 'col p-1';
+            calendarDays.appendChild(emptyDay);
+        }
+        
+        // Add days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayElement = document.createElement('div');
+            dayElement.className = 'col p-1';
+            
+            const dayButton = document.createElement('div');
+            dayButton.className = 'calendar-day';
+            dayButton.textContent = day;
+            
+            // Add attendance status (this would come from server data)
+            const today = new Date();
+            if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+                dayButton.classList.add('today');
+            }
+            
+            // Sample attendance data - replace with real data
+            if (Math.random() > 0.8) {
+                dayButton.classList.add('absent');
+            } else if (Math.random() > 0.9) {
+                dayButton.classList.add('late');
+            } else {
+                dayButton.classList.add('present');
+            }
+            
+            dayElement.appendChild(dayButton);
+            calendarDays.appendChild(dayElement);
+        }
+    }
+    
+    // Initialize calendar
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date();
+        generateCalendar(today.getFullYear(), today.getMonth());
+        
+        // Animate progress ring
+        const progressRings = document.querySelectorAll('.progress-ring');
+        progressRings.forEach(ring => {
+            const percentage = parseInt(ring.dataset.percentage);
+            const circle = ring.querySelector('.progress-ring-circle');
+            const radius = 50;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (percentage / 100) * circumference;
+            
+            circle.style.strokeDasharray = circumference;
+            circle.style.strokeDashoffset = circumference;
+            
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+            }, 500);
+        });
+    });
+    
+    // Calendar navigation
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+    
+    function previousMonth() {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        generateCalendar(currentYear, currentMonth);
+        updateMonthDisplay();
+    }
+    
+    function nextMonth() {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        generateCalendar(currentYear, currentMonth);
+        updateMonthDisplay();
+    }
+    
+    function updateMonthDisplay() {
+        const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+        document.getElementById('currentMonth').textContent = `${months[currentMonth]} ${currentYear}`;
+    }
+    
+    // Mark attendance
+    function markAttendance() {
+        // This would integrate with your attendance system
+        alert('Attendance marking functionality will be implemented in Phase 3');
+    }
+</script>
+{% endblock %}

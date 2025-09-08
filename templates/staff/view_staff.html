@@ -1,0 +1,590 @@
+{% extends "base.html" %}
+{% block title %}{{ staff.full_name or 'Staff Details' }} - Global IT Education{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Resume-style staff profile design */
+.resume-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    background: var(--bg-primary);
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.resume-header {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+    color: white;
+    padding: 3rem 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.resume-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.profile-picture {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 6px solid rgba(255, 255, 255, 0.3);
+    object-fit: cover;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.profile-placeholder {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 6px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.profile-placeholder i {
+    font-size: 4rem;
+    opacity: 0.7;
+}
+
+.resume-name {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.resume-title {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.resume-badges {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+
+.badge-custom {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.resume-body {
+    padding: 2.5rem;
+}
+
+.contact-bar {
+    background: var(--bg-secondary);
+    padding: 1.5rem 2.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.contact-item i {
+    color: var(--brand-primary);
+    width: 20px;
+    text-align: center;
+}
+
+.section {
+    margin-bottom: 2.5rem;
+}
+
+.section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--brand-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--brand-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 4px solid var(--brand-primary);
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.info-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.3rem;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.branch-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.branch-tag {
+    background: linear-gradient(135deg, var(--info-light) 0%, var(--info) 100%);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.action-buttons {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 0.5rem;
+    z-index: 1000;
+}
+
+.btn-floating {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-floating:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode specific styles */
+[data-theme="dark"] .resume-container {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .info-item {
+    border-left-color: var(--brand-secondary);
+}
+
+[data-theme="dark"] .section-title {
+    color: var(--brand-secondary);
+    border-bottom-color: var(--brand-secondary);
+}
+
+/* Print styles */
+@media print {
+    .action-buttons, .btn-floating {
+        display: none !important;
+    }
+    
+    .resume-container {
+        box-shadow: none !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+    
+    .resume-header {
+        background: #667eea !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .resume-container {
+        margin: 1rem;
+    }
+    
+    .resume-header {
+        padding: 2rem 1rem;
+    }
+    
+    .resume-name {
+        font-size: 2rem;
+    }
+    
+    .resume-body {
+        padding: 1.5rem;
+    }
+    
+    .contact-bar {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        position: relative;
+        top: auto;
+        right: auto;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Floating Action Buttons -->
+<div class="action-buttons">
+    <button onclick="printProfile()" class="btn btn-info btn-floating" title="Print Profile">
+        <i class="fas fa-print"></i>
+    </button>
+    <a href="{{ url_for('staff.edit_staff', user_id=staff.user_id) }}" class="btn btn-primary btn-floating" title="Edit Profile">
+        <i class="fas fa-edit"></i>
+    </a>
+    <a href="{{ url_for('staff.list_staff') }}" class="btn btn-secondary btn-floating" title="Back to List">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+</div>
+
+{% if staff %}
+<div class="resume-container">
+    <!-- Header Section -->
+    <div class="resume-header">
+        {% if staff.profile_photo %}
+            <img src="{{ url_for('static', filename=staff.profile_photo) }}" alt="Profile Photo" class="profile-picture">
+        {% else %}
+            <div class="profile-placeholder">
+                <i class="fas fa-user"></i>
+            </div>
+        {% endif %}
+        
+        <h1 class="resume-name">{{ staff.full_name or 'Unknown Staff Member' }}</h1>
+        <p class="resume-title">{{ staff.designation or 'Staff Member' }} • {{ staff.department or 'Global IT Education' }}</p>
+        
+        <div class="resume-badges">
+            <span class="badge-custom">{{ staff.role.replace('_', ' ').title() if staff.role else 'Staff' }}</span>
+            <span class="badge-custom">{{ 'Active' if staff.is_active else 'Inactive' }}</span>
+            {% if staff.employee_id %}
+            <span class="badge-custom">ID: {{ staff.employee_id }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Contact Information Bar -->
+    <div class="contact-bar">
+        {% if staff.primary_mobile %}
+        <div class="contact-item">
+            <i class="fas fa-phone"></i>
+            <span>{{ staff.primary_mobile }}</span>
+        </div>
+        {% endif %}
+        
+        {% if staff.personal_email or staff.official_email %}
+        <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <span>{{ staff.personal_email or staff.official_email }}</span>
+        </div>
+        {% endif %}
+        
+        {% if staff.current_address %}
+        <div class="contact-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>{{ staff.current_address }}</span>
+        </div>
+        {% endif %}
+        
+        {% if staff.joining_date %}
+        <div class="contact-item">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Joined: {{ staff.joining_date }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="resume-body">
+        <!-- Personal Information -->
+        {% if staff.date_of_birth or staff.gender or staff.blood_group %}
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-user"></i>
+                Personal Information
+            </h2>
+            <div class="info-grid">
+                {% if staff.date_of_birth %}
+                <div class="info-item">
+                    <div class="info-label">Date of Birth</div>
+                    <div class="info-value">{{ staff.date_of_birth }}</div>
+                </div>
+                {% endif %}
+                
+                {% if staff.gender %}
+                <div class="info-item">
+                    <div class="info-label">Gender</div>
+                    <div class="info-value">{{ staff.gender }}</div>
+                </div>
+                {% endif %}
+                
+                {% if staff.blood_group %}
+                <div class="info-item">
+                    <div class="info-label">Blood Group</div>
+                    <div class="info-value">{{ staff.blood_group }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Professional Information -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-briefcase"></i>
+                Professional Information
+            </h2>
+            <div class="info-grid">
+                {% if staff.employment_type %}
+                <div class="info-item">
+                    <div class="info-label">Employment Type</div>
+                    <div class="info-value">{{ staff.employment_type }}</div>
+                </div>
+                {% endif %}
+                
+                {% if staff.years_of_experience %}
+                <div class="info-item">
+                    <div class="info-label">Experience</div>
+                    <div class="info-value">{{ staff.years_of_experience }} years</div>
+                </div>
+                {% endif %}
+                
+                {% if staff.technical_skills %}
+                <div class="info-item">
+                    <div class="info-label">Technical Skills</div>
+                    <div class="info-value">{{ staff.technical_skills }}</div>
+                </div>
+                {% endif %}
+                
+                {% if staff.teaching_subjects %}
+                <div class="info-item">
+                    <div class="info-label">Teaching Subjects</div>
+                    <div class="info-value">{{ staff.teaching_subjects }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Branch Assignments -->
+        {% if staff.branches %}
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-building"></i>
+                Branch Assignments
+            </h2>
+            <div class="branch-tags">
+                {% for branch in staff.branches %}
+                <span class="branch-tag">{{ branch }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Education & Qualifications -->
+        {% if staff.highest_qualification or staff.university_college or staff.graduation_year %}
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-graduation-cap"></i>
+                Education & Qualifications
+            </h2>
+            <div class="info-grid">
+                {% if staff.highest_qualification %}
+                <div class="info-item">
+                    <div class="info-label">Highest Qualification</div>
+                    <div class="info-value">{{ staff.highest_qualification }}</div>
+                </div>
+                {% endif %}
+                
+                {% if staff.specialization %}
+                <div class="info-item">
+                    <div class="info-label">Specialization</div>
+                    <div class="info-value">{{ staff.specialization }}</div>
+                </div>
+                {% endif %}
+                
+                {% if staff.university_college %}
+                <div class="info-item">
+                    <div class="info-label">University/College</div>
+                    <div class="info-value">{{ staff.university_college }}</div>
+                </div>
+                {% endif %}
+                
+                {% if staff.graduation_year %}
+                <div class="info-item">
+                    <div class="info-label">Graduation Year</div>
+                    <div class="info-value">{{ staff.graduation_year }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Emergency Contact -->
+        {% if staff.emergency_contact_name or staff.emergency_contact_mobile %}
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-exclamation-triangle"></i>
+                Emergency Contact
+            </h2>
+            <div class="info-grid">
+                {% if staff.emergency_contact_name %}
+                <div class="info-item">
+                    <div class="info-label">Contact Name</div>
+                    <div class="info-value">{{ staff.emergency_contact_name }}</div>
+                </div>
+                {% endif %}
+                
+                {% if staff.emergency_contact_relation %}
+                <div class="info-item">
+                    <div class="info-label">Relation</div>
+                    <div class="info-value">{{ staff.emergency_contact_relation }}</div>
+                </div>
+                {% endif %}
+                
+                {% if staff.emergency_contact_mobile %}
+                <div class="info-item">
+                    <div class="info-label">Mobile</div>
+                    <div class="info-value">{{ staff.emergency_contact_mobile }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Additional Information -->
+        {% if staff.hobbies_interests or staff.notes %}
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                Additional Information
+            </h2>
+            <div class="info-grid">
+                {% if staff.hobbies_interests %}
+                <div class="info-item">
+                    <div class="info-label">Hobbies & Interests</div>
+                    <div class="info-value">{{ staff.hobbies_interests }}</div>
+                </div>
+                {% endif %}
+                
+                {% if staff.notes %}
+                <div class="info-item">
+                    <div class="info-label">Notes</div>
+                    <div class="info-value">{{ staff.notes }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% else %}
+<!-- Error State -->
+<div class="container text-center py-5">
+    <div class="resume-container">
+        <div class="resume-body">
+            <i class="fas fa-exclamation-circle fa-3x text-danger mb-3"></i>
+            <h3>Staff Member Not Found</h3>
+            <p class="text-muted mb-4">The requested staff member could not be found or you don't have permission to view their details.</p>
+            <a href="{{ url_for('staff.list_staff') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Staff List
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Print functionality
+function printProfile() {
+    window.print();
+}
+
+// Smooth scroll for mobile
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth hover effects
+    const infoItems = document.querySelectorAll('.info-item');
+    infoItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-3px)';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %}

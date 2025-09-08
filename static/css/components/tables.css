@@ -1,0 +1,95 @@
+/* Clean table */
+.table-clean{
+  width:100%; border-collapse:separate; border-spacing:0; background:#fff;
+  border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-sm)
+}
+.table-clean thead th{
+  background:var(--gradient-primary); color:#fff; font-weight:var(--font-semibold);
+  padding:1rem .75rem; border:none; font-size:.95rem
+}
+.table-clean tbody tr{border-bottom:1px solid var(--gray-200); transition:.2s background-color,.2s transform,.2s box-shadow}
+.table-clean tbody tr:hover{background:var(--gray-50); transform:translateY(-1px); box-shadow:var(--shadow-sm)}
+.table-clean td{padding:1rem .75rem; vertical-align:middle; color:var(--text-primary)}
+.table-clean .cell-muted{color:var(--text-muted)}
+.table-clean .row-link{color:var(--brand-primary); text-decoration:none; font-weight:var(--font-semibold)}
+.table-clean .row-link:hover{text-decoration:underline}
+
+/* Dark mode enhancements for tables */
+@media (prefers-color-scheme: dark) {
+  .table-clean {
+    background: var(--bg-secondary);
+    border: 1px solid var(--gray-200);
+  }
+
+  .table-clean thead th {
+    background: var(--gradient-primary);
+    color: var(--text-white);
+    border-bottom: 2px solid var(--gray-300);
+  }
+
+  .table-clean tbody tr {
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .table-clean tbody tr:hover {
+    background: var(--bg-primary);
+    box-shadow: var(--shadow-md);
+  }
+
+  .table-clean td {
+    color: var(--text-primary);
+  }
+
+  .table-clean .cell-muted {
+    color: var(--text-muted);
+  }
+
+  .table-clean .row-link {
+    color: var(--brand-secondary);
+  }
+
+  .table-clean .row-link:hover {
+    color: #60a5fa;
+    text-decoration: underline;
+  }
+
+  /* Enhanced table responsiveness for dark mode */
+  .table-responsive {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+  }
+
+  .table {
+    color: var(--text-primary);
+  }
+
+  .table thead th {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--gray-300);
+  }
+
+  .table tbody tr {
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .table tbody tr:hover {
+    background: var(--bg-primary);
+  }
+
+  .table tbody td {
+    color: var(--text-primary);
+    border-top: 1px solid var(--gray-200);
+  }
+
+  /* Enhanced striped tables */
+  .table-striped > tbody > tr:nth-of-type(odd) > td,
+  .table-striped > tbody > tr:nth-of-type(odd) > th {
+    background-color: var(--bg-primary);
+  }
+
+  .table-striped > tbody > tr:nth-of-type(even) > td,
+  .table-striped > tbody > tr:nth-of-type(even) > th {
+    background-color: var(--bg-secondary);
+  }
+}

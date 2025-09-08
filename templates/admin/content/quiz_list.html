@@ -1,0 +1,234 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}Quiz Management{% endblock %}
+{% block page_icon %}fas fa-question-circle{% endblock %}
+{% block page_title %}Quiz Management{% endblock %}
+{% block page_description %}Create and manage quizzes for course sections{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('lms_content_management.quiz_create_form') }}" class="btn btn-warning">
+    <i class="fas fa-plus me-2"></i>Create Quiz
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="draft" {% if current_status == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="published" {% if current_status == 'published' %}selected{% endif %}>Published</option>
+                    <option value="review" {% if current_status == 'review' %}selected{% endif %}>Under Review</option>
+                    <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>Approved</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Course</label>
+                <select name="course_id" class="form-select">
+                    <option value="">All Courses</option>
+                    {% for course in courses %}
+                    <option value="{{ course.id }}" {% if current_course_id == course.id %}selected{% endif %}>
+                        {{ course.course_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-outline-warning d-block">
+                    <i class="fas fa-filter me-2"></i>Filter
+                </button>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <a href="{{ url_for('lms_content_management.quiz_list') }}" class="btn btn-outline-secondary d-block">
+                    <i class="fas fa-times me-2"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Quizzes List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Quizzes</h5>
+        <span class="badge bg-warning">{{ quizzes.total }} Total</span>
+    </div>
+    <div class="card-body">
+        {% if quizzes.items %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Quiz</th>
+                            <th>Course</th>
+                            <th>Questions</th>
+                            <th>Settings</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for quiz in quizzes.items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-question-circle fa-2x text-warning"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-0">{{ quiz.quiz_title }}</h6>
+                                        {% if quiz.quiz_description %}
+                                        <small class="text-muted">{{ quiz.quiz_description[:50] }}...</small>
+                                        {% endif %}
+                                        {% if quiz.is_mandatory %}
+                                        <br><span class="badge bg-danger badge-sm">Mandatory</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <strong>{{ quiz.course.course_name }}</strong>
+                                <br><small class="text-muted">{{ quiz.module.module_name }}</small>
+                                <br><small class="text-muted">{{ quiz.section.section_name }}</small>
+                            </td>
+                            <td>
+                                <div class="text-center">
+                                    <h5 class="mb-0">{{ quiz.total_questions }}</h5>
+                                    <small class="text-muted">Questions</small>
+                                    <br><small class="text-muted">{{ quiz.max_score }} points</small>
+                                </div>
+                            </td>
+                            <td>
+                                <small class="d-block">Time: {{ quiz.time_limit_minutes }} min</small>
+                                <small class="d-block">Attempts: {{ quiz.max_attempts }}</small>
+                                <small class="d-block">Pass: {{ quiz.passing_score }}%</small>
+                                {% if quiz.shuffle_questions %}
+                                <span class="badge bg-info badge-sm">Shuffled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if quiz.is_published %}
+                                <span class="workflow-stage stage-published">
+                                    <i class="fas fa-globe me-1"></i>Published
+                                </span>
+                                {% else %}
+                                <span class="workflow-stage stage-{{ quiz.workflow_stage }}">
+                                    {% if quiz.workflow_stage == 'draft' %}
+                                        <i class="fas fa-edit me-1"></i>Draft
+                                    {% elif quiz.workflow_stage == 'review' %}
+                                        <i class="fas fa-eye me-1"></i>Review
+                                    {% elif quiz.workflow_stage == 'approved' %}
+                                        <i class="fas fa-check me-1"></i>Approved
+                                    {% endif %}
+                                </span>
+                                {% endif %}
+                                {% if quiz.available_from %}
+                                <br><small class="text-muted">Available from: {{ quiz.available_from | format_datetime_indian }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ quiz.created_at | format_datetime_indian if quiz.created_at else 'N/A' }}
+                                <br><small class="text-muted">by {{ quiz.creator.full_name if quiz.creator else 'Unknown' }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('lms_content_management.quiz_detail', quiz_id=quiz.id) }}" 
+                                       class="btn btn-outline-warning" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if quiz.total_questions > 0 and not quiz.is_published %}
+                                    <button class="btn btn-outline-success" 
+                                            onclick="publishQuiz({{ quiz.id }})" title="Publish">
+                                        <i class="fas fa-globe"></i>
+                                    </button>
+                                    {% endif %}
+                                    <a href="{{ url_for('lms_content_management.quiz_add_question_form', quiz_id=quiz.id) }}" 
+                                       class="btn btn-outline-primary" title="Add Question">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if quizzes.pages > 1 %}
+            <nav aria-label="Quiz pagination">
+                <ul class="pagination justify-content-center">
+                    {% if quizzes.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('lms_content_management.quiz_list', page=quizzes.prev_num, status=current_status, course_id=current_course_id) }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in quizzes.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != quizzes.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('lms_content_management.quiz_list', page=page_num, status=current_status, course_id=current_course_id) }}">{{ page_num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if quizzes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('lms_content_management.quiz_list', page=quizzes.next_num, status=current_status, course_id=current_course_id) }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No quizzes found</h5>
+                <p class="text-muted">Start by creating your first quiz</p>
+                <a href="{{ url_for('lms_content_management.quiz_create_form') }}" class="btn btn-warning">
+                    <i class="fas fa-plus me-2"></i>Create Quiz
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function publishQuiz(quizId) {
+        if (confirm('Are you sure you want to publish this quiz? Students will be able to take it once published.')) {
+            fetch(`/admin/content/quizzes/${quizId}/publish`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then(response => {
+                if (response.ok) {
+                    showToast('Quiz published successfully!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Failed to publish quiz', 'error');
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

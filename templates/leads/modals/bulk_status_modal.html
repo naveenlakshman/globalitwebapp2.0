@@ -1,0 +1,55 @@
+<!-- Bulk Status Update Modal -->
+<div class="modal fade" id="bulkStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Status for Selected Leads</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">New Status</label>
+                    <select class="form-select" id="bulkStatusSelect">
+                        <option value="">Select Status</option>
+                        <option value="Open">🔵 Open - Fresh lead, not yet contacted</option>
+                        <option value="In Progress">🔄 In Progress - Contacted, under discussion</option>
+                        <option value="Follow-up Scheduled">📅 Follow-up Scheduled - Waiting for next contact date</option>
+                        <option value="Demo Scheduled">🎯 Demo Scheduled - Lead booked for demo class</option>
+                        <option value="Converted">✅ Converted - Joined & paid fees</option>
+                        <option value="Not Interested">❌ Not Interested - Lead closed without joining</option>
+                    </select>
+                </div>
+                <div class="mb-3" id="bulkReasonSection" style="display:none;">
+                    <label class="form-label">Reason <span class="text-danger">*Required for Not Interested</span></label>
+                    <textarea class="form-control" id="bulkReason" rows="2"
+                              placeholder="Provide reason for marking as Not Interested"></textarea>
+                </div>
+                <p class="text-muted">
+                    This will update the status for <span id="bulkStatusCount">0</span> selected leads.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="executeBulkStatus()">Update Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide reason section for bulk status update
+document.addEventListener('DOMContentLoaded', function() {
+    const bulkStatusSelect = document.getElementById('bulkStatusSelect');
+    const bulkReasonSection = document.getElementById('bulkReasonSection');
+    
+    if (bulkStatusSelect && bulkReasonSection) {
+        bulkStatusSelect.addEventListener('change', function() {
+            if (this.value === 'Not Interested') {
+                bulkReasonSection.style.display = 'block';
+            } else {
+                bulkReasonSection.style.display = 'none';
+            }
+        });
+    }
+});
+</script>

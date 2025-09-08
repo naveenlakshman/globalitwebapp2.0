@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block title %}{{ batch.name }} - Trainers{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-chalkboard-teacher text-primary me-2"></i>{{ batch.name }} - Trainers
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-book me-1"></i>{{ batch.course_name or 'Course not specified' }} • 
+                <i class="fas fa-building me-1"></i>{{ batch.branch.branch_name if batch.branch else 'Unknown Branch' }}
+                {% if batch.timing %}
+                • <i class="fas fa-clock me-1"></i>{{ batch.timing }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#assignTrainerModal">
+                <i class="fas fa-plus me-1"></i>Assign Trainer
+            </button>
+            <a href="{{ url_for('batches.batch_students', batch_id=batch.id) }}" class="btn btn-info btn-sm">
+                <i class="fas fa-users me-1"></i>Students
+            </a>
+            <a href="{{ url_for('batches.view_batch', batch_id=batch.id) }}" class="btn btn-warning btn-sm">
+                <i class="fas fa-chart-bar me-1"></i>Analytics
+            </a>
+            <a href="{{ url_for('batches.list_batches') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Batches
+            </a>
+        </div>
+    </div>
+
+    <!-- Trainer Statistics -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Trainers
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ assigned_trainers|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Primary Trainers
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ assigned_trainers|selectattr('trainer_role', 'equalto', 'Primary')|list|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Assistant Trainers
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ assigned_trainers|selectattr('trainer_role', 'equalto', 'Assistant')|list|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hands-helping fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Available Trainers
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ available_trainers|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-plus fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Trainers -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-users me-2"></i>Assigned Trainers
+            </h6>
+            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#assignTrainerModal">
+                <i class="fas fa-plus me-1"></i>Add Trainer
+            </button>
+        </div>
+        <div class="card-body">
+            {% if assigned_trainers %}
+                <div class="row">
+                    {% for assignment in assigned_trainers %}
+                    <div class="col-lg-6 mb-4">
+                        <div class="card border-left-{{ 'primary' if assignment.trainer_role == 'Primary' else 'info' if assignment.trainer_role == 'Assistant' else 'warning' }}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-lg me-3">
+                                            <div class="avatar-initial bg-{{ 'primary' if assignment.trainer_role == 'Primary' else 'info' if assignment.trainer_role == 'Assistant' else 'warning' }} rounded-circle">
+                                                {{ assignment.trainer_user.full_name[0].upper() }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-1">{{ assignment.trainer_user.full_name }}</h5>
+                                            <p class="text-muted mb-1">
+                                                <i class="fas fa-user-tag me-1"></i>{{ assignment.trainer_user.role.title() }}
+                                            </p>
+                                            <p class="text-muted mb-1">
+                                                <i class="fas fa-star me-1"></i>{{ assignment.trainer_role }} Trainer
+                                            </p>
+                                            <p class="text-sm text-muted mb-0">
+                                                <i class="fas fa-calendar me-1"></i>Assigned {{ assignment.assigned_date.strftime('%d/%m/%Y') if assignment.assigned_date else 'Recently' }}
+                                            </p>
+                                            {% if assignment.notes %}
+                                            <p class="text-sm text-muted mt-2">
+                                                <i class="fas fa-sticky-note me-1"></i>{{ assignment.notes }}
+                                            </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                                data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="#" 
+                                                   onclick="editTrainerRole('{{ assignment.id }}', '{{ assignment.trainer_role }}', '{{ (assignment.notes or '')|replace("'", "\\'") }}')">>
+                                                    <i class="fas fa-edit me-2"></i>Edit Role
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#" 
+                                                   onclick="removeTrainer('{{ assignment.id }}', '{{ assignment.trainer_user.full_name }}')">
+                                                    <i class="fas fa-times me-2"></i>Remove
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chalkboard-teacher fa-3x text-gray-300 mb-3"></i>
+                    <h4 class="text-gray-500">No Trainers Assigned</h4>
+                    <p class="text-muted">This batch doesn't have any trainers assigned yet.</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignTrainerModal">
+                        <i class="fas fa-plus me-1"></i>Assign First Trainer
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Available Trainers -->
+    {% if available_trainers %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-user-plus me-2"></i>Available Trainers
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Contact</th>
+                            <th>Current Assignments</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trainer in available_trainers %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar avatar-sm me-2">
+                                        <div class="avatar-initial bg-secondary rounded-circle">
+                                            {{ trainer.full_name[0].upper() }}
+                                        </div>
+                                    </div>
+                                    <strong>{{ trainer.full_name }}</strong>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ trainer.role.title() }}</span>
+                            </td>
+                            <td>
+                                {% if trainer.mobile %}
+                                    <i class="fas fa-phone me-1"></i>{{ trainer.mobile }}
+                                {% else %}
+                                    <small class="text-muted">Not provided</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ trainer.get_active_batch_count() if trainer.get_active_batch_count else 0 }} batches</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-success" 
+                                        onclick="quickAssignTrainer('{{ trainer.id }}', '{{ trainer.full_name }}')">
+                                    <i class="fas fa-plus me-1"></i>Assign
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Assign Trainer Modal -->
+<div class="modal fade" id="assignTrainerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-chalkboard-teacher me-2"></i>Assign Trainer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('batches.assign_trainer', batch_id=batch.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="trainer_select" class="form-label">Select Trainer *</label>
+                        <select class="form-select" id="trainer_select" name="trainer_id" required>
+                            <option value="">Choose a trainer...</option>
+                            {% for trainer in available_trainers %}
+                            <option value="{{ trainer.id }}">
+                                {{ trainer.full_name }} ({{ trainer.role.title() }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="trainer_role" class="form-label">Role in Batch</label>
+                        <select class="form-select" id="trainer_role" name="trainer_role">
+                            <option value="Primary">Primary Trainer</option>
+                            <option value="Assistant">Assistant Trainer</option>
+                            <option value="Guest">Guest Trainer</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="assignment_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="assignment_notes" name="notes" rows="3" 
+                                  placeholder="Optional notes about this assignment..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Assign Trainer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Trainer Role Modal -->
+<div class="modal fade" id="editTrainerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Edit Trainer Role
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editTrainerForm">
+                <div class="modal-body">
+                    <input type="hidden" id="edit_assignment_id">
+                    <div class="mb-3">
+                        <label for="edit_trainer_role" class="form-label">Role in Batch</label>
+                        <select class="form-select" id="edit_trainer_role">
+                            <option value="Primary">Primary Trainer</option>
+                            <option value="Assistant">Assistant Trainer</option>
+                            <option value="Guest">Guest Trainer</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_assignment_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="edit_assignment_notes" rows="3" 
+                                  placeholder="Optional notes about this assignment..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTrainerEdit()">
+                        <i class="fas fa-save me-1"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function quickAssignTrainer(trainerId, trainerName) {
+    // Pre-fill the modal with the selected trainer
+    document.getElementById('trainer_select').value = trainerId;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('assignTrainerModal'));
+    modal.show();
+}
+
+function editTrainerRole(assignmentId, currentRole, currentNotes) {
+    document.getElementById('edit_assignment_id').value = assignmentId;
+    document.getElementById('edit_trainer_role').value = currentRole;
+    document.getElementById('edit_assignment_notes').value = currentNotes;
+    
+    const modal = new bootstrap.Modal(document.getElementById('editTrainerModal'));
+    modal.show();
+}
+
+function saveTrainerEdit() {
+    const assignmentId = document.getElementById('edit_assignment_id').value;
+    const role = document.getElementById('edit_trainer_role').value;
+    const notes = document.getElementById('edit_assignment_notes').value;
+    
+    // Here you would typically send an AJAX request to update the trainer role
+    fetch(`/batches/trainers/${assignmentId}/edit`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            trainer_role: role,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('editTrainerModal')).hide();
+            location.reload();
+        } else {
+            alert('Error updating trainer role: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Error updating trainer role: ' + error);
+    });
+}
+
+function removeTrainer(assignmentId, trainerName) {
+    if (confirm(`Are you sure you want to remove ${trainerName} from this batch?`)) {
+        fetch(`/batches/trainers/${assignmentId}/remove`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error removing trainer: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error removing trainer: ' + error);
+        });
+    }
+}
+</script>
+
+<style>
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 4px solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 4px solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 4px solid #f6c23e !important;
+}
+
+.avatar {
+    width: 2rem;
+    height: 2rem;
+}
+
+.avatar-lg {
+    width: 3rem;
+    height: 3rem;
+}
+
+.avatar-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-weight: 600;
+    color: white;
+}
+</style>
+{% endblock %}

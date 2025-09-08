@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Collect Payment - Global IT Education{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Collect Payment</h1>
+                    <p class="text-muted">Process fee payments and generate receipts</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('finance.installments_list') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Installments
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Payment Collection Form -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-credit-card me-2"></i>Payment Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if installment %}
+                    <!-- Pre-selected Installment -->
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Payment for:</h6>
+                        <strong>{{ installment.invoice.student.full_name }}</strong> ({{ installment.invoice.student.student_id }})<br>
+                        <strong>Course:</strong> {{ installment.invoice.course_name }}<br>
+                        <strong>Installment:</strong> #{{ installment.installment_number }} - Due: {{ installment.due_date.strftime('%d-%m-%Y') }}<br>
+                        <strong>Amount Due:</strong> ₹{{ "{:,.2f}".format(installment.balance_amount) }}
+                        {% if installment.is_overdue() %}
+                            <span class="badge bg-danger ms-2">{{ installment.get_days_overdue() }} days overdue</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" id="paymentForm">
+                        {% if installment %}
+                            <input type="hidden" name="installment_id" value="{{ installment.id }}">
+                        {% endif %}
+
+                        <!-- Student Selection (if no installment pre-selected) -->
+                        {% if not installment %}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="student_search" class="form-label">Search Student *</label>
+                                <input type="text" class="form-control" id="student_search" 
+                                       placeholder="Enter student name or ID">
+                                <div id="student_suggestions" class="list-group mt-1" style="display: none;"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="installment_select" class="form-label">Select Installment *</label>
+                                <select class="form-select" id="installment_select" name="installment_id" required>
+                                    <option value="">Select student first</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Payment Amount -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="amount" class="form-label">Payment Amount *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" class="form-control" id="amount" name="amount" 
+                                           step="0.01" min="0" required
+                                           {% if installment %}value="{{ installment.balance_amount }}"{% endif %}>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="discount" class="form-label">Discount (if any)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" class="form-control" id="discount" name="discount" 
+                                           step="0.01" min="0" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="payment_method" class="form-label">Payment Method *</label>
+                                <select class="form-select" id="payment_method" name="payment_method" required>
+                                    <option value="">Select payment method</option>
+                                    <option value="cash">Cash</option>
+                                    <option value="online">Online Transfer</option>
+                                    <option value="upi">UPI</option>
+                                    <option value="card">Credit/Debit Card</option>
+                                    <option value="cheque">Cheque</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="transaction_id_group" style="display: none;">
+                                <label for="transaction_id" class="form-label">Transaction ID</label>
+                                <input type="text" class="form-control" id="transaction_id" name="transaction_id">
+                            </div>
+                        </div>
+
+                        <!-- Additional Payment Details -->
+                        <div class="row mb-3">
+                            <div class="col-md-6" id="utr_group" style="display: none;">
+                                <label for="utr_number" class="form-label">UTR Number</label>
+                                <input type="text" class="form-control" id="utr_number" name="utr_number">
+                            </div>
+                            <div class="col-md-6" id="cheque_group" style="display: none;">
+                                <label for="cheque_number" class="form-label">Cheque Number</label>
+                                <input type="text" class="form-control" id="cheque_number" name="cheque_number">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3" id="bank_group" style="display: none;">
+                            <div class="col-md-6">
+                                <label for="bank_name" class="form-label">Bank Name</label>
+                                <input type="text" class="form-control" id="bank_name" name="bank_name">
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="Any additional notes about this payment"></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check me-2"></i>Collect Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Guidelines -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Payment Guidelines
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Verify student identity before accepting payment
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            For online payments, ensure transaction is successful
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            For cheques, verify details and keep a copy
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Always provide a receipt to the student
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Record any special circumstances in notes
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('finance.installments_list', status='pending') }}" 
+                           class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-clock me-2"></i>Pending Installments
+                        </a>
+                        <a href="{{ url_for('finance.installments_list', status='overdue') }}" 
+                           class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Overdue Payments
+                        </a>
+                        <a href="{{ url_for('finance.payments_list') }}" 
+                           class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-list me-2"></i>Recent Payments
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethodSelect = document.getElementById('payment_method');
+    const transactionIdGroup = document.getElementById('transaction_id_group');
+    const utrGroup = document.getElementById('utr_group');
+    const chequeGroup = document.getElementById('cheque_group');
+    const bankGroup = document.getElementById('bank_group');
+
+    // Show/hide fields based on payment method
+    paymentMethodSelect.addEventListener('change', function() {
+        // Hide all conditional fields
+        transactionIdGroup.style.display = 'none';
+        utrGroup.style.display = 'none';
+        chequeGroup.style.display = 'none';
+        bankGroup.style.display = 'none';
+
+        // Show relevant fields based on selection
+        switch(this.value) {
+            case 'online':
+                transactionIdGroup.style.display = 'block';
+                utrGroup.style.display = 'block';
+                bankGroup.style.display = 'block';
+                break;
+            case 'upi':
+                transactionIdGroup.style.display = 'block';
+                break;
+            case 'card':
+                transactionIdGroup.style.display = 'block';
+                break;
+            case 'cheque':
+                chequeGroup.style.display = 'block';
+                bankGroup.style.display = 'block';
+                break;
+        }
+    });
+
+    // Student search functionality (if no installment pre-selected)
+    {% if not installment %}
+    const studentSearch = document.getElementById('student_search');
+    const studentSuggestions = document.getElementById('student_suggestions');
+    const installmentSelect = document.getElementById('installment_select');
+
+    let searchTimeout;
+    studentSearch.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            studentSuggestions.style.display = 'none';
+            return;
+        }
+
+        searchTimeout = setTimeout(() => {
+            // Here you would typically make an AJAX call to search students
+            // For now, we'll show a placeholder
+            studentSuggestions.innerHTML = '<div class="list-group-item">Search functionality to be implemented</div>';
+            studentSuggestions.style.display = 'block';
+        }, 300);
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!studentSearch.contains(e.target) && !studentSuggestions.contains(e.target)) {
+            studentSuggestions.style.display = 'none';
+        }
+    });
+    {% endif %}
+
+    // Form validation
+    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+        const amount = parseFloat(document.getElementById('amount').value);
+        const discount = parseFloat(document.getElementById('discount').value) || 0;
+        
+        if (amount <= 0) {
+            e.preventDefault();
+            alert('Please enter a valid payment amount.');
+            return;
+        }
+
+        if (discount < 0) {
+            e.preventDefault();
+            alert('Discount cannot be negative.');
+            return;
+        }
+
+        if (amount + discount <= 0) {
+            e.preventDefault();
+            alert('Total payment amount must be greater than zero.');
+            return;
+        }
+
+        // Confirm the payment
+        const confirmMessage = `Confirm payment collection of ₹${amount.toFixed(2)}${discount > 0 ? ' (discount: ₹' + discount.toFixed(2) + ')' : ''}?`;
+        if (!confirm(confirmMessage)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

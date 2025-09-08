@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice #{{ invoice.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* View Invoice - Clean UI with Dark/Light Mode Support */
+.invoice-view {
+  padding: var(--space-lg);
+}
+
+.section-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  margin-bottom: var(--space-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.section-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.section-header {
+  background: var(--gradient-primary);
+  color: var(--text-white);
+  padding: var(--space-md) var(--space-xl);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-body {
+  padding: var(--space-xl);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.table-borderless td {
+  border: none;
+  padding: 0.75rem 0;
+  color: var(--text-primary);
+}
+
+.timeline-item {
+  border-left: 2px solid var(--brand-success);
+  padding-left: 1rem;
+  position: relative;
+}
+
+.timeline-item:before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--brand-success);
+  border-radius: 50%;
+}
+
+.badge.fs-6 {
+  font-size: 1rem !important;
+}
+
+.btn-outline-primary {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--text-white);
+}
+
+.btn-outline-secondary {
+  border-color: var(--gray-400);
+  color: var(--text-secondary);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--gray-400);
+  border-color: var(--gray-400);
+  color: var(--text-white);
+}
+
+/* Dark mode support */
+html[data-theme="dark"] .section-card {
+  background: var(--bg-secondary) !important;
+  border-color: var(--gray-200) !important;
+}
+
+html[data-theme="dark"] .section-body {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .table-borderless td {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .timeline-item {
+  border-left-color: var(--brand-success) !important;
+}
+
+html[data-theme="dark"] .timeline-item:before {
+  background-color: var(--brand-success) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .invoice-view {
+    padding: var(--space-md);
+  }
+  
+  .section-header {
+    padding: var(--space-sm) var(--space-md);
+    flex-direction: column;
+    gap: var(--space-sm);
+    text-align: center;
+  }
+  
+  .section-body {
+    padding: var(--space-md);
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid invoice-view">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-receipt text-primary me-2"></i>
+                        Invoice #{{ invoice.id }}
+                    </h1>
+                    <p class="text-muted mb-0">View invoice details and payment history</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('invoices.list_invoices') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i> Back
+                    </a>
+                    
+                    <!-- Print & Download Buttons -->
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-print me-1"></i> Print
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('invoices.print_invoice', invoice_id=invoice.id) }}" target="_blank">
+                                <i class="fas fa-print me-1"></i> Print View
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('invoices.download_invoice_pdf', invoice_id=invoice.id) }}">
+                                <i class="fas fa-file-pdf me-1"></i> Download PDF
+                            </a></li>
+                        </ul>
+                    </div>
+                    
+                    {% if invoice.due_amount > 0 %}
+                    <a href="{{ url_for('invoices.payment_form', invoice_id=invoice.id) }}" class="btn btn-success me-2">
+                        <i class="fas fa-credit-card me-1"></i> Record Payment
+                    </a>
+                    {% endif %}
+                    {% if session.role == 'admin' %}
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog me-1"></i> Actions
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('invoices.edit_invoice_form', invoice_id=invoice.id) }}">
+                                <i class="fas fa-edit me-1"></i> Edit Invoice
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="confirmDelete()">
+                                <i class="fas fa-trash me-1"></i> Delete Invoice
+                            </a></li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Invoice Details -->
+                <div class="col-md-8">
+                    <div class="section-card mb-4">
+                        <div class="section-header">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file-text me-2"></i>
+                                Invoice Details
+                            </div>
+                            <span class="badge {% if invoice.due_amount <= 0 %}bg-success{% else %}bg-warning{% endif %} fs-6">
+                                {% if invoice.due_amount <= 0 %}Paid{% else %}Pending{% endif %}
+                            </span>
+                        </div>
+                        <div class="section-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td class="fw-bold">Invoice ID:</td>
+                                            <td>INV-{{ invoice.id }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Student:</td>
+                                            <td>
+                                                <strong>{{ student.full_name }}</strong><br>
+                                                <small class="text-muted">ID: {{ student.student_id }}</small>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Course:</td>
+                                            <td>
+                                                <strong>{{ invoice.course.course_name if invoice.course else 'N/A' }}</strong><br>
+                                                <small class="text-muted">Duration: {{ invoice.course.duration if invoice.course else 'N/A' }}</small>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Enrollment Date:</td>
+                                            <td>{{ invoice.enrollment_date|format_date_indian if invoice.enrollment_date else 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Created Date:</td>
+                                            <td>{{ invoice.created_at|format_datetime_indian if invoice.created_at else 'N/A' }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td class="fw-bold">Course Fee:</td>
+                                            <td class="text-info">₹{{ "{:,.2f}".format(invoice.course_fee) if invoice.course_fee else 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Total Amount:</td>
+                                            <td class="text-primary fw-bold">₹{{ "{:,.2f}".format(invoice.total_amount) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Discount:</td>
+                                            <td class="text-success">₹{{ "{:,.2f}".format(invoice.discount) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Paid Amount:</td>
+                                            <td class="text-success fw-bold">₹{{ "{:,.2f}".format(invoice.paid_amount) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Due Amount:</td>
+                                            <td class="{% if invoice.due_amount > 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                                                ₹{{ "{:,.2f}".format(invoice.due_amount) }}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Installments -->
+                    <div class="section-card mb-4">
+                        <div class="section-header">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            Installments
+                        </div>
+                        <div class="section-body">
+                            {% if installments %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Due Date</th>
+                                            <th>Amount</th>
+                                            <th>Paid</th>
+                                            <th>Balance</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for installment in installments %}
+                                        <tr>
+                                            <td>{{ installment.installment_number }}</td>
+                                            <td>
+                                                {{ installment.due_date|format_date_indian if installment.due_date else 'N/A' }}
+                                                {% if installment.due_date and installment.due_date < today and installment.status != 'paid' %}
+                                                <br><small class="text-danger">Overdue</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>₹{{ "{:,.2f}".format(installment.amount) }}</td>
+                                            <td class="text-success">₹{{ "{:,.2f}".format(installment.paid_amount) }}</td>
+                                            <td class="{% if installment.balance_amount > 0 %}text-danger{% else %}text-success{% endif %}">
+                                                ₹{{ "{:,.2f}".format(installment.balance_amount) }}
+                                            </td>
+                                            <td>
+                                                {% if installment.status == 'paid' %}
+                                                <span class="badge bg-success">Paid</span>
+                                                {% elif installment.status == 'partial' %}
+                                                <span class="badge bg-warning">Partial</span>
+                                                {% else %}
+                                                <span class="badge bg-danger">Pending</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if installment.status != 'paid' %}
+                                                <a href="{{ url_for('installments.payment_form', installment_id=installment.id) }}" 
+                                                   class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-credit-card me-1"></i> Pay
+                                                </a>
+                                                {% endif %}
+                                                <a href="{{ url_for('installments.view_installment', installment_id=installment.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No installments found for this invoice.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-md-4">
+                    <!-- Student Info -->
+                    <div class="section-card mb-4">
+                        <div class="section-header">
+                            <i class="fas fa-user me-2"></i>
+                            Student Information
+                        </div>
+                        <div class="section-body">
+                            <p><strong>Name:</strong> {{ student.full_name }}</p>
+                            <p><strong>ID:</strong> {{ student.student_id }}</p>
+                            <p><strong>Phone:</strong> {{ student.mobile or 'N/A' }}</p>
+                            <p><strong>Email:</strong> {{ student.email or 'N/A' }}</p>
+                            <a href="{{ url_for('students.view_student', student_id=student.student_id) }}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i> View Profile
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Payment History -->
+                    <div class="section-card">
+                        <div class="section-header">
+                            <i class="fas fa-history me-2"></i>
+                            Payment History
+                        </div>
+                        <div class="section-body">
+                            {% if payments %}
+                            <div class="timeline">
+                                {% for payment in payments %}
+                                <div class="timeline-item mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold text-success">₹{{ "{:,.2f}".format(payment.amount) }}</span>
+                                        <small class="text-muted">{{ payment.paid_on|format_date_indian if payment.paid_on else 'N/A' }}</small>
+                                    </div>
+                                    <div class="small text-muted">
+                                        {{ payment.payment_method }}<br>
+                                        {% if payment.utr_ref %}UTR: {{ payment.utr_ref }}<br>{% endif %}
+                                        {% if payment.notes %}{{ payment.notes }}{% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No payments recorded yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if session.role == 'admin' %}
+<form method="POST" action="{{ url_for('invoices.delete_invoice', invoice_id=invoice.id) }}" id="deleteForm" style="display: none;">
+</form>
+{% endif %}
+
+<script>
+function confirmDelete() {
+    if (confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+        document.getElementById('deleteForm').submit();
+    }
+}
+</script>
+{% endblock %}

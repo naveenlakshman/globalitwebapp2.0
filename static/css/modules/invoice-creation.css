@@ -1,0 +1,1398 @@
+/* ==========================================================================
+   Invoice Creation Module - Create Invoice Forms
+   Uses tokens from design-system.css for consistent theming
+   ========================================================================== */
+
+/* Form section styling - consistent with lead-forms.css */
+.invoice-form-section {
+  background: var(--bg-secondary, #ffffff);
+  border: 1px solid var(--gray-200, #e0e0e0);
+  border-radius: var(--radius-lg, 8px);
+  padding: var(--space-xl, 24px);
+  margin-bottom: var(--space-xl, 24px);
+  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0,0,0,0.1));
+  transition: box-shadow var(--transition-base, 0.3s ease);
+  display: block;
+  visibility: visible;
+  overflow: visible !important; /* Allow dropdowns to escape */
+}
+
+.invoice-form-section .row,
+.invoice-form-section .col-lg-6,
+.invoice-form-section .col-12 {
+  overflow: visible !important; /* Allow dropdowns to escape */
+}
+
+.invoice-form-section:hover {
+  box-shadow: var(--shadow-md, 0 4px 8px rgba(0,0,0,0.15));
+}
+
+.invoice-form-section h5 {
+  margin-bottom: var(--space-lg, 20px);
+  color: var(--brand-primary, #007bff);
+  font-weight: var(--font-semibold, 600);
+  font-size: var(--text-xl, 1.25rem);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 8px);
+}
+
+.invoice-form-section h5 i {
+  color: var(--brand-secondary, #6c757d);
+}
+
+/* Payment option cards */
+.payment-option-wrapper {
+  display: flex;
+  gap: var(--space-lg, 20px);
+  margin-bottom: var(--space-xl, 24px);
+}
+
+.payment-type-option {
+  flex: 1;
+  background: var(--bg-primary, #ffffff);
+  border: 2px solid var(--gray-200, #e0e0e0);
+  border-radius: var(--radius-lg, 8px);
+  padding: var(--space-xl, 24px);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: block;
+}
+
+.payment-type-option:hover {
+  border-color: var(--brand-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.payment-type-option.active {
+  border-color: var(--brand-primary);
+  background: rgba(var(--brand-primary-rgb), 0.05);
+  box-shadow: var(--shadow-md);
+}
+
+.payment-type-option .icon {
+  font-size: 3rem;
+  color: var(--brand-primary);
+  margin-bottom: var(--space-md);
+}
+
+.payment-type-option .title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.payment-type-option .description {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-md);
+}
+
+.payment-type-option .badge {
+  display: inline-block;
+  background: var(--brand-success);
+  color: var(--text-white);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Course search and selection */
+.course-search-container {
+  position: relative;
+}
+
+.course-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: var(--space-xs);
+}
+
+.course-search-item {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--gray-100);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.course-search-item:hover {
+  background: var(--gray-50);
+  transform: translateX(2px);
+}
+
+.course-search-item:last-child {
+  border-bottom: none;
+}
+
+.course-search-item .course-info {
+  flex-grow: 1;
+}
+
+.course-search-item .course-name {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.course-search-item .course-details {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.course-search-item .course-fee {
+  background: var(--brand-success);
+  color: var(--text-white);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+}
+
+/* Selected courses display */
+.selected-courses-section {
+  margin-top: var(--space-lg);
+}
+
+.selected-course-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-md);
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  transition: all 0.3s ease;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selected-course-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.selected-course-info {
+  flex-grow: 1;
+}
+
+.selected-course-name {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.selected-course-name i {
+  color: var(--brand-success);
+}
+
+.selected-course-details {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.course-remove-btn {
+  background: var(--brand-danger);
+  border: none;
+  color: var(--text-white);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.course-remove-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(var(--brand-danger-rgb), 0.3);
+}
+
+/* Installment date cards */
+.installment-date-card {
+  background: var(--bg-primary);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.installment-date-card:hover {
+  border-color: var(--brand-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.installment-header {
+  background: var(--gradient-primary);
+  color: var(--text-white);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.installment-amount-badge {
+  background: var(--brand-success);
+  color: var(--text-white);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-bold);
+  text-align: center;
+  margin-top: var(--space-md);
+  font-size: var(--text-lg);
+}
+
+/* Summary panel */
+.invoice-summary-panel {
+  background: var(--bg-primary);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  position: sticky;
+  top: 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.summary-item:last-child {
+  border-bottom: 2px solid var(--gray-200);
+  font-weight: var(--font-bold);
+  font-size: var(--text-lg);
+  padding-top: var(--space-lg);
+  margin-top: var(--space-sm);
+}
+
+.summary-label {
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
+}
+
+.summary-amount {
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.summary-amount.total {
+  color: var(--brand-primary);
+  font-size: var(--text-xl);
+}
+
+.summary-amount.discount {
+  color: var(--brand-success);
+}
+
+/* Ensure Bootstrap cards don't clip dropdowns */
+.card,
+.card-body,
+.container-fluid,
+.row,
+.col-lg-6,
+.col-12 {
+  overflow: visible !important;
+}
+
+/* Student and Course search dropdown fixes - Compact version */
+.student-search-results,
+.course-search-results {
+  position: absolute !important;
+  top: calc(100% + 0.25rem) !important;
+  left: 0 !important;
+  right: 0 !important;
+  background: var(--bg-primary, #fff) !important;
+  border: 1px solid var(--gray-200, #e0e0e0) !important;
+  border-radius: var(--radius-md, 8px) !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,.12) !important;
+  max-height: 200px !important; /* Reduced from 300px */
+  overflow-y: auto !important;
+  z-index: 2000 !important;
+  margin-top: 0 !important;
+}
+
+/* Ensure the parent containers allow overflow */
+.position-relative {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Student search items - Compact */
+.student-search-item {
+  padding: 8px 12px !important; /* Reduced from 12px 16px */
+  border-bottom: 1px solid var(--gray-100, #f0f0f0) !important;
+  cursor: pointer !important;
+  transition: background-color .15s ease, transform .15s ease !important;
+  display: block !important;
+  background: var(--bg-primary, #fff) !important;
+  color: var(--text-primary, #333) !important;
+}
+
+.student-search-item:hover {
+  background: var(--gray-50, #f8f9fa) !important;
+  transform: translateX(2px) !important;
+}
+
+.student-search-item:last-child {
+  border-bottom: 0 !important;
+}
+
+/* Course search items - Compact */
+.course-search-item {
+  padding: 8px 12px !important; /* Reduced from 12px 16px */
+  border-bottom: 1px solid var(--gray-100, #f0f0f0) !important;
+  cursor: pointer !important;
+  transition: all .15s ease !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  background: var(--bg-primary, #fff) !important;
+  color: var(--text-primary, #333) !important;
+}
+
+.course-search-item:hover {
+  background: var(--gray-50, #f8f9fa) !important;
+  transform: translateX(2px) !important;
+}
+
+.course-search-item:last-child {
+  border-bottom: 0 !important;
+}
+
+/* Override Bootstrap card styling in search results - Compact */
+.student-search-results .card,
+.course-search-results .card {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  overflow: visible !important;
+  margin-bottom: 0 !important;
+}
+
+.student-search-results .card-header,
+.course-search-results .card-header {
+  background: var(--bg-secondary, #f8f9fa) !important;
+  border-bottom: 1px solid var(--gray-200, #e0e0e0) !important;
+  padding: 6px 12px !important; /* Reduced from 8px 16px */
+  font-size: 0.8rem !important; /* Smaller header text */
+}
+
+.student-search-results .list-group-flush,
+.course-search-results .list-group-flush {
+  background: var(--bg-primary, #fff) !important;
+  border: none !important;
+  max-height: 160px !important; /* Reduced from default */
+  overflow-y: auto !important;
+}
+
+/* Make sure list group items are properly styled */
+.student-search-results .list-group-item,
+.course-search-results .list-group-item {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Course item content */
+.course-search-item .course-info {
+  flex-grow: 1 !important;
+}
+
+.course-search-item .course-name {
+  font-weight: 600 !important;
+  color: var(--text-primary, #333) !important;
+  margin-bottom: 4px !important;
+}
+
+.course-search-item .course-details {
+  color: var(--text-secondary, #666) !important;
+  font-size: 0.875rem !important;
+}
+
+.course-search-item .course-fee {
+  background: var(--brand-success, #28a745) !important;
+  color: white !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+}
+
+.student-name {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.student-details {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* Selected student display */
+.selected-student-card {
+  background: rgba(var(--brand-success-rgb), 0.1);
+  border: 1px solid rgba(var(--brand-success-rgb), 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-top: var(--space-md);
+  animation: slideIn 0.3s ease;
+}
+
+.selected-student-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.selected-student-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.selected-student-icon {
+  color: var(--brand-success);
+  font-size: var(--text-2xl);
+}
+
+.selected-student-name {
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.selected-student-details {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* Installment preview */
+.installment-preview {
+  background: rgba(var(--brand-secondary-rgb), 0.1);
+  border: 1px solid rgba(var(--brand-secondary-rgb), 0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-lg);
+}
+
+.installment-preview-header {
+  color: var(--brand-secondary);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.installment-preview-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-lg);
+  text-align: center;
+}
+
+.installment-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.installment-stat-value {
+  font-weight: var(--font-bold);
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.installment-stat-label {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Info alert styling */
+.info-alert {
+  background: rgba(var(--brand-info-rgb), 0.1);
+  border: 1px solid rgba(var(--brand-info-rgb), 0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-lg);
+}
+
+.info-alert-icon {
+  color: var(--brand-info);
+  font-size: var(--text-2xl);
+  flex-shrink: 0;
+  margin-top: var(--space-xs);
+}
+
+.info-alert-content h6 {
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-sm);
+}
+
+.info-alert-content p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Required field indicator */
+.required::after {
+  content: " *";
+  color: var(--brand-danger);
+  font-weight: var(--font-bold);
+}
+
+/* Enhanced form text visibility for all themes */
+.form-text {
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem !important;
+  margin-top: 0.25rem !important;
+  opacity: 1 !important;
+}
+
+/* Ensure text muted is always visible */
+.text-muted {
+  color: var(--text-muted) !important;
+  opacity: 0.8 !important;
+}
+
+/* Enhanced Bootstrap utility overrides */
+.text-primary {
+  color: var(--brand-primary) !important;
+}
+
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.text-success {
+  color: var(--brand-success) !important;
+}
+
+.text-info {
+  color: var(--brand-info) !important;
+}
+
+.text-warning {
+  color: var(--brand-warning) !important;
+}
+
+.text-danger {
+  color: var(--brand-danger) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .payment-option-wrapper {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  
+  .invoice-form-section {
+    padding: var(--space-lg);
+  }
+  
+  .installment-preview-stats {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+  
+  .selected-student-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+}
+
+/* Main Container */
+.invoice-creation-container {
+  background: var(--invoice-bg-primary);
+  color: var(--invoice-text-primary);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  transition: all 0.3s ease;
+}
+
+/* Modern Card Design */
+.invoice-card {
+  background: var(--invoice-bg-primary);
+  border: 1px solid var(--invoice-border-light);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px var(--invoice-shadow-light);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.invoice-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--invoice-shadow-medium);
+}
+
+/* Card Headers with Gradients */
+.invoice-card-header {
+  background: var(--invoice-gradient-primary);
+  color: white;
+  padding: 1.25rem 1.5rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: none;
+}
+
+.invoice-card-header.success {
+  background: var(--invoice-gradient-success);
+}
+
+.invoice-card-header.accent {
+  background: var(--invoice-gradient-accent);
+}
+
+.invoice-card-header i {
+  font-size: 1.25rem;
+  opacity: 0.9;
+}
+
+/* Card Body */
+.invoice-card-body {
+  background: var(--invoice-bg-primary);
+  color: var(--invoice-text-primary);
+  padding: 1.5rem;
+}
+
+/* Modern Form Controls */
+.modern-form-control {
+  background: var(--invoice-bg-secondary);
+  border: 2px solid var(--invoice-border-light);
+  border-radius: 0.75rem;
+  padding: 0.875rem 1.125rem;
+  font-size: 1rem;
+  color: var(--invoice-text-primary);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.modern-form-control:focus {
+  background: var(--invoice-bg-primary);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.modern-form-control::placeholder {
+  color: var(--invoice-text-muted);
+}
+
+/* Modern Form Labels */
+.modern-form-label {
+  color: var(--invoice-text-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modern-form-label.required::after {
+  content: "*";
+  color: #e74c3c;
+  font-weight: bold;
+  margin-left: 0.25rem;
+}
+
+.modern-form-label i {
+  color: var(--invoice-text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Payment Type Cards */
+.payment-option-card {
+  background: var(--invoice-bg-secondary);
+  border: 2px solid var(--invoice-border-light);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.payment-option-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s ease;
+}
+
+.payment-option-card:hover::before {
+  left: 100%;
+}
+
+.payment-option-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: #667eea;
+  box-shadow: 0 12px 40px var(--invoice-shadow-medium);
+}
+
+.payment-option-card.selected {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-color: #667eea;
+  transform: scale(1.05);
+  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+}
+
+.payment-option-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  background: var(--invoice-gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.payment-option-title {
+  color: var(--invoice-text-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.payment-option-description {
+  color: var(--invoice-text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.payment-option-badge {
+  display: inline-block;
+  background: var(--invoice-gradient-success);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Course Selection */
+.course-search-container {
+  position: relative;
+}
+
+.course-search-input {
+  background: var(--invoice-bg-secondary);
+  border: 2px solid var(--invoice-border-light);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  color: var(--invoice-text-primary);
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.course-search-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  outline: none;
+}
+
+.course-results-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--invoice-bg-primary);
+  border: 1px solid var(--invoice-border-medium);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 30px var(--invoice-shadow-medium);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 0.25rem;
+}
+
+.course-option {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--invoice-border-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: between;
+  align-items: center;
+}
+
+.course-option:hover {
+  background: var(--invoice-bg-accent);
+  color: var(--invoice-text-primary);
+}
+
+.course-option:last-child {
+  border-bottom: none;
+}
+
+.course-name {
+  font-weight: 600;
+  color: var(--invoice-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.course-details {
+  color: var(--invoice-text-secondary);
+  font-size: 0.875rem;
+}
+
+.course-fee-badge {
+  background: var(--invoice-gradient-success);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 1.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Selected Courses Display */
+.selected-course-item {
+  background: var(--invoice-bg-secondary);
+  border: 1px solid var(--invoice-border-light);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.3s ease;
+  animation: slideInUp 0.4s ease;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selected-course-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px var(--invoice-shadow-light);
+}
+
+.course-remove-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  border: none;
+  color: white;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.course-remove-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+/* Installment Cards */
+.installment-date-card {
+  background: var(--invoice-bg-secondary);
+  border: 2px solid var(--invoice-border-light);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.installment-date-card:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--invoice-shadow-light);
+}
+
+.installment-header {
+  background: var(--invoice-gradient-primary);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.installment-amount-display {
+  background: var(--invoice-gradient-success);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 0.75rem;
+  font-size: 1rem;
+}
+
+/* Summary Panel */
+.invoice-summary-panel {
+  background: var(--invoice-bg-secondary);
+  border: 1px solid var(--invoice-border-light);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  position: sticky;
+  top: 2rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--invoice-border-light);
+  color: var(--invoice-text-primary);
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  border-top: 2px solid var(--invoice-border-medium);
+}
+
+.summary-label {
+  color: var(--invoice-text-secondary);
+  font-weight: 500;
+}
+
+.summary-amount {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.summary-amount.total {
+  background: var(--invoice-gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.5rem;
+}
+
+/* Modern Buttons */
+.modern-btn {
+  background: var(--invoice-gradient-primary);
+  border: none;
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.modern-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  color: white;
+  text-decoration: none;
+}
+
+.modern-btn:active {
+  transform: translateY(-1px);
+}
+
+.modern-btn.success {
+  background: var(--invoice-gradient-success);
+  box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+}
+
+.modern-btn.success:hover {
+  box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+}
+
+.modern-btn.secondary {
+  background: var(--invoice-bg-accent);
+  color: var(--invoice-text-primary);
+  border: 2px solid var(--invoice-border-medium);
+  box-shadow: 0 2px 10px var(--invoice-shadow-light);
+}
+
+.modern-btn.secondary:hover {
+  background: var(--invoice-bg-secondary);
+  color: var(--invoice-text-primary);
+  box-shadow: 0 4px 15px var(--invoice-shadow-medium);
+}
+
+.modern-btn:disabled {
+  background: var(--invoice-bg-accent);
+  color: var(--invoice-text-muted);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.modern-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Page Header */
+.invoice-page-header {
+  background: var(--invoice-bg-primary);
+  color: var(--invoice-text-primary);
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+}
+
+.invoice-page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: var(--invoice-gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.invoice-page-subtitle {
+  color: var(--invoice-text-secondary);
+  font-size: 1.1rem;
+  font-weight: 400;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .invoice-creation-container {
+    padding: 1rem 0.5rem;
+  }
+  
+  .invoice-card-header {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  
+  .invoice-card-body {
+    padding: 1rem;
+  }
+  
+  .payment-option-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .payment-option-icon {
+    font-size: 2.5rem;
+  }
+  
+  .invoice-page-title {
+    font-size: 2rem;
+  }
+  
+  .modern-btn {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .invoice-card-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .course-option {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+/* Loading States */
+.loading-shimmer {
+  background: linear-gradient(90deg, var(--invoice-bg-secondary) 25%, var(--invoice-bg-accent) 50%, var(--invoice-bg-secondary) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Focus Indicators for Accessibility */
+.modern-form-control:focus,
+.payment-option-card:focus,
+.modern-btn:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --invoice-border-light: #000000;
+    --invoice-text-primary: #000000;
+    --invoice-text-secondary: #333333;
+  }
+}
+
+/* Dark Mode Form Text Fixes */
+@media (prefers-color-scheme: dark) {
+  /* Fix form text visibility in dark mode */
+  .form-text {
+    color: var(--text-secondary) !important;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+  
+  /* Fix text-muted visibility */
+  .text-muted {
+    color: var(--text-muted) !important;
+  }
+  
+  /* Fix Bootstrap utility classes that might conflict */
+  .text-primary {
+    color: var(--brand-primary) !important;
+  }
+  
+  .text-secondary {
+    color: var(--text-secondary) !important;
+  }
+  
+  .text-success {
+    color: var(--brand-success) !important;
+  }
+  
+  .text-info {
+    color: var(--brand-info) !important;
+  }
+  
+  .text-warning {
+    color: var(--brand-warning) !important;
+  }
+  
+  .text-danger {
+    color: var(--brand-danger) !important;
+  }
+  
+  /* Fix small text elements */
+  small {
+    color: var(--text-secondary) !important;
+  }
+  
+  /* Fix label text */
+  .form-label {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+  }
+  
+  /* Fix card text */
+  .card-text {
+    color: var(--text-secondary) !important;
+  }
+  
+  /* Fix list group items */
+  .list-group-item {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--gray-200) !important;
+  }
+  
+  /* Fix invalid feedback */
+  .invalid-feedback {
+    color: var(--brand-danger) !important;
+  }
+  
+  /* Fix alert text */
+  .alert {
+    color: var(--text-primary) !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --invoice-border-light: #000000;
+    --invoice-text-primary: #000000;
+    --invoice-text-secondary: #333333;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === FIX 1: prevent clipping by cards/sections === */
+.invoice-form-section,
+.card,
+.card-body {
+  overflow: visible; /* let dropdowns escape the container */
+}
+
+/* === FIX 2: ensure the dropdown anchors to the input ===
+   Put the results <div> inside the same .position-relative wrapper as the input.
+   If you can't change HTML, this z-index + absolute will still work. */
+.position-relative { /* wrapper around the search inputs */
+  position: relative !important;
+}
+
+/* Student search dropdown (overlay below the input) */
+.student-search-results {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  background: var(--bg-primary, #fff);
+  border: 1px solid var(--gray-200, #e0e0e0);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-lg, 0 12px 24px rgba(0,0,0,.12));
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 2000; /* above cards/modals */
+}
+
+/* Course search dropdown (same behavior) */
+.course-search-results {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  background: var(--bg-primary, #fff);
+  border: 1px solid var(--gray-200, #e0e0e0);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-lg, 0 12px 24px rgba(0,0,0,.12));
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 2000;
+}
+
+/* Row items look clickable */
+.student-search-item,
+.course-search-item {
+  padding: var(--space-md, 12px) var(--space-lg, 16px);
+  border-bottom: 1px solid var(--gray-100, #f0f0f0);
+  cursor: pointer;
+  transition: background-color .15s ease, transform .15s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.student-search-item:hover,
+.course-search-item:hover {
+  background: var(--gray-50, #f8f9fa);
+  transform: translateX(2px);
+}
+.student-search-item:last-child,
+.course-search-item:last-child { border-bottom: 0; }
+
+/* === FIX 3: tiny typos that break flex layout === */
+/* These appear in your file; 'between' is invalid. */
+.selected-course-item,
+.course-option { justify-content: space-between; }

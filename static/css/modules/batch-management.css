@@ -1,0 +1,4 @@
+/* batch-management.css */
+.batch-header{background:var(--gradient-primary); color:#fff; padding:var(--space-xl); border-radius:var(--radius-xl); box-shadow:var(--shadow-sm)}
+.batch-card{background:#fff; border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:var(--space-lg); box-shadow:var(--shadow-sm)}
+.batch-table{composes: table-clean}

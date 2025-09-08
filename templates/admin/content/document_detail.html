@@ -1,0 +1,501 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}{{ document.document_title }}{% endblock %}
+{% block page_icon %}fas fa-file-alt{% endblock %}
+{% block page_title %}{{ document.document_title }}{% endblock %}
+{% block page_description %}Document upload details and management{% endblock %}
+
+{% block header_actions %}
+<div class="btn-group">
+    {% if document.workflow_stage in ['draft', 'rejected'] %}
+    <a href="{{ url_for('lms_content_management.document_edit', document_id=document.id) }}" class="btn btn-outline-primary">
+        <i class="fas fa-edit me-2"></i>Edit Document
+    </a>
+    {% endif %}
+    {% if document.workflow_stage == 'draft' and document.upload_status == 'completed' %}
+    <button class="btn btn-outline-primary" onclick="submitForReview()">
+        <i class="fas fa-paper-plane me-2"></i>Submit for Review
+    </button>
+    {% endif %}
+    {% if document.workflow_stage == 'review' %}
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">
+        <i class="fas fa-check me-2"></i>Approve
+    </button>
+    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+        <i class="fas fa-times me-2"></i>Reject
+    </button>
+    {% endif %}
+    <a href="{{ url_for('lms_content_management.document_list') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Documents
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Document Information -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Document Information</h5>
+                <span class="workflow-stage stage-{{ document.workflow_stage }}">
+                    {% if document.workflow_stage == 'draft' %}
+                        <i class="fas fa-edit me-1"></i>Draft
+                    {% elif document.workflow_stage == 'review' %}
+                        <i class="fas fa-eye me-1"></i>Under Review
+                    {% elif document.workflow_stage == 'approved' %}
+                        <i class="fas fa-check me-1"></i>Approved
+                    {% elif document.workflow_stage == 'published' %}
+                        <i class="fas fa-globe me-1"></i>Published
+                    {% elif document.workflow_stage == 'rejected' %}
+                        <i class="fas fa-times me-1"></i>Rejected
+                    {% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Title:</strong></td>
+                                <td>{{ document.document_title }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Course:</strong></td>
+                                <td>{{ document.course.course_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Module:</strong></td>
+                                <td>{{ document.module.module_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Section:</strong></td>
+                                <td>{{ document.section.section_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Original Filename:</strong></td>
+                                <td>{{ document.original_filename }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>File Size:</strong></td>
+                                <td>{{ document.get_upload_size_formatted() }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Format:</strong></td>
+                                <td>{{ document.file_format.upper() if document.file_format else 'Unknown' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Page Count:</strong></td>
+                                <td>{{ document.page_count if document.page_count else 'Not processed' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Word Count:</strong></td>
+                                <td>{{ document.word_count if document.word_count else 'Not processed' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Uploaded By:</strong></td>
+                                <td>{{ document.uploader.full_name if document.uploader else 'Unknown' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if document.document_description %}
+                <div class="mt-3">
+                    <strong>Description:</strong>
+                    <p class="mt-2">{{ document.document_description }}</p>
+                </div>
+                {% endif %}
+                
+                {% if document.upload_notes %}
+                <div class="mt-3">
+                    <strong>Upload Notes:</strong>
+                    <p class="mt-2">{{ document.upload_notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Upload Progress -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Upload Progress</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">Upload Progress</label>
+                        <div class="progress mb-2">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ document.upload_progress }}%" 
+                                 aria-valuenow="{{ document.upload_progress }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ document.upload_progress }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Status: {{ document.upload_status.title() }}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Processing Progress</label>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ document.processing_progress }}%" 
+                                 aria-valuenow="{{ document.processing_progress }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ document.processing_progress }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Status: {{ document.processing_status.title() }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Features -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Security Features</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-shield-alt fa-2x mb-2 {{ 'text-success' if document.watermark_applied else 'text-muted' }}"></i>
+                            <br><small>Watermark</small>
+                            <br><strong>{{ 'Applied' if document.watermark_applied else 'Not Applied' }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-copy fa-2x mb-2 {{ 'text-success' if document.copy_protection_applied else 'text-muted' }}"></i>
+                            <br><small>Copy Protection</small>
+                            <br><strong>{{ 'Enabled' if document.copy_protection_applied else 'Disabled' }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-print fa-2x mb-2 {{ 'text-success' if document.print_protection_applied else 'text-muted' }}"></i>
+                            <br><small>Print Protection</small>
+                            <br><strong>{{ 'Enabled' if document.print_protection_applied else 'Disabled' }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-virus fa-2x mb-2 {{ 'text-success' if document.security_scan_status == 'passed' else 'text-warning' if document.security_scan_status == 'pending' else 'text-danger' }}"></i>
+                            <br><small>Security Scan</small>
+                            <br><strong>{{ document.security_scan_status.title() }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments & Feedback -->
+        {% if document.reviewer_comments or document.rejection_reason %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Comments & Feedback</h5>
+            </div>
+            <div class="card-body">
+                {% if document.reviewer_comments %}
+                <div class="alert alert-info">
+                    <h6>Reviewer Comments</h6>
+                    <p class="mb-0">{{ document.reviewer_comments }}</p>
+                </div>
+                {% endif %}
+                
+                {% if document.rejection_reason %}
+                <div class="alert alert-danger">
+                    <h6>Rejection Reason</h6>
+                    <p class="mb-0">{{ document.rejection_reason }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Document Settings -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Document Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Downloadable</span>
+                    <span class="badge {{ 'bg-success' if document.is_downloadable else 'bg-secondary' }}">
+                        {{ 'Yes' if document.is_downloadable else 'No' }}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>View Only Mode</span>
+                    <span class="badge {{ 'bg-warning' if document.view_only_mode else 'bg-secondary' }}">
+                        {{ 'Yes' if document.view_only_mode else 'No' }}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Access Level</span>
+                    <span class="badge bg-info">{{ document.access_level.title() }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Video Completion Required</span>
+                    <span class="badge {{ 'bg-warning' if document.requires_video_completion else 'bg-secondary' }}">
+                        {{ 'Yes' if document.requires_video_completion else 'No' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Upload Timeline</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6>Upload Started</h6>
+                            <small class="text-muted">{{ document.upload_started_at|format_datetime_indian if document.upload_started_at else 'Not recorded' }}</small>
+                        </div>
+                    </div>
+                    
+                    {% if document.upload_completed_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6>Upload Completed</h6>
+                            <small class="text-muted">{{ document.upload_completed_at|format_datetime_indian }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if document.processing_started_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <h6>Processing Started</h6>
+                            <small class="text-muted">{{ document.processing_started_at|format_datetime_indian }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if document.processing_completed_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6>Processing Completed</h6>
+                            <small class="text-muted">{{ document.processing_completed_at|format_datetime_indian }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if document.reviewed_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-warning"></div>
+                        <div class="timeline-content">
+                            <h6>Reviewed</h6>
+                            <small class="text-muted">{{ document.reviewed_at|format_datetime_indian }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if document.approved_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6>Approved</h6>
+                            <small class="text-muted">{{ document.approved_at|format_datetime_indian }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if document.published_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6>Published</h6>
+                            <small class="text-muted">{{ document.published_at|format_datetime_indian }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Approve Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('lms_content_management.approve_document', document_id=document.id) }}">
+                <div class="modal-body">
+                    <p>Are you sure you want to approve this document for publishing?</p>
+                    <div class="mb-3">
+                        <label for="comments" class="form-label">Comments (optional)</label>
+                        <textarea class="form-control" id="comments" name="comments" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Approve Document</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('lms_content_management.reject_document', document_id=document.id) }}">
+                <div class="modal-body">
+                    <p>Please provide a reason for rejecting this document:</p>
+                    <div class="mb-3">
+                        <label for="rejection_reason" class="form-label">Rejection Reason *</label>
+                        <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Document</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.workflow-stage {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+}
+
+.stage-draft {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.stage-review {
+    background-color: #fff3e0;
+    color: #f57c00;
+}
+
+.stage-approved {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+}
+
+.stage-published {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.stage-rejected {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+
+.timeline-content h6 {
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function submitForReview() {
+    if (confirm('Submit this document for review?')) {
+        fetch(`{{ url_for('lms_content_management.submit_document_for_review', document_id=document.id) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Document submitted for review', 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showToast(data.error || 'Failed to submit for review', 'error');
+            }
+        })
+        .catch(error => {
+            showToast('Error submitting document for review', 'error');
+        });
+    }
+}
+
+function showToast(message, type = 'info') {
+    // Simple toast implementation
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 350px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

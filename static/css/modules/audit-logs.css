@@ -1,0 +1,4 @@
+/* audit-logs.css */
+.audit-card{background:#fff; border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:var(--space-lg); box-shadow:var(--shadow-sm)}
+.audit-table{composes: table-clean}
+.audit-meta{color:var(--text-muted); font-size:var(--text-sm)}

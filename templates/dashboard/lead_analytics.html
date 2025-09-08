@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+
+{% block title %}Lead Analytics - Global IT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header">
+                <h2><i class="fas fa-chart-line me-2"></i>Lead Analytics Dashboard</h2>
+                <p class="text-muted">Track lead sources and conversion rates including direct admissions</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Time Period</label>
+                            <select name="days" class="form-select" onchange="this.form.submit()">
+                                <option value="7" {% if days_back == 7 %}selected{% endif %}>Last 7 days</option>
+                                <option value="30" {% if days_back == 30 %}selected{% endif %}>Last 30 days</option>
+                                <option value="90" {% if days_back == 90 %}selected{% endif %}>Last 3 months</option>
+                                <option value="180" {% if days_back == 180 %}selected{% endif %}>Last 6 months</option>
+                                <option value="365" {% if days_back == 365 %}selected{% endif %}>Last year</option>
+                            </select>
+                        </div>
+                        
+                        {% if branches %}
+                        <div class="col-md-4">
+                            <label class="form-label">Branch</label>
+                            <select name="branch_id" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Branches</option>
+                                {% for branch in branches %}
+                                <option value="{{ branch.id }}" {% if selected_branch_id == branch.id %}selected{% endif %}>
+                                    {{ branch.branch_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ recovery_stats.recovered_leads }}</h4>
+                            <small>Recovered Leads</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-save fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="opacity-75">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Direct admissions that would have been missed
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ recovery_stats.recovery_percentage }}%</h4>
+                            <small>Recovery Rate</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-percentage fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="opacity-75">
+                        <i class="fas fa-chart-line me-1"></i>
+                        Percentage of leads recovered
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ recovery_stats.total_leads }}</h4>
+                            <small>Total Leads</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="opacity-75">
+                        <i class="fas fa-plus me-1"></i>
+                        Regular + Recovered leads
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ recovery_stats.regular_leads }}</h4>
+                            <small>Regular Leads</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-plus fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="opacity-75">
+                        <i class="fas fa-clipboard me-1"></i>
+                        Traditional lead process
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lead Source Analysis -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar me-2"></i>Lead Source Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Source</th>
+                                    <th>Total Leads</th>
+                                    <th>Regular Process</th>
+                                    <th>Direct Admissions</th>
+                                    <th>Converted</th>
+                                    <th>Conversion Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for source, stats in source_stats.items() %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-primary">{{ source or 'Unknown' }}</span>
+                                    </td>
+                                    <td><strong>{{ stats.total_leads }}</strong></td>
+                                    <td>{{ stats.regular_leads }}</td>
+                                    <td>
+                                        {% if stats.direct_admissions > 0 %}
+                                        <span class="badge bg-success">{{ stats.direct_admissions }}</span>
+                                        {% else %}
+                                        0
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ stats.converted_leads }}</td>
+                                    <td>
+                                        {% if stats.conversion_rate >= 50 %}
+                                        <span class="badge bg-success">{{ stats.conversion_rate }}%</span>
+                                        {% elif stats.conversion_rate >= 25 %}
+                                        <span class="badge bg-warning">{{ stats.conversion_rate }}%</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">{{ stats.conversion_rate }}%</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No lead data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-funnel-dollar me-2"></i>Conversion Funnel</h5>
+                </div>
+                <div class="card-body">
+                    {% for stage, count in conversion_funnel.items() %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>{{ stage }}</span>
+                            <span class="badge bg-primary">{{ count }}</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            {% set max_count = conversion_funnel.values() | list | max %}
+                            <div class="progress-bar" style="width: {{ (count / max_count * 100) if max_count > 0 else 0 }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Auto-Created Leads -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-robot me-2"></i>Recent Auto-Created Leads</h5>
+                    <small class="text-muted">Direct admissions that automatically generated lead records</small>
+                </div>
+                <div class="card-body">
+                    {% if recent_auto_leads %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Lead ID</th>
+                                    <th>Student Name</th>
+                                    <th>Student ID</th>
+                                    <th>Course</th>
+                                    <th>Source</th>
+                                    <th>Admission Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lead in recent_auto_leads %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-success">{{ lead.lead_sl_number }}</span>
+                                    </td>
+                                    <td>{{ lead.full_name }}</td>
+                                    <td><code>{{ lead.student_id }}</code></td>
+                                    <td>{{ lead.course_name }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ lead.lead_source }}</span>
+                                    </td>
+                                    <td>{{ lead.admission_date.strftime('%Y-%m-%d %H:%M') if lead.admission_date else 'N/A' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-robot fa-3x mb-3"></i>
+                        <p>No auto-created leads in the selected time period</p>
+                        <small>This feature ensures no direct admissions are missed in lead tracking</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+</style>
+{% endblock %}

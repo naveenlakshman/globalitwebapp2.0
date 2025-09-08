@@ -1,0 +1,301 @@
+{% extends "admin/content/base.html" %}
+
+{% block title %}{{ quiz.quiz_title }}{% endblock %}
+{% block page_icon %}fas fa-question-circle{% endblock %}
+{% block page_title %}{{ quiz.quiz_title }}{% endblock %}
+{% block page_description %}Quiz Details and Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Quiz Information
+                </h5>
+                <div class="btn-group">
+                    <a href="{{ url_for('lms_content_management.quiz_add_question_form', quiz_id=quiz.id) }}" 
+                       class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Add Questions
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split" 
+                            data-bs-toggle="dropdown">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="previewQuiz()">
+                            <i class="fas fa-eye me-2"></i>Preview Quiz
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('lms_content_management.quiz_edit_form', quiz_id=quiz.id) }}">
+                            <i class="fas fa-edit me-2"></i>Edit Quiz Settings
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteQuiz()">
+                            <i class="fas fa-trash me-2"></i>Delete Quiz
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Quiz Title</h6>
+                        <p>{{ quiz.quiz_title }}</p>
+                        
+                        <h6 class="text-muted">Description</h6>
+                        <p>{{ quiz.quiz_description or 'No description provided' }}</p>
+                        
+                        <h6 class="text-muted">Instructions</h6>
+                        <p>{{ quiz.instructions or 'No special instructions' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Quiz Settings</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Status:</strong> 
+                                {% if quiz.is_published %}
+                                    <span class="badge bg-success">Published</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Draft</span>
+                                {% endif %}
+                            </li>
+                            {% if quiz.published_at %}
+                            <li><strong>Published:</strong> {{ quiz.published_at.strftime('%Y-%m-%d %H:%M') }}</li>
+                            {% endif %}
+                            <li><strong>Time Limit:</strong> {{ quiz.time_limit_minutes }} minutes</li>
+                            <li><strong>Max Attempts:</strong> {{ quiz.max_attempts }}</li>
+                            <li><strong>Passing Score:</strong> {{ quiz.passing_score }}%</li>
+                            <li><strong>Total Questions:</strong> {{ quiz.questions|length }}</li>
+                            <li><strong>Total Points:</strong> {{ quiz.max_score }}</li>
+                        </ul>
+                        
+                        <h6 class="text-muted">Placement</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Type:</strong> {{ quiz.quiz_placement|title }} Level</li>
+                            <li><strong>Course:</strong> {{ quiz.course.course_name }}</li>
+                            <li><strong>Module:</strong> {{ quiz.module.module_name }}</li>
+                            {% if quiz.section %}
+                            <li><strong>Section:</strong> {{ quiz.section.section_name }}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions List -->
+        {% if quiz.questions %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Questions ({{ quiz.questions|length }})
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% for question in quiz.questions %}
+                <div class="border-bottom p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-2">
+                                <span class="badge bg-light text-dark me-2">Q{{ loop.index }}</span>
+                                {{ question.question_text }}
+                            </h6>
+                            
+                            {% if question.question_type == 'multiple_choice' or question.question_type == 'multiple_select' %}
+                                {% set options = question.get_options() %}
+                                {% if options %}
+                                <div class="ms-4">
+                                    {% for option in options %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="{{ 'checkbox' if question.question_type == 'multiple_select' else 'radio' }}" 
+                                               disabled {% if loop.index0 in question.get_correct_option_indexes() %}checked{% endif %}>
+                                        <label class="form-check-label {% if loop.index0 in question.get_correct_option_indexes() %}text-success fw-bold{% endif %}">
+                                            {{ option }}
+                                            {% if loop.index0 in question.get_correct_option_indexes() %}
+                                                <i class="fas fa-check text-success ms-1"></i>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            {% elif question.question_type == 'true_false' %}
+                                <div class="ms-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" disabled {% if question.correct_answer == 'true' %}checked{% endif %}>
+                                        <label class="form-check-label {% if question.correct_answer == 'true' %}text-success fw-bold{% endif %}">
+                                            True {% if question.correct_answer == 'true' %}<i class="fas fa-check text-success ms-1"></i>{% endif %}
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" disabled {% if question.correct_answer == 'false' %}checked{% endif %}>
+                                        <label class="form-check-label {% if question.correct_answer == 'false' %}text-success fw-bold{% endif %}">
+                                            False {% if question.correct_answer == 'false' %}<i class="fas fa-check text-success ms-1"></i>{% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                            {% elif question.question_type == 'short_answer' %}
+                                {% if question.correct_answer %}
+                                <div class="ms-4">
+                                    <small class="text-muted">Expected Answer:</small>
+                                    <div class="bg-light p-2 rounded">{{ question.correct_answer }}</div>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if question.explanation %}
+                            <div class="ms-4 mt-2">
+                                <small class="text-muted">Explanation:</small>
+                                <div class="text-info">{{ question.explanation }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="text-end">
+                            <span class="badge bg-primary">{{ question.points }} pt{{ 's' if question.points != 1 else '' }}</span>
+                            <br>
+                            <small class="text-muted">{{ question.question_type|replace('_', ' ')|title }}</small>
+                            <div class="btn-group btn-group-sm mt-2" role="group">
+                                <button type="button" class="btn btn-outline-primary" onclick="editQuestion({{ question.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" onclick="deleteQuestion({{ question.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="card mt-4">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Questions Added Yet</h5>
+                <p class="text-muted">Start building your quiz by adding questions</p>
+                <a href="{{ url_for('lms_content_management.quiz_add_question_form', quiz_id=quiz.id) }}" 
+                   class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Add Your First Question
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Quiz Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <div class="h4 mb-0 text-primary">{{ quiz.questions|length }}</div>
+                            <small class="text-muted">Questions</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 mb-0 text-success">{{ quiz.max_score }}</div>
+                        <small class="text-muted">Total Points</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="d-grid gap-2">
+                    {% if quiz.questions|length > 0 and not quiz.is_published %}
+                    <button type="button" class="btn btn-success btn-sm" onclick="publishQuiz()">
+                        <i class="fas fa-check-circle me-1"></i>Publish Quiz
+                    </button>
+                    {% elif quiz.is_published %}
+                    <div class="alert alert-success mb-2">
+                        <i class="fas fa-check-circle me-1"></i>Quiz Published
+                        {% if quiz.published_at %}
+                        <small class="d-block">Published on: {{ quiz.published_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <a href="{{ url_for('lms_content_management.quiz_add_question_form', quiz_id=quiz.id) }}" 
+                       class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Add More Questions
+                    </a>
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="previewQuiz()">
+                        <i class="fas fa-eye me-1"></i>Preview Quiz
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Quick Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Add at least 5 questions for a good quiz
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Mix different question types for variety
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Preview before publishing
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Add explanations to help learning
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewQuiz() {
+    window.open(`/quizzes/{{ quiz.id }}/preview`, '_blank');
+}
+
+function publishQuiz() {
+    if ({{ quiz.questions|length }} === 0) {
+        alert('Please add at least one question before publishing.');
+        return;
+    }
+    
+    if (confirm('Are you sure you want to publish this quiz? Students will be able to take it once published.')) {
+        // Create a form and submit it as POST request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/content/quizzes/{{ quiz.id }}/publish';
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function editQuestion(questionId) {
+    window.location.href = `/admin/content/quizzes/{{ quiz.id }}/questions/${questionId}/edit`;
+}
+
+function deleteQuestion(questionId) {
+    if (confirm('Are you sure you want to delete this question?')) {
+        window.location.href = `/admin/content/quizzes/{{ quiz.id }}/questions/${questionId}/delete`;
+    }
+}
+
+function deleteQuiz() {
+    if (confirm('Are you sure you want to delete this entire quiz? This action cannot be undone.')) {
+        window.location.href = "{{ url_for('lms_content_management.quiz_delete', quiz_id=quiz.id) }}";
+    }
+}
+</script>
+{% endblock %}

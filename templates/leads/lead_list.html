@@ -1,0 +1,782 @@
+{% extends "base.html" %}
+{% block title %}Lead List - Global IT Education{% endblock %}
+{% block page_title %}Lead Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/lead-management.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="lead-list-container compact">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1><i class="fas fa-users"></i> Lead Management</h1>
+    <p>Manage and track your leads effectively</p>
+  </div>
+
+  <!-- Stats Cards - Compact -->
+  <div class="row mb-2">
+    <div class="col-md-3 col-sm-6 mb-1">
+      <div class="stats-card">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon me-2">
+            <i class="fas fa-users fa-lg text-primary"></i>
+          </div>
+          <div>
+            <h4 class="mb-0" id="totalLeads">{{ leads.total if leads else 0 }}</h4>
+            <small class="text-muted">Total Leads</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-2">
+      <div class="stats-card">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon me-2">
+            <i class="fas fa-clock fa-lg text-warning"></i>
+          </div>
+          <div>
+            <h4 class="mb-0" id="openLeads">{{ open_count if open_count is defined else 0 }}</h4>
+            <small class="text-muted">Open Leads</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-1">
+      <div class="stats-card">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon me-2">
+            <i class="fas fa-check-circle fa-lg text-success"></i>
+          </div>
+          <div>
+            <h4 class="mb-0" id="convertedLeads">{{ converted_count if converted_count is defined else 0 }}</h4>
+            <small class="text-muted">Converted</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-1">
+      <div class="stats-card">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon me-2">
+            <i class="fas fa-fire fa-lg text-danger"></i>
+          </div>
+          <div>
+            <h4 class="mb-0" id="hotLeads">{{ hot_count if hot_count is defined else 0 }}</h4>
+            <small class="text-muted">Hot Leads</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="filter-section">
+    <h5><i class="fas fa-filter"></i> Search & Filters</h5>
+
+    <form id="leadFilterForm" method="GET" action="{{ url_for('leads.lead_list') }}">
+      <div class="row g-3">
+        <!-- Search Box -->
+        <div class="col-md-4">
+          <label class="form-label">Search Leads</label>
+          <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="form-control" name="search"
+                   value="{{ request.args.get('search', '') }}"
+                   placeholder="Search by name, mobile, email, lead #">
+          </div>
+        </div>
+
+        <!-- Date Range -->
+        <div class="col-md-2">
+          <label class="form-label">Date From</label>
+          <input type="date" class="form-control" name="date_from"
+                 value="{{ request.args.get('date_from', '') }}">
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Date To</label>
+          <input type="date" class="form-control" name="date_to"
+                 value="{{ request.args.get('date_to', '') }}">
+        </div>
+
+        <!-- Lead Status -->
+        <div class="col-md-2">
+          <label class="form-label">Lead Status</label>
+          <select class="form-select" name="status">
+            <option value="">All Status</option>
+            <option value="Open" {% if request.args.get('status') == 'Open' %}selected{% endif %}>Open</option>
+            <option value="In Progress" {% if request.args.get('status') == 'In Progress' %}selected{% endif %}>In Progress</option>
+            <option value="Follow-up Scheduled" {% if request.args.get('status') == 'Follow-up Scheduled' %}selected{% endif %}>Follow-up Scheduled</option>
+            <option value="Demo Scheduled" {% if request.args.get('status') == 'Demo Scheduled' %}selected{% endif %}>Demo Scheduled</option>
+            <option value="Converted" {% if request.args.get('status') == 'Converted' %}selected{% endif %}>Converted</option>
+            <option value="Not Interested" {% if request.args.get('status') == 'Not Interested' %}selected{% endif %}>Not Interested</option>
+          </select>
+        </div>
+
+        <!-- Lead Stage -->
+        <div class="col-md-2">
+          <label class="form-label">Lead Stage</label>
+          <select class="form-select" name="stage">
+            <option value="">All Stages</option>
+            <option value="New" {% if request.args.get('stage') == 'New' %}selected{% endif %}>New</option>
+            <option value="Contacted" {% if request.args.get('stage') == 'Contacted' %}selected{% endif %}>Contacted</option>
+            <option value="Qualified" {% if request.args.get('stage') == 'Qualified' %}selected{% endif %}>Qualified</option>
+            <option value="Demo" {% if request.args.get('stage') == 'Demo' %}selected{% endif %}>Demo</option>
+            <option value="Proposal" {% if request.args.get('stage') == 'Proposal' %}selected{% endif %}>Proposal</option>
+            <option value="Negotiation" {% if request.args.get('stage') == 'Negotiation' %}selected{% endif %}>Negotiation</option>
+            <option value="Closed Won" {% if request.args.get('stage') == 'Closed Won' %}selected{% endif %}>Closed Won</option>
+            <option value="Closed Lost" {% if request.args.get('stage') == 'Closed Lost' %}selected{% endif %}>Closed Lost</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-2">
+        <!-- Priority -->
+        <div class="col-md-2">
+          <label class="form-label">Priority</label>
+          <select class="form-select" name="priority">
+            <option value="">All Priority</option>
+            <option value="Hot" {% if request.args.get('priority') == 'Hot' %}selected{% endif %}>🔥 Hot</option>
+            <option value="High" {% if request.args.get('priority') == 'High' %}selected{% endif %}>🔴 High</option>
+            <option value="Medium" {% if request.args.get('priority') == 'Medium' %}selected{% endif %}>🟡 Medium</option>
+            <option value="Low" {% if request.args.get('priority') == 'Low' %}selected{% endif %}>🔵 Low</option>
+          </select>
+        </div>
+
+        <!-- Source -->
+        <div class="col-md-2">
+          <label class="form-label">Lead Source</label>
+          <select class="form-select" name="source">
+            <option value="">All Sources</option>
+            <option value="Walk-in" {% if request.args.get('source') == 'Walk-in' %}selected{% endif %}>Walk-in</option>
+            <option value="Referral" {% if request.args.get('source') == 'Referral' %}selected{% endif %}>Referral</option>
+            <option value="Phone" {% if request.args.get('source') == 'Phone' %}selected{% endif %}>Phone</option>
+            <option value="Instagram" {% if request.args.get('source') == 'Instagram' %}selected{% endif %}>Instagram</option>
+            <option value="Facebook" {% if request.args.get('source') == 'Facebook' %}selected{% endif %}>Facebook</option>
+            <option value="Google" {% if request.args.get('source') == 'Google' %}selected{% endif %}>Google</option>
+            <option value="College Visit" {% if request.args.get('source') == 'College Visit' %}selected{% endif %}>College Visit</option>
+            <option value="Other" {% if request.args.get('source') == 'Other' %}selected{% endif %}>Other</option>
+          </select>
+        </div>
+
+        {% if users %}
+        <!-- Assigned To -->
+        <div class="col-md-2">
+          <label class="form-label">Assigned To</label>
+          <select class="form-select" name="assigned_to">
+            <option value="">All Users</option>
+            <option value="unassigned" {% if request.args.get('assigned_to') == 'unassigned' %}selected{% endif %}>Unassigned</option>
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if request.args.get('assigned_to') == user.id|string %}selected{% endif %}>
+              {{ user.full_name or user.username }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="col-md-6 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i> Apply Filters
+          </button>
+          <a href="{{ url_for('leads.lead_list') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-refresh"></i> Clear
+          </a>
+          <button type="button" class="btn btn-outline-info" onclick="exportLeads()">
+            <i class="fas fa-download"></i> Export
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Quick Filters -->
+    <div class="quick-filters">
+      <div class="d-flex flex-wrap">
+        <span class="me-3 align-self-center text-muted">Quick Filters:</span>
+        <button type="button" class="btn btn-outline-primary quick-filter-btn" onclick="quickFilter('status', 'Open')">
+          🔵 Open Leads
+        </button>
+        <button type="button" class="btn btn-outline-warning quick-filter-btn" onclick="quickFilter('priority', 'Hot')">
+          🔥 Hot Priority
+        </button>
+        <button type="button" class="btn btn-outline-info quick-filter-btn" onclick="quickFilter('status', 'Follow-up Scheduled')">
+          📅 Follow-up Scheduled
+        </button>
+        <button type="button" class="btn btn-outline-success quick-filter-btn" onclick="quickFilter('status', 'Demo Scheduled')">
+          🎯 Demo Scheduled
+        </button>
+        <button type="button" class="btn btn-outline-secondary quick-filter-btn" onclick="quickFilter('assigned_to', 'unassigned')">
+          👤 Unassigned
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leads Table -->
+  <div class="leads-table-container position-relative" id="leadsTableContainer">
+    <div class="table-header">
+      <h5 class="table-title">
+        <i class="fas fa-list"></i> Leads List
+        <span class="badge bg-primary ms-2">
+          {{ leads.total if leads else 0 }} leads
+        </span>
+      </h5>
+      <div class="table-actions">
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-cog"></i> Actions
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="refreshData()">
+              <i class="fas fa-refresh"></i> Refresh
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="exportLeads()">
+              <i class="fas fa-download"></i> Export All
+            </a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('leads.leads_import_get') if 'leads_import_get' else '#' }}">
+              <i class="fas fa-upload"></i> Import Leads
+            </a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {% if leads and leads.items %}
+    <div class="table-responsive">
+      <table class="leads-table">
+        <thead>
+          <tr>
+            <th>Lead #</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Course Interest</th>
+            <th>Status</th>
+            <th>Stage</th>
+            <th>Priority</th>
+            <th>Source</th>
+            <th>Assigned To</th>
+            <th>Next Follow-up</th>
+            <th>Created Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lead in leads.items %}
+          <tr>
+            <td>
+              <a href="{{ url_for('leads.lead_detail', lead_id=lead.id) }}" class="lead-id">
+                {{ lead.lead_sl_number }}
+              </a>
+            </td>
+            <td>
+              <div>
+                <strong>{{ lead.name }}</strong>
+                {% if lead.qualification %}
+                  <br><small class="text-muted">{{ lead.qualification }}</small>
+                {% endif %}
+              </div>
+            </td>
+            <td>
+              <div class="contact-info">
+                <a href="tel:{{ lead.mobile }}" class="contact-link">
+                  <i class="fas fa-phone"></i> {{ lead.mobile }}
+                </a>
+                {% if lead.email %}
+                <a href="mailto:{{ lead.email }}" class="contact-link">
+                  <i class="fas fa-envelope"></i> {{ lead.email }}
+                </a>
+                {% endif %}
+              </div>
+            </td>
+            <td>{{ lead.course_interest or '-' }}</td>
+            <td>
+              <span class="status-badge status-{{ lead.lead_status|lower|replace(' ', '-') }}">
+                {% if lead.lead_status == 'Open' %}🔵
+                {% elif lead.lead_status == 'In Progress' %}🔄
+                {% elif lead.lead_status == 'Follow-up Scheduled' %}📅
+                {% elif lead.lead_status == 'Demo Scheduled' %}🎯
+                {% elif lead.lead_status == 'Converted' %}✅
+                {% elif lead.lead_status == 'Not Interested' %}❌
+                {% endif %}
+                {{ lead.lead_status }}
+              </span>
+            </td>
+            <td><span class="badge bg-light text-dark">{{ lead.lead_stage or 'New' }}</span></td>
+            <td>
+              {% set priority_info = lead.get_priority_display() %}
+              <span class="priority-badge priority-{{ priority_info.class }}">
+                {{ priority_info.emoji }}
+                {{ priority_info.text }}
+              </span>
+            </td>
+            <td>{{ lead.lead_source or '-' }}</td>
+            <td>
+              {% if lead.assigned_to %}
+                <span class="text-primary">
+                  <i class="fas fa-user"></i> {{ lead.assigned_to.full_name or lead.assigned_to.username }}
+                </span>
+              {% else %}
+                <span class="text-muted">
+                  <i class="fas fa-user-slash"></i> Unassigned
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              {% if lead.next_follow_up_at %}
+                <span class="text-info">
+                  <i class="fas fa-calendar"></i>
+                  {{ lead.next_follow_up_at.strftime('%d/%m/%Y') if lead.next_follow_up_at else '-' }}
+                </span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              <small class="text-muted">
+                {{ lead.lead_generation_date.strftime('%d/%m/%Y') if lead.lead_generation_date
+                   else lead.created_at.strftime('%d/%m/%Y') if lead.created_at else '-' }}
+              </small>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <a href="{{ url_for('leads.lead_detail', lead_id=lead.id) }}"
+                   class="action-btn btn-view" title="View Details">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('leads.lead_edit', lead_id=lead.id) }}"
+                   class="action-btn btn-edit" title="Edit Lead">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <button type="button" class="action-btn btn-delete"
+                        data-lead-id="{{ lead.id }}" onclick="deleteLead(this.dataset.leadId)" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if leads.pages > 1 %}
+    <div class="pagination-container">
+      <nav aria-label="Leads pagination">
+        <ul class="pagination">
+          {% if leads.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('leads.lead_list', page=leads.prev_num, **request.args) }}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+
+          {% for page_num in leads.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+              {% if page_num != leads.page %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('leads.lead_list', page=page_num, **request.args) }}">{{ page_num }}</a>
+              </li>
+              {% else %}
+              <li class="page-item active">
+                <span class="page-link">{{ page_num }}</span>
+              </li>
+              {% endif %}
+            {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">…</span>
+            </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if leads.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('leads.lead_list', page=leads.next_num, **request.args) }}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+
+    <div class="text-center text-muted mt-3">
+      <small>
+        Showing {{ leads.items|length }} of {{ leads.total }} leads
+        (Page {{ leads.page }} of {{ leads.pages }})
+      </small>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+      <i class="fas fa-users"></i>
+      <h4>No Leads Found</h4>
+      <p class="text-muted">
+        {% if request.args %}
+          No leads match your current filters. Try adjusting your search criteria.
+        {% else %}
+          You haven't created any leads yet. Start by adding your first lead.
+        {% endif %}
+      </p>
+      <div class="mt-3">
+        <a href="{{ url_for('leads.lead_create_new') }}" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Create First Lead
+        </a>
+        {% if request.args %}
+        <a href="{{ url_for('leads.lead_list') }}" class="btn btn-outline-secondary ms-2">
+          <i class="fas fa-refresh"></i> Clear Filters
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const filterForm = document.getElementById('leadFilterForm');
+  const searchInput = document.querySelector('input[name="search"]');
+  let searchTimeout;
+
+  filterForm.addEventListener('change', function(e) {
+    if (e.target.tagName === 'SELECT') {
+      showLoading();
+      this.submit();
+    }
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        showLoading();
+        filterForm.submit();
+      }, 500);
+    });
+  }
+
+  document.querySelectorAll('input[type="date"]').forEach(input => {
+    input.addEventListener('change', function() {
+      showLoading();
+      filterForm.submit();
+    });
+  });
+
+  updateQuickFilterButtons();
+});
+
+function quickFilter(filterName, filterValue) {
+  const form = document.getElementById('leadFilterForm');
+  const filterElement = form.querySelector(`[name="${filterName}"]`);
+  if (filterElement) {
+    filterElement.value = filterValue;
+    showLoading();
+    form.submit();
+  }
+}
+
+function updateQuickFilterButtons() {
+  const urlParams = new URLSearchParams(window.location.search);
+  document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+    const onclick = btn.getAttribute('onclick');
+    if (onclick) {
+      const match = onclick.match(/quickFilter\('(\w+)', '([^']+)'\)/);
+      if (match) {
+        const [, filterName, filterValue] = match;
+        if (urlParams.get(filterName) === filterValue) {
+          btn.classList.add('active');
+        }
+      }
+    }
+  });
+}
+
+function showLoading() {
+  const container = document.getElementById('leadsTableContainer');
+  if (!document.querySelector('.loading-overlay')) {
+    const overlay = document.createElement('div');
+    overlay.className = 'loading-overlay';
+    overlay.innerHTML = '<i class="fas fa-spinner fa-spin loading-spinner"></i>';
+    container.appendChild(overlay);
+  }
+}
+
+function refreshData() {
+  showLoading();
+  window.location.reload();
+}
+
+function exportLeads() {
+  const urlParams = new URLSearchParams(window.location.search);
+  urlParams.set('export', 'csv');
+  window.open(`{{ url_for('leads.lead_list') }}?${urlParams.toString()}`, '_blank');
+}
+
+function deleteLead(leadId) {
+  const leadRow = document.querySelector(`button[data-lead-id="${leadId}"]`).closest('tr');
+  const leadName = leadRow.querySelector('strong').textContent;
+  const leadNumber = leadRow.querySelector('.lead-id').textContent;
+  
+  showDeleteConfirmationModal(leadId, leadName, leadNumber);
+}
+
+function showDeleteConfirmationModal(leadId, leadName, leadNumber) {
+  // Update modal content
+  document.getElementById('modalLeadNumber').textContent = leadNumber;
+  document.getElementById('modalLeadName').textContent = leadName;
+  
+  // Reset form
+  document.getElementById('deleteLeadForm').reset();
+  document.getElementById('confirmDeleteButton').disabled = true;
+  
+  // Get form elements
+  const reasonSelect = document.getElementById('deleteReason');
+  const confirmationInput = document.getElementById('deleteConfirmation');
+  const acknowledgeCheck = document.getElementById('deleteAcknowledge');
+  const confirmBtn = document.getElementById('confirmDeleteButton');
+  const notesTextarea = document.getElementById('deleteNotes');
+
+  // Validation function
+  function validateForm() {
+    const reasonSelected = reasonSelect.value !== '';
+    const confirmationTyped = confirmationInput.value === 'DELETE';
+    const acknowledged = acknowledgeCheck.checked;
+    
+    confirmBtn.disabled = !(reasonSelected && confirmationTyped && acknowledged);
+  }
+
+  // Add event listeners for real-time validation
+  reasonSelect.addEventListener('change', validateForm);
+  confirmationInput.addEventListener('input', validateForm);
+  acknowledgeCheck.addEventListener('change', validateForm);
+
+  // Handle confirm delete button click
+  confirmBtn.onclick = function() {
+    const requestData = {
+      reason: reasonSelect.value,
+      notes: notesTextarea.value
+    };
+
+    fetch(`/leads/${leadId}/delete`, {
+      method: 'POST',
+      body: JSON.stringify(requestData),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.ok) {
+        // Hide modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteLeadModal'));
+        modal.hide();
+        
+        // Show success message
+        showSuccessMessage(data.data.message || 'Lead deleted successfully');
+        
+        // Remove the row from table
+        const row = document.querySelector(`button[data-lead-id="${leadId}"]`).closest('tr');
+        if (row) {
+          row.remove();
+        }
+        
+        // Update total count if exists
+        updateLeadCount();
+      } else {
+        showErrorMessage('Error deleting lead: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showErrorMessage('Error deleting lead. Please try again.');
+    });
+  };
+
+  // Show the modal with proper configuration
+  const modalElement = document.getElementById('deleteLeadModal');
+  
+  // Ensure all form elements are enabled and interactive
+  modalElement.querySelectorAll('input, select, textarea, button').forEach(element => {
+    element.style.pointerEvents = 'auto';
+    element.style.zIndex = '1059';
+    element.disabled = false; // Enable all elements initially
+  });
+  
+  // Re-disable only the confirm button
+  confirmBtn.disabled = true;
+  
+  const modal = new bootstrap.Modal(modalElement, {
+    backdrop: true,  // Allow clicking outside to close
+    keyboard: true,  // Allow ESC key to close
+    focus: true      // Focus on modal when shown
+  });
+  
+  modal.show();
+  
+  // Focus on reason select when modal is shown and ensure it's interactive
+  modalElement.addEventListener('shown.bs.modal', function() {
+    setTimeout(() => {
+      reasonSelect.focus();
+      reasonSelect.click(); // Trigger click to ensure dropdown works
+    }, 100);
+  }, { once: true });
+}
+
+function showSuccessMessage(message) {
+  const alertHtml = `
+    <div class="alert alert-success alert-dismissible fade show position-fixed" 
+         style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+      <i class="fas fa-check-circle me-2"></i>${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', alertHtml);
+}
+
+function showErrorMessage(message) {
+  const alertHtml = `
+    <div class="alert alert-danger alert-dismissible fade show position-fixed" 
+         style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+      <i class="fas fa-exclamation-circle me-2"></i>${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', alertHtml);
+}
+
+function updateLeadCount() {
+  // Update the lead count display if it exists
+  const totalRows = document.querySelectorAll('.leads-table tbody tr').length;
+  const countElement = document.querySelector('.lead-count, .total-count, .results-count');
+  if (countElement) {
+    countElement.textContent = totalRows;
+  }
+  
+  // Update pagination info if exists
+  const paginationInfo = document.querySelector('.pagination-info');
+  if (paginationInfo) {
+    const currentPage = new URLSearchParams(window.location.search).get('page') || 1;
+    const perPage = new URLSearchParams(window.location.search).get('per_page') || 10;
+    const startItem = ((currentPage - 1) * perPage) + 1;
+    const endItem = Math.min(startItem + totalRows - 1, totalRows);
+    paginationInfo.textContent = `Showing ${startItem}-${endItem} of ${totalRows} leads`;
+  }
+}
+
+// Debug function to test modal interactivity
+function testModalInteractivity() {
+  const modal = document.getElementById('deleteLeadModal');
+  const elements = modal.querySelectorAll('input, select, textarea, button');
+  console.log('Testing modal elements:');
+  elements.forEach((el, idx) => {
+    console.log(`Element ${idx}: ${el.tagName} - pointer-events: ${getComputedStyle(el).pointerEvents}, z-index: ${getComputedStyle(el).zIndex}`);
+  });
+}
+
+document.querySelectorAll('.leads-table tbody tr').forEach(row => {
+  row.addEventListener('dblclick', function() {
+    const detailLink = this.querySelector('.lead-id');
+    if (detailLink) window.location.href = detailLink.href;
+  });
+});
+
+if ('ontouchstart' in window) {
+  document.querySelectorAll('.action-btn').forEach(btn => {
+    btn.addEventListener('touchstart', function(){ this.style.transform = 'scale(0.95)'; });
+    btn.addEventListener('touchend', function(){ this.style.transform = ''; });
+  });
+}
+</script>
+
+<!-- Static Delete Confirmation Modal -->
+<div class="modal fade" id="deleteLeadModal" tabindex="-1" aria-labelledby="deleteLeadModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteLeadModalLabel">
+          <i class="fas fa-exclamation-triangle me-2"></i>Confirm Lead Deletion
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <i class="fas fa-warning me-2"></i>
+          <strong>Warning:</strong> This is a soft delete - lead will be marked as deleted but preserved for audit purposes.
+        </div>
+        
+        <div class="mb-3">
+          <h6>Lead Details:</h6>
+          <ul class="list-unstyled">
+            <li><strong>Lead #:</strong> <span id="modalLeadNumber"></span></li>
+            <li><strong>Name:</strong> <span id="modalLeadName"></span></li>
+          </ul>
+        </div>
+
+        <form id="deleteLeadForm">
+          <div class="mb-3">
+            <label for="deleteReason" class="form-label">
+              <strong>Reason for deletion *</strong>
+            </label>
+            <select class="form-select" id="deleteReason" name="deleteReason" required>
+              <option value="">Select a reason...</option>
+              <option value="duplicate_lead">Duplicate Lead</option>
+              <option value="spam_invalid">Spam/Invalid Lead</option>
+              <option value="test_data">Test Data</option>
+              <option value="data_cleanup">Data Cleanup</option>
+              <option value="gdpr_request">GDPR/Privacy Request</option>
+              <option value="convert_error">Conversion Error</option>
+              <option value="other">Other (specify below)</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="deleteNotes" class="form-label">Additional Notes (Optional)</label>
+            <textarea class="form-control" id="deleteNotes" name="deleteNotes" rows="3" 
+                      placeholder="Provide additional context for this deletion..."></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="deleteConfirmation" class="form-label">
+              <strong>Type "DELETE" to confirm *</strong>
+            </label>
+            <input type="text" class="form-control" id="deleteConfirmation" name="deleteConfirmation"
+                   placeholder="Type DELETE in uppercase" 
+                   autocomplete="off">
+            <div class="form-text text-danger">
+              You must type exactly "DELETE" (in uppercase) to enable the delete button.
+            </div>
+          </div>
+
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="deleteAcknowledge" name="deleteAcknowledge">
+            <label class="form-check-label text-danger" for="deleteAcknowledge">
+              I understand that this action will soft-delete the lead (preserves audit trail).
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteButton" disabled>
+          <i class="fas fa-trash-alt me-2"></i>Delete Lead
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

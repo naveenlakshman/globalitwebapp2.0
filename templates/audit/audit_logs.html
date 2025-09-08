@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% block title %}Audit Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary">
+                        <i class="fas fa-shield-alt me-2"></i>System Audit Logs
+                    </h2>
+                    <p class="text-muted mb-0">Security monitoring and user activity tracking</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('audit.export_logs') }}" class="btn btn-success">
+                        <i class="fas fa-download me-1"></i>Export CSV
+                    </a>
+                    <a href="{{ url_for('audit.security_alerts') }}" class="btn btn-warning">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Security Alerts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Logs
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ "{:,}".format(total_logs) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Failed Actions
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ failed_actions }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                High Risk Actions
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ high_risk_actions }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Unresolved Alerts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recent_alerts|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bell fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-filter me-2"></i>Filters
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('audit.audit_logs') }}">
+                <div class="row">
+                    <div class="col-md-2">
+                        <label for="action" class="form-label">Action</label>
+                        <input type="text" class="form-control" name="action" 
+                               value="{{ filters.action }}" placeholder="e.g., LOGIN">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="user" class="form-label">User</label>
+                        <input type="text" class="form-control" name="user" 
+                               value="{{ filters.user }}" placeholder="Username">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="risk" class="form-label">Risk Level</label>
+                        <select class="form-control" name="risk">
+                            <option value="">All Levels</option>
+                            <option value="LOW" {% if filters.risk == 'LOW' %}selected{% endif %}>Low</option>
+                            <option value="MEDIUM" {% if filters.risk == 'MEDIUM' %}selected{% endif %}>Medium</option>
+                            <option value="HIGH" {% if filters.risk == 'HIGH' %}selected{% endif %}>High</option>
+                            <option value="CRITICAL" {% if filters.risk == 'CRITICAL' %}selected{% endif %}>Critical</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="success" class="form-label">Status</label>
+                        <select class="form-control" name="success">
+                            <option value="">All</option>
+                            <option value="true" {% if filters.success == 'true' %}selected{% endif %}>Success</option>
+                            <option value="false" {% if filters.success == 'false' %}selected{% endif %}>Failed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date_from" class="form-label">From Date</label>
+                        <input type="date" class="form-control" name="date_from" value="{{ filters.date_from }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date_to" class="form-label">To Date</label>
+                        <input type="date" class="form-control" name="date_to" value="{{ filters.date_to }}">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>Apply Filters
+                        </button>
+                        <a href="{{ url_for('audit.audit_logs') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Clear Filters
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Audit Logs Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>Audit Trail
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if logs.items %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Target</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                            <th>Risk Level</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs.items %}
+                        <tr class="{% if not log.success %}table-danger{% elif log.risk_level in ['HIGH', 'CRITICAL'] %}table-warning{% endif %}">
+                            <td><small>{{ log.timestamp | format_datetime_indian }}</small></td>
+                            <td>
+                                {% if log.username %}
+                                    <strong>{{ log.username }}</strong>
+                                    {% if log.user_id %}
+                                        <br><small class="text-muted">ID: {{ log.user_id }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <em class="text-muted">System</em>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ log.action }}</span>
+                            </td>
+                            <td>{{ log.target or '-' }}</td>
+                            <td><small>{{ log.ip_address or '-' }}</small></td>
+                            <td>
+                                {% if log.success %}
+                                    <span class="badge bg-success">Success</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Failed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.risk_level == 'LOW' %}
+                                    <span class="badge bg-secondary">{{ log.risk_level }}</span>
+                                {% elif log.risk_level == 'MEDIUM' %}
+                                    <span class="badge bg-warning">{{ log.risk_level }}</span>
+                                {% elif log.risk_level == 'HIGH' %}
+                                    <span class="badge bg-danger">{{ log.risk_level }}</span>
+                                {% elif log.risk_level == 'CRITICAL' %}
+                                    <span class="badge bg-dark">{{ log.risk_level }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.details %}
+                                    <small>{{ log.details[:100] }}{% if log.details|length > 100 %}...{% endif %}</small>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if logs.pages > 1 %}
+            <nav aria-label="Audit logs pagination">
+                <ul class="pagination justify-content-center">
+                    {% if logs.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('audit.audit_logs', page=logs.prev_num, **filters) }}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in logs.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != logs.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('audit.audit_logs', page=page_num, **filters) }}">
+                                        {{ page_num }}
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if logs.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('audit.audit_logs', page=logs.next_num, **filters) }}">
+                                Next
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No audit logs found matching your criteria.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Security Alerts -->
+    {% if recent_alerts %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>Recent Security Alerts
+            </h6>
+        </div>
+        <div class="card-body">
+            {% for alert in recent_alerts %}
+            <div class="alert alert-{% if alert.severity == 'CRITICAL' %}danger{% elif alert.severity == 'HIGH' %}warning{% else %}info{% endif %} d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>{{ alert.alert_type }}</strong> - {{ alert.description }}
+                    <br>
+                    <small class="text-muted">
+                        {{ alert.created_at | format_datetime_indian }}
+                        {% if alert.username %} | User: {{ alert.username }}{% endif %}
+                        {% if alert.ip_address %} | IP: {{ alert.ip_address }}{% endif %}
+                    </small>
+                </div>
+                <span class="badge bg-{% if alert.severity == 'CRITICAL' %}danger{% elif alert.severity == 'HIGH' %}warning{% else %}info{% endif %}">
+                    {{ alert.severity }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.border-left-primary {
+    border-left: .25rem solid #4e73df!important;
+}
+.border-left-danger {
+    border-left: .25rem solid #e74a3b!important;
+}
+.border-left-warning {
+    border-left: .25rem solid #f6c23e!important;
+}
+.border-left-info {
+    border-left: .25rem solid #36b9cc!important;
+}
+.text-gray-800 {
+    color: #5a5c69!important;
+}
+.text-gray-300 {
+    color: #dddfeb!important;
+}
+</style>
+{% endblock %}

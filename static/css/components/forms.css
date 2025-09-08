@@ -1,0 +1,134 @@
+/* Forms */
+label{font-weight:var(--font-medium); color:var(--text-primary)}
+
+/* Required field indicator */
+.form-label.required::after,
+.required::after {
+  content: " *";
+  color: var(--brand-danger);
+  font-weight: var(--font-bold);
+}
+
+.form-control,.form-select,.form-check-input{
+  border:1px solid var(--gray-300); border-radius:var(--radius-md); transition:.15s box-shadow,.15s border-color
+}
+.form-control:focus,.form-select:focus,.form-check-input:focus{
+  border-color:var(--brand-secondary);
+  box-shadow:0 0 0 3px rgba(56,113,193,.15)
+}
+.input-group-text{background:var(--gray-100); border-color:var(--gray-300)}
+.help-text{font-size:var(--text-sm); color:var(--text-muted)}
+
+/* Override dark mode for forms to ensure visibility */
+.form-control,
+.form-select {
+  background: #ffffff !important;
+  color: #212529 !important;
+}
+
+.form-control::placeholder {
+  color: #6c757d !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background: #ffffff !important;
+  color: #212529 !important;
+  border-color: var(--brand-secondary);
+  box-shadow: 0 0 0 0.25rem rgba(56, 113, 193, 0.25);
+}
+
+/* Commented out dark mode styles temporarily to fix visibility issues */
+/*
+@media (prefers-color-scheme: dark) {
+  label {
+    color: var(--text-primary);
+  }
+
+  .form-control,
+  .form-select {
+    background: var(--bg-primary);
+    border: 1px solid var(--gray-300);
+    color: var(--text-primary);
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    background: var(--bg-primary);
+    border-color: var(--brand-secondary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.25rem rgba(96, 165, 250, 0.25);
+  }
+
+  .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  .form-control:disabled,
+  .form-select:disabled {
+    background: var(--gray-100);
+    border-color: var(--gray-300);
+    color: var(--text-muted);
+  }
+
+  .input-group-text {
+    background: var(--bg-secondary);
+    border-color: var(--gray-300);
+    color: var(--text-secondary);
+  }
+
+  .form-check-input {
+    background: var(--bg-primary);
+    border-color: var(--gray-300);
+  }
+
+  .form-check-input:checked {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+  }
+
+  .form-check-input:focus {
+    border-color: var(--brand-secondary);
+    box-shadow: 0 0 0 0.25rem rgba(96, 165, 250, 0.25);
+  }
+
+  .help-text {
+    color: var(--text-muted);
+  }
+
+  /* Form validation states for dark mode */
+/*
+  .is-valid,
+  .was-validated .form-control:valid,
+  .was-validated .form-select:valid {
+    border-color: var(--brand-success);
+  }
+
+  .is-valid:focus,
+  .was-validated .form-control:valid:focus,
+  .was-validated .form-select:valid:focus {
+    border-color: var(--brand-success);
+    box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.25);
+  }
+
+  .is-invalid,
+  .was-validated .form-control:invalid,
+  .was-validated .form-select:invalid {
+    border-color: var(--brand-danger);
+  }
+
+  .is-invalid:focus,
+  .was-validated .form-control:invalid:focus,
+  .was-validated .form-select:invalid:focus {
+    border-color: var(--brand-danger);
+    box-shadow: 0 0 0 0.25rem rgba(239, 68, 68, 0.25);
+  }
+
+  .valid-feedback {
+    color: #86efac;
+  }
+
+  .invalid-feedback {
+    color: #fca5a5;
+  }
+}

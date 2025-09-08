@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block title %}{{ batch.name }} - Attendance Report{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+
+<style>
+    .batch-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 30px 30px;
+    }
+    
+    .batch-info-card {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    .student-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease;
+        margin-bottom: 1rem;
+    }
+    
+    .student-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    
+    .attendance-rate-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+        color: white;
+    }
+    
+    .rate-excellent { background: linear-gradient(135deg, #28a745, #20c997); }
+    .rate-good { background: linear-gradient(135deg, #17a2b8, #6f42c1); }
+    .rate-average { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+    .rate-poor { background: linear-gradient(135deg, #dc3545, #e83e8c); }
+    
+    .attendance-timeline {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .timeline-item {
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f3f4;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .timeline-item:last-child {
+        border-bottom: none;
+    }
+    
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    
+    .status-present { background-color: #28a745; }
+    .status-absent { background-color: #dc3545; }
+    .status-late { background-color: #ffc107; }
+    
+    .filter-card {
+        background: #f8f9fa;
+        border: none;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+        padding: 15px;
+    }
+    
+    .table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        border-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="batch-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-chart-bar me-3"></i>{{ batch.name }}
+                </h1>
+                <p class="mb-0 opacity-75">Detailed attendance report for {{ start_date }} to {{ end_date }}</p>
+            </div>
+            <div class="col-md-4">
+                <div class="batch-info-card">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="h4 mb-1">{{ batch.course_name }}</div>
+                            <small class="opacity-75">Course</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 mb-1">{{ student_attendance_data|length }}</div>
+                            <small class="opacity-75">Students</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('attendance_reports.attendance_reports') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Reports
+                    </a>
+                    <a href="{{ url_for('batches.batch_students', batch_id=batch.id) }}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-users me-1"></i>Manage Students
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Date Range Filter -->
+    <div class="card filter-card">
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label fw-bold">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label fw-bold">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-2"></i>Update Report
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary ms-2" onclick="printReport()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Student Attendance Cards -->
+    {% if student_attendance_data %}
+        <div class="row">
+            {% for data in student_attendance_data %}
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="student-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between mb-3">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-1 fw-bold">{{ data.student.full_name }}</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-id-card me-1"></i>{{ data.student.student_id }}
+                                </small>
+                                {% if data.student.phone %}
+                                <br><small class="text-muted">
+                                    <i class="fas fa-phone me-1"></i>{{ data.student.phone }}
+                                </small>
+                                {% endif %}
+                            </div>
+                            <div class="attendance-rate-circle
+                                {% if data.attendance_rate >= 90 %}rate-excellent
+                                {% elif data.attendance_rate >= 75 %}rate-good
+                                {% elif data.attendance_rate >= 60 %}rate-average
+                                {% else %}rate-poor{% endif %}">
+                                {{ data.attendance_rate }}%
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <div class="fw-bold text-primary">{{ data.total_days }}</div>
+                                <small class="text-muted">Total</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="fw-bold text-success">{{ data.present_days }}</div>
+                                <small class="text-muted">Present</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="fw-bold text-danger">{{ data.absent_days }}</div>
+                                <small class="text-muted">Absent</small>
+                            </div>
+                        </div>
+                        
+                        {% if data.recent_records %}
+                        <div class="border-top pt-3">
+                            <h6 class="mb-2">
+                                <i class="fas fa-clock me-1"></i>Recent Activity
+                            </h6>
+                            <div class="attendance-timeline">
+                                {% for record in data.recent_records %}
+                                <div class="timeline-item">
+                                    <div class="status-dot status-{{ record.status.lower() }}"></div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-medium">{{ record.attendance_date.strftime('%b %d, %Y') if record.attendance_date else 'N/A' }}</span>
+                                            <span class="badge 
+                                                {% if record.status == 'Present' %}bg-success
+                                                {% elif record.status == 'Absent' %}bg-danger
+                                                {% elif record.status == 'Late' %}bg-warning
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ record.status }}
+                                            </span>
+                                        </div>
+                                        {% if record.remarks %}
+                                        <small class="text-muted">{{ record.remarks }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Detailed Table View -->
+        <div class="table-container mt-4">
+            <div class="card-header bg-transparent border-0 pt-3">
+                <h5 class="mb-0 text-dark">
+                    <i class="fas fa-table me-2"></i>Detailed Attendance Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="attendanceTable">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Student ID</th>
+                                <th>Total Days</th>
+                                <th>Present</th>
+                                <th>Absent</th>
+                                <th>Late</th>
+                                <th>Attendance Rate</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in student_attendance_data %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-graduate text-primary me-2"></i>
+                                        <div>
+                                            <div class="fw-bold">{{ data.student.full_name }}</div>
+                                            {% if data.student.phone %}
+                                            <small class="text-muted">{{ data.student.phone }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ data.student.student_id }}</td>
+                                <td><span class="badge bg-info">{{ data.total_days }}</span></td>
+                                <td><span class="badge bg-success">{{ data.present_days }}</span></td>
+                                <td><span class="badge bg-danger">{{ data.absent_days }}</span></td>
+                                <td>
+                                    {% set late_days = data.total_days - data.present_days - data.absent_days %}
+                                    <span class="badge bg-warning">{{ late_days if late_days > 0 else 0 }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 fw-bold
+                                            {% if data.attendance_rate >= 90 %}text-success
+                                            {% elif data.attendance_rate >= 75 %}text-primary
+                                            {% elif data.attendance_rate >= 60 %}text-warning
+                                            {% else %}text-danger{% endif %}">
+                                            {{ data.attendance_rate }}%
+                                        </span>
+                                        <div class="progress flex-grow-1" style="height: 8px;">
+                                            <div class="progress-bar
+                                                {% if data.attendance_rate >= 90 %}bg-success
+                                                {% elif data.attendance_rate >= 75 %}bg-primary
+                                                {% elif data.attendance_rate >= 60 %}bg-warning
+                                                {% else %}bg-danger{% endif %}"
+                                                style="width: {{ data.attendance_rate }}%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if data.attendance_rate >= 90 %}
+                                        <span class="badge bg-success">Excellent</span>
+                                    {% elif data.attendance_rate >= 75 %}
+                                        <span class="badge bg-primary">Good</span>
+                                    {% elif data.attendance_rate >= 60 %}
+                                        <span class="badge bg-warning">Average</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Poor</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Attendance Data Found</h5>
+            <p class="text-muted">No students or attendance records found for this batch in the selected date range.</p>
+            <a href="{{ url_for('batches.batch_students', batch_id=batch.id) }}" class="btn btn-primary">
+                <i class="fas fa-users me-2"></i>Manage Students
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#attendanceTable').DataTable({
+        "pageLength": 25,
+        "order": [[ 6, "asc" ]], // Order by attendance rate (lowest first)
+        "columnDefs": [
+            { "orderable": false, "targets": [7] } // Disable sorting for Status column
+        ],
+        "language": {
+            "emptyTable": "No student attendance data available",
+            "info": "Showing _START_ to _END_ of _TOTAL_ students",
+            "search": "Search students:"
+        },
+        "responsive": true
+    });
+});
+
+function printReport() {
+    window.print();
+}
+
+// Print styles
+window.addEventListener('beforeprint', function() {
+    document.querySelectorAll('.student-card').forEach(card => {
+        card.style.pageBreakInside = 'avoid';
+        card.style.marginBottom = '20px';
+    });
+});
+</script>
+
+<style media="print">
+    .batch-header,
+    .filter-card,
+    .btn,
+    .no-print {
+        display: none !important;
+    }
+    
+    .student-card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+    }
+    
+    .table-container {
+        box-shadow: none !important;
+    }
+    
+    .table thead th {
+        background: #f8f9fa !important;
+        color: #000 !important;
+    }
+</style>
+{% endblock %}

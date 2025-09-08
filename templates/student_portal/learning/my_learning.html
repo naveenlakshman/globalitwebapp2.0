@@ -1,0 +1,333 @@
+{% extends "student_portal/base_student.html" %}
+
+{% block title %}My Learning - {{ student.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.learning-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.course-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.course-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.progress-ring {
+    width: 100px;
+    height: 100px;
+}
+
+.progress-ring circle {
+    stroke-width: 8;
+    fill: transparent;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 283;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    transition: stroke-dashoffset 0.5s ease-in-out;
+}
+
+.module-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.module-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.module-item:hover {
+    background: #e9ecef;
+    border-left-color: #667eea;
+}
+
+.module-completed {
+    border-left-color: #28a745;
+    background: #d4edda;
+}
+
+.module-in-progress {
+    border-left-color: #ffc107;
+}
+
+.module-pending {
+    border-left-color: #dee2e6;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.achievement-badge {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    border-radius: 50px;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    display: inline-block;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Learning Header -->
+<div class="learning-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h2 class="mb-0">
+                <i class="fas fa-graduation-cap me-2"></i>My Learning Journey
+            </h2>
+            <p class="mb-0 opacity-75">Track your progress and continue learning</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="d-flex align-items-center justify-content-end">
+                <div class="progress-ring me-3">
+                    <svg width="100" height="100">
+                        <circle cx="50" cy="50" r="45" stroke="#ffffff30" />
+                        <circle cx="50" cy="50" r="45" stroke="#ffffff" 
+                                style="stroke-dashoffset: {{ 283 - (283 * overall_progress / 100) }};" />
+                    </svg>
+                    <div class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <div class="text-center">
+                            <div class="h4 mb-0">{{ "%.0f"|format(overall_progress) }}%</div>
+                            <small>Complete</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Learning Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-primary">{{ total_modules or 0 }}</div>
+            <div class="text-muted">Total Modules</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-success">{{ completed_modules or 0 }}</div>
+            <div class="text-muted">Completed</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-info">{{ total_study_hours or 0 }}h</div>
+            <div class="text-muted">Study Hours</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-warning">{{ total_achievements or 0 }}</div>
+            <div class="text-muted">Achievements</div>
+        </div>
+    </div>
+</div>
+
+<!-- Course Content -->
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Enrolled Courses -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-book me-2"></i>Enrolled Courses</h5>
+            </div>
+            <div class="card-body">
+                {% if enrolled_courses %}
+                    {% for course in enrolled_courses %}
+                    <div class="course-card p-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <div class="course-thumbnail">
+                                    <i class="fas fa-book-open fa-3x text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="mb-1">{{ course.course_name }}</h5>
+                                <p class="mb-1 text-muted">Instructor: {{ course.instructor_name }}</p>
+                                <p class="mb-0">
+                                    <span class="badge bg-info">{{ course.difficulty_level or 'Beginner' }}</span>
+                                    <span class="badge bg-secondary ms-1">{{ course.duration_hours or 40 }} hours</span>
+                                </p>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <div class="progress-circle">
+                                    <div class="h4 text-primary">{{ "%.0f"|format(course.progress or 0) }}%</div>
+                                    <small class="text-muted">Progress</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                {% if course.id %}
+                                <a href="{{ url_for('lms.course_content', course_id=course.id) }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-play me-1"></i>Continue
+                                </a>
+                                {% else %}
+                                <a href="{{ url_for('lms.student_dashboard') }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-play me-1"></i>Start Learning
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No courses enrolled yet</h5>
+                        <p class="text-muted">Contact your administrator to get enrolled in courses.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Learning Modules -->
+        {% if modules %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-puzzle-piece me-2"></i>Course Modules</h5>
+            </div>
+            <div class="card-body">
+                <div class="module-list">
+                    {% for module in modules %}
+                    <div class="module-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-1">
+                                <div class="text-center">
+                                    <span class="badge bg-secondary">{{ module.module_order }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-1">{{ module.module_name }}</h6>
+                                <p class="mb-0 text-muted small">{{ module.module_description or 'No description available' }}</p>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <small class="text-muted">{{ module.estimated_duration_hours or 0 }} hours</small>
+                            </div>
+                            <div class="col-md-1 text-center">
+                                {% set progress = module.get_progress_for_student(student.student_id) if module.get_progress_for_student else 0 %}
+                                <small class="text-muted">{{ progress }}%</small>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <a href="{{ url_for('lms.module_content', module_id=module.id) }}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Weekly Progress -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Weekly Progress</h6>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3" style="height: 10px;">
+                    <div class="progress-bar bg-success" style="width: {{ weekly_study_progress }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>{{ weekly_study_hours }}h</span>
+                    <span class="text-muted">Goal: {{ weekly_goal_hours }}h</span>
+                </div>
+                <small class="text-muted">{{ "%.0f"|format(weekly_study_progress) }}% of weekly goal achieved</small>
+            </div>
+        </div>
+
+        <!-- Recent Achievements -->
+        {% if recent_achievements %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-trophy me-2"></i>Recent Achievements</h6>
+            </div>
+            <div class="card-body">
+                {% for achievement in recent_achievements %}
+                <div class="achievement-badge">
+                    <i class="fas fa-medal me-1"></i>{{ achievement.name or 'Achievement Unlocked' }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('lms.student_dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>Continue Learning
+                    </a>
+                    <a href="{{ url_for('student_portal.my_attendance') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-calendar-check me-2"></i>View Attendance
+                    </a>
+                    <a href="{{ url_for('student_portal.support') }}" class="btn btn-outline-info">
+                        <i class="fas fa-question-circle me-2"></i>Get Help
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update progress rings
+document.addEventListener('DOMContentLoaded', function() {
+    const progressRings = document.querySelectorAll('.progress-ring circle:last-child');
+    progressRings.forEach(ring => {
+        const progress = parseFloat(ring.style.strokeDashoffset.match(/\d+/)[0]);
+        const circumference = 283;
+        const offset = circumference - (progress / 100) * circumference;
+        ring.style.strokeDashoffset = offset;
+    });
+});
+</script>
+{% endblock %}

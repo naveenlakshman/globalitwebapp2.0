@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Learning Management System - Global IT{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lms-card {
+        transition: transform 0.2s ease-in-out;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .lms-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .course-card {
+        height: 100%;
+        border-left: 4px solid #007bff;
+    }
+    
+    .course-progress {
+        height: 8px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .course-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #007bff, #0056b3);
+        transition: width 0.3s ease;
+    }
+    
+    .moodle-badge {
+        background: linear-gradient(135deg, #ff6b35, #f7931e);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .quick-action-btn {
+        border-radius: 25px;
+        padding: 8px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .lms-header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- LMS Header -->
+    <div class="lms-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-2">
+                    <i class="fas fa-graduation-cap me-3"></i>Learning Management System
+                </h1>
+                <p class="mb-0 opacity-75">
+                    Welcome to your personalized learning dashboard. Access courses, track progress, and enhance your skills.
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if role in ['admin', 'super_admin'] %}
+                    <span class="moodle-badge">
+                        <i class="fas fa-user-shield me-1"></i>LMS Administrator
+                    </span>
+                {% elif moodle_user_id %}
+                    <span class="moodle-badge">
+                        <i class="fas fa-check-circle me-1"></i>LMS Connected
+                    </span>
+                {% else %}
+                    <span class="badge bg-warning">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Setup Required
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card lms-card h-100">
+                <div class="card-body text-center">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-book-open fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">{{ courses|length if courses else 0 }}</h5>
+                    <p class="card-text text-muted">Enrolled Courses</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card lms-card h-100">
+                <div class="card-body text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-play-circle fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">{{ courses|selectattr('progress', 'defined')|list|length if courses else 0 }}</h5>
+                    <p class="card-text text-muted">In Progress</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card lms-card h-100">
+                <div class="card-body text-center">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">
+                        {% if student_info and student_info.batch %}
+                            {{ student_info.batch.duration }}
+                        {% else %}
+                            --
+                        {% endif %}
+                    </h5>
+                    <p class="card-text text-muted">Study Duration</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card lms-card h-100">
+                <div class="card-body text-center">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-certificate fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">0</h5>
+                    <p class="card-text text-muted">Certificates</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    {% if role in ['admin', 'super_admin', 'franchise', 'branch_manager'] %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card lms-card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>LMS Management
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ url_for('lms.course_management') }}" class="btn btn-primary quick-action-btn">
+                            <i class="fas fa-cogs me-1"></i>Manage Courses
+                        </a>
+                        {% if role in ['admin', 'super_admin'] %}
+                        <a href="{{ url_for('lms.lms_settings') }}" class="btn btn-secondary quick-action-btn">
+                            <i class="fas fa-sliders-h me-1"></i>LMS Settings
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="row">
+        {% if courses and courses|length > 0 %}
+            <!-- Enrolled Courses -->
+            <div class="col-12">
+                <div class="card lms-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-book me-2"></i>My Courses
+                        </h5>
+                        <span class="badge bg-primary">{{ courses|length }} Enrolled</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            {% for course in courses %}
+                            <div class="col-lg-6 col-xl-4">
+                                <div class="card course-card m-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title">{{ course.fullname }}</h6>
+                                            <span class="badge bg-success">Active</span>
+                                        </div>
+                                        
+                                        <p class="card-text text-muted small">
+                                            {{ course.summary[:100] if course.summary else 'No description available' }}
+                                            {% if course.summary and course.summary|length > 100 %}...{% endif %}
+                                        </p>
+                                        
+                                        <!-- Progress Bar (if available) -->
+                                        <div class="course-progress mb-3">
+                                            <div class="course-progress-bar" style="width: {{ course.progress|default(0) }}%"></div>
+                                        </div>
+                                        <small class="text-muted">Progress: {{ course.progress|default(0) }}%</small>
+                                        
+                                        <div class="d-flex justify-content-between mt-3">
+                                            {% if role == 'student' %}
+                                                <a href="{{ url_for('lms.course_content', course_id=course.id) }}" 
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-play me-1"></i>Continue Learning
+                                                </a>
+                                            {% else %}
+                                                <a href="{{ url_for('lms.course_preview', course_id=course.id) }}" 
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-eye me-1"></i>View Course Details
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- No Courses Enrolled -->
+            <div class="col-12">
+                <div class="card lms-card">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-book-open fa-4x text-muted"></i>
+                        </div>
+                        
+                        {% if role in ['admin', 'super_admin'] %}
+                            <h4 class="text-muted mb-3">LMS System Overview</h4>
+                            <p class="text-muted mb-4">
+                                {% if students_info %}
+                                    You have {{ students_info|length }} active students across all branches. 
+                                    Use the <a href="{{ url_for('lms.course_management') }}">Course Management</a> interface to manage the LMS system.
+                                {% else %}
+                                    No active students found in the system. Add students to get started with the LMS.
+                                {% endif %}
+                            </p>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{{ url_for('lms.course_management') }}" class="btn btn-primary">
+                                    <i class="fas fa-cogs me-2"></i>Manage LMS System
+                                </a>
+                            </div>
+                        {% elif role in ['franchise', 'branch_manager'] %}
+                            <h4 class="text-muted mb-3">LMS Overview for Your Branch</h4>
+                            <p class="text-muted mb-4">
+                                {% if students_info %}
+                                    You have {{ students_info|length }} students in your branch. 
+                                    Use the <a href="{{ url_for('lms.course_management') }}">Course Management</a> interface to sync students and manage their learning.
+                                {% else %}
+                                    No students found in your branch. Add students to get started with the LMS.
+                                {% endif %}
+                            </p>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{{ url_for('lms.course_management') }}" class="btn btn-primary">
+                                    <i class="fas fa-cogs me-2"></i>Manage Students & Courses
+                                </a>
+                                <a href="{{ moodle_url }}" target="_blank" class="btn btn-outline-primary">
+                                    <i class="fas fa-external-link-alt me-2"></i>Open Moodle
+                                </a>
+                            </div>
+                        {% else %}
+                            <h4 class="text-muted mb-3">No Courses Enrolled Yet</h4>
+                            <p class="text-muted mb-4">
+                                Contact your administrator to enroll in courses and start your learning journey.
+                            </p>
+                            <div class="alert alert-info d-inline-block">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Your courses will appear here once you're enrolled by an administrator.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- User Info Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card lms-card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Internal LMS Account Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ user.full_name }}</p>
+                            <p><strong>Role:</strong> {{ role.title() }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Student ID:</strong> {{ user.id }}</p>
+                            <p><strong>LMS Status:</strong> <span class="badge bg-success">Active</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mb-0">Processing...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing...'); // Debug log
+    
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    console.log('Internal LMS Dashboard initialized successfully');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,309 @@
+/* ==========================================================================
+   Staff Management - Multi-Step Wizard Form
+   ========================================================================== */
+
+/* Form Wizard Container */
+.form-wizard {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+/* Progress Indicator */
+.progress-indicator {
+  height: 4px;
+  background: var(--gray-200);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar-custom {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-secondary));
+  transition: width 0.3s ease;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Wizard Navigation Tabs */
+.wizard-nav {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0;
+  margin: 0;
+}
+
+.wizard-nav .nav-item {
+  flex: 1;
+}
+
+.wizard-nav .nav-link {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 1rem 0.5rem;
+  border-radius: 0;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.wizard-nav .nav-link:hover {
+  background: rgba(44, 56, 146, 0.05);
+  color: var(--text-primary);
+}
+
+.wizard-nav .nav-link.active {
+  color: var(--brand-primary);
+  background: var(--bg-primary);
+  border-bottom-color: var(--brand-primary);
+  font-weight: var(--font-semibold);
+}
+
+.wizard-nav .nav-link.completed {
+  color: var(--brand-success);
+  position: relative;
+}
+
+.wizard-nav .nav-link.completed::after {
+  content: '\f00c';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  font-size: 0.7rem;
+  color: var(--brand-success);
+}
+
+/* Wizard Steps */
+.wizard-step {
+  display: none;
+  padding: 2rem;
+  min-height: 400px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.wizard-step.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Form Sections */
+.form-section {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--gray-200);
+}
+
+.form-section h6 {
+  color: var(--brand-primary);
+  font-weight: var(--font-semibold);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-section h6 i {
+  color: var(--brand-secondary);
+}
+
+/* Form Controls */
+.form-control,
+.form-select {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-300);
+  padding: 0.75rem 1rem;
+  font-size: var(--text-sm);
+  transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 0.2rem rgba(44, 56, 146, 0.25);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+  border-color: var(--brand-danger);
+  box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25);
+}
+
+/* File Upload Area */
+.file-upload-area {
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+  background: var(--gray-50);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.file-upload-area:hover,
+.file-upload-area.dragover {
+  border-color: var(--brand-primary);
+  background: rgba(44, 56, 146, 0.05);
+}
+
+.file-upload-area i {
+  font-size: 2rem;
+  color: var(--brand-primary);
+  margin-bottom: 1rem;
+}
+
+/* Avatar Preview */
+.avatar-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--brand-primary);
+  margin: 0 auto 1rem;
+  display: block;
+}
+
+/* Summary Card */
+.summary-card {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  color: white;
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.summary-card h5 {
+  margin-bottom: 0.5rem;
+  font-weight: var(--font-bold);
+}
+
+/* Summary Items */
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+}
+
+.summary-item strong {
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  min-width: 150px;
+  text-align: left;
+}
+
+.summary-item span {
+  color: var(--text-secondary);
+  text-align: right;
+  flex: 1;
+}
+
+/* Wizard Controls */
+.btn-wizard {
+  min-width: 120px;
+  padding: 0.75rem 1.5rem;
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-md);
+  transition: all 0.3s ease;
+}
+
+.btn-wizard:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .wizard-nav .nav-link {
+    padding: 0.75rem 0.25rem;
+    font-size: var(--text-xs);
+  }
+  
+  .wizard-nav .nav-link i {
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  
+  .wizard-step {
+    padding: 1rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .summary-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .summary-item strong {
+    min-width: auto;
+  }
+}
+
+/* Dark Mode Support */
+html[data-theme="dark"] .form-wizard {
+  background: var(--bg-secondary);
+}
+
+html[data-theme="dark"] .wizard-nav {
+  background: var(--bg-primary);
+  border-bottom-color: var(--gray-600);
+}
+
+html[data-theme="dark"] .wizard-nav .nav-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+html[data-theme="dark"] .wizard-nav .nav-link.active {
+  background: var(--bg-secondary);
+}
+
+html[data-theme="dark"] .form-section {
+  background: var(--bg-primary);
+  border-color: var(--gray-600);
+}
+
+html[data-theme="dark"] .form-section h6 {
+  border-bottom-color: var(--gray-600);
+}
+
+html[data-theme="dark"] .file-upload-area {
+  background: var(--bg-primary);
+  border-color: var(--gray-600);
+}
+
+html[data-theme="dark"] .file-upload-area:hover,
+html[data-theme="dark"] .file-upload-area.dragover {
+  background: rgba(44, 56, 146, 0.1);
+}
+
+html[data-theme="dark"] .summary-item {
+  border-bottom-color: var(--gray-600);
+}

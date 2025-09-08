@@ -1,0 +1,224 @@
+{% extends "student_portal/auth/base_auth.html" %}
+
+{% block title %}Login - Student Portal{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card auth-card shadow-lg border-0">
+                    <div class="card-body p-5">
+                        <!-- Header -->
+                        <div class="auth-header">
+                            <i class="fas fa-graduation-cap text-primary"></i>
+                            <h3 class="fw-bold text-primary">Student Portal</h3>
+                            <p class="text-muted">GlobalIT Education Management System</p>
+                        </div>
+
+                        <!-- Flash Messages -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                                        <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' if category == 'info' else 'check-circle' }}"></i>
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <!-- Login Form -->
+                        <form method="POST" action="{{ url_for('student_portal.student_login') }}" id="loginForm">
+                            <div class="mb-3">
+                                <label for="student_id" class="form-label fw-bold">
+                                    <i class="fas fa-id-card me-2"></i>Student ID
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="student_id" 
+                                       name="student_id" 
+                                       placeholder="Enter your Student ID"
+                                       required
+                                       autocomplete="username">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label fw-bold">
+                                    <i class="fas fa-lock me-2"></i>Password
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control form-control-lg" 
+                                           id="password" 
+                                           name="password" 
+                                           placeholder="Enter your password"
+                                           required
+                                           autocomplete="current-password">
+                                    <button class="btn btn-outline-secondary" type="button" id="passwordToggleBtn">
+                                        <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+                                <label class="form-check-label" for="remember_me">
+                                    Remember me
+                                </label>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login to Portal
+                                </button>
+                            </div>
+                            
+                            <!-- Demo Login Button for Testing -->
+                            <div class="d-grid mt-2">
+                                <button type="button" id="demoLoginBtn" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-flask me-2"></i>Demo Login (Testing)
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Additional Links -->
+                        <div class="auth-footer">
+                            <a href="#" class="text-decoration-none text-muted small">
+                                <i class="fas fa-question-circle me-1"></i>Forgot Password?
+                            </a>
+                            <hr class="my-3">
+                            <small class="text-muted">
+                                Need help? Contact your branch office or 
+                                <a href="mailto:support@globalit.edu" class="text-primary">support@globalit.edu</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Info Cards -->
+                <div class="row mt-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-0 bg-light bg-opacity-75">
+                            <div class="card-body text-center p-3">
+                                <i class="fas fa-book text-primary mb-2"></i>
+                                <h6 class="card-title">Access Courses</h6>
+                                <small class="text-muted">View your enrolled courses and learning materials</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-0 bg-light bg-opacity-75">
+                            <div class="card-body text-center p-3">
+                                <i class="fas fa-chart-line text-success mb-2"></i>
+                                <h6 class="card-title">Track Progress</h6>
+                                <small class="text-muted">Monitor your learning progress and attendance</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Demo login function (Global scope)
+    function fillDemoCredentials() {
+        console.log('Filling demo credentials...');
+        const studentIdField = document.getElementById('student_id');
+        const passwordField = document.getElementById('password');
+        const demoBtn = document.getElementById('demoLoginBtn');
+        
+        if (studentIdField && passwordField && demoBtn) {
+            studentIdField.value = '1516170';
+            passwordField.value = 'student123';
+            
+            // Update button text temporarily
+            const originalText = demoBtn.innerHTML;
+            demoBtn.innerHTML = '<i class="fas fa-check me-2"></i>Demo Credentials Filled!';
+            demoBtn.classList.remove('btn-outline-info');
+            demoBtn.classList.add('btn-success');
+            
+            // Reset button after 2 seconds
+            setTimeout(function() {
+                demoBtn.innerHTML = originalText;
+                demoBtn.classList.remove('btn-success');
+                demoBtn.classList.add('btn-outline-info');
+            }, 2000);
+            
+            // Focus on login button
+            document.querySelector('button[type="submit"]').focus();
+        } else {
+            console.error('Could not find form fields');
+        }
+    }
+
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.getElementById('passwordToggleIcon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    }
+
+    // Initialize everything when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-focus on student ID field
+        const studentIdField = document.getElementById('student_id');
+        if (studentIdField) {
+            studentIdField.focus();
+        }
+        
+        // Demo login button event listener
+        const demoBtn = document.getElementById('demoLoginBtn');
+        if (demoBtn) {
+            demoBtn.addEventListener('click', fillDemoCredentials);
+        }
+        
+        // Password toggle button event listener
+        const passwordToggleBtn = document.getElementById('passwordToggleBtn');
+        if (passwordToggleBtn) {
+            passwordToggleBtn.addEventListener('click', togglePassword);
+        }
+        
+        // Form submission handling
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...';
+                submitBtn.disabled = true;
+                
+                // Re-enable after 5 seconds in case of error
+                setTimeout(function() {
+                    submitBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login to Portal';
+                    submitBtn.disabled = false;
+                }, 5000);
+            });
+        }
+        
+        // Enter key handling for better UX
+        if (studentIdField) {
+            studentIdField.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const passwordField = document.getElementById('password');
+                    if (passwordField) {
+                        passwordField.focus();
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

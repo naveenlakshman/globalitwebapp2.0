@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice List Debug Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .error { color: red; background: #ffe6e6; padding: 10px; border-radius: 5px; }
+        .success { color: green; background: #e6ffe6; padding: 10px; border-radius: 5px; }
+        .info { color: blue; background: #e6f3ff; padding: 10px; border-radius: 5px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Invoice List Debug Page</h1>
+    
+    <div class="debug-section">
+        <h2>1. JavaScript Error Detection</h2>
+        <div id="js-errors" class="info">Checking for JavaScript errors...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>2. Variable Check</h2>
+        <div id="variable-check" class="info">Checking if 'today' variable exists...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>3. Console Log</h2>
+        <div id="console-log">
+            <button onclick="checkConsole()">Check Console</button>
+            <pre id="console-output"></pre>
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>4. Ajax Test</h2>
+        <div id="ajax-test">
+            <button onclick="testAjax()">Test AJAX Call</button>
+            <div id="ajax-result"></div>
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>5. Recommendations</h2>
+        <div class="info">
+            <h3>If you see the 'today' is undefined error:</h3>
+            <ol>
+                <li><strong>Clear Browser Cache:</strong> Ctrl+Shift+Delete (Chrome/Edge) or Ctrl+Shift+R (hard refresh)</li>
+                <li><strong>Check Developer Console:</strong> Press F12 → Console tab → Look for error details</li>
+                <li><strong>Disable Extensions:</strong> Try accessing the page in Incognito/Private mode</li>
+                <li><strong>Check Network Tab:</strong> F12 → Network tab → Look for failed requests</li>
+                <li><strong>Try Different Browser:</strong> Test in Chrome, Firefox, or Edge</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Capture all console errors
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript Error:', e.error);
+            document.getElementById('js-errors').innerHTML = 
+                '<div class="error">JavaScript Error Found: ' + e.message + ' at line ' + e.lineno + '</div>';
+        });
+
+        // Check for the 'today' variable
+        function checkVariables() {
+            let result = '';
+            
+            // Check if 'today' is defined in global scope
+            if (typeof today !== 'undefined') {
+                result += '<div class="success">✅ Global variable "today" is defined: ' + today + '</div>';
+            } else {
+                result += '<div class="error">❌ Global variable "today" is undefined</div>';
+            }
+            
+            // Check if there's a today() function
+            if (typeof today === 'function') {
+                try {
+                    result += '<div class="success">✅ Function "today()" exists and returns: ' + today() + '</div>';
+                } catch (e) {
+                    result += '<div class="error">❌ Function "today()" exists but throws error: ' + e.message + '</div>';
+                }
+            }
+            
+            // Check window object for today-related properties
+            let todayProps = [];
+            for (let prop in window) {
+                if (prop.toLowerCase().includes('today')) {
+                    todayProps.push(prop);
+                }
+            }
+            
+            if (todayProps.length > 0) {
+                result += '<div class="info">ℹ️ Found today-related properties: ' + todayProps.join(', ') + '</div>';
+            }
+            
+            document.getElementById('variable-check').innerHTML = result;
+        }
+        
+        function checkConsole() {
+            // Try to simulate the error conditions
+            let output = 'Console check results:\n';
+            
+            try {
+                // This might trigger the error if 'today' is referenced somewhere
+                output += '1. Testing direct today access: ';
+                if (typeof today !== 'undefined') {
+                    output += 'SUCCESS - today = ' + today + '\n';
+                } else {
+                    output += 'UNDEFINED\n';
+                }
+            } catch (e) {
+                output += 'ERROR - ' + e.message + '\n';
+            }
+            
+            try {
+                output += '2. Testing today() function call: ';
+                if (typeof today === 'function') {
+                    output += 'SUCCESS - today() = ' + today() + '\n';
+                } else {
+                    output += 'NOT A FUNCTION\n';
+                }
+            } catch (e) {
+                output += 'ERROR - ' + e.message + '\n';
+            }
+            
+            document.getElementById('console-output').textContent = output;
+        }
+        
+        function testAjax() {
+            // Test if there are any AJAX calls that might reference 'today'
+            document.getElementById('ajax-result').innerHTML = '<div class="info">Testing AJAX functionality...</div>';
+            
+            // Simple test
+            try {
+                fetch('/invoices/')
+                    .then(response => {
+                        if (response.ok) {
+                            document.getElementById('ajax-result').innerHTML = 
+                                '<div class="success">✅ AJAX call to /invoices/ successful</div>';
+                        } else {
+                            document.getElementById('ajax-result').innerHTML = 
+                                '<div class="error">❌ AJAX call failed: ' + response.status + '</div>';
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('ajax-result').innerHTML = 
+                            '<div class="error">❌ AJAX error: ' + error.message + '</div>';
+                    });
+            } catch (e) {
+                document.getElementById('ajax-result').innerHTML = 
+                    '<div class="error">❌ AJAX test error: ' + e.message + '</div>';
+            }
+        }
+        
+        // Run checks on page load
+        window.addEventListener('load', function() {
+            checkVariables();
+            
+            // Simulate potential error conditions
+            setTimeout(function() {
+                document.getElementById('js-errors').innerHTML += 
+                    '<div class="info">No immediate JavaScript errors detected</div>';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

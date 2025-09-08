@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% block title %}Security Alerts{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Security Alerts
+                    </h2>
+                    <p class="text-muted mb-0">Monitor and manage security incidents</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('audit.audit_logs') }}" class="btn btn-primary">
+                        <i class="fas fa-shield-alt me-1"></i>View Audit Logs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Total Alerts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_alerts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bell fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Unresolved
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ unresolved_alerts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Critical Alerts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ critical_alerts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-skull-crossbones fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Alerts Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-danger">
+                <i class="fas fa-list me-2"></i>Security Incidents
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if alerts.items %}
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Created</th>
+                            <th>Alert Type</th>
+                            <th>Severity</th>
+                            <th>User</th>
+                            <th>IP Address</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in alerts.items %}
+                        <tr class="{% if not alert.resolved %}
+                            {% if alert.severity == 'CRITICAL' %}table-danger
+                            {% elif alert.severity == 'HIGH' %}table-warning
+                            {% elif alert.severity == 'MEDIUM' %}table-info
+                            {% endif %}
+                        {% endif %}">
+                            <td><small>{{ alert.created_at | format_datetime_indian }}</small></td>
+                            <td>
+                                <span class="badge bg-secondary">{{ alert.alert_type }}</span>
+                            </td>
+                            <td>
+                                {% if alert.severity == 'CRITICAL' %}
+                                    <span class="badge bg-danger">{{ alert.severity }}</span>
+                                {% elif alert.severity == 'HIGH' %}
+                                    <span class="badge bg-warning">{{ alert.severity }}</span>
+                                {% elif alert.severity == 'MEDIUM' %}
+                                    <span class="badge bg-info">{{ alert.severity }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ alert.severity }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if alert.username %}
+                                    <strong>{{ alert.username }}</strong>
+                                    {% if alert.user_id %}
+                                        <br><small class="text-muted">ID: {{ alert.user_id }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <em class="text-muted">Unknown</em>
+                                {% endif %}
+                            </td>
+                            <td><small>{{ alert.ip_address or '-' }}</small></td>
+                            <td>{{ alert.description }}</td>
+                            <td>
+                                {% if alert.resolved %}
+                                    <span class="badge bg-success">Resolved</span>
+                                    {% if alert.resolved_at %}
+                                        <br><small class="text-muted">{{ alert.resolved_at | format_datetime_indian }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-warning">Open</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not alert.resolved %}
+                                    <button class="btn btn-sm btn-success" 
+                                            onclick="resolveAlert({{ alert.id }})">
+                                        <i class="fas fa-check me-1"></i>Resolve
+                                    </button>
+                                {% else %}
+                                    <em class="text-muted">Resolved</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if alerts.pages > 1 %}
+            <nav aria-label="Security alerts pagination">
+                <ul class="pagination justify-content-center">
+                    {% if alerts.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('audit.security_alerts', page=alerts.prev_num) }}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in alerts.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != alerts.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('audit.security_alerts', page=page_num) }}">
+                                        {{ page_num }}
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if alerts.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('audit.security_alerts', page=alerts.next_num) }}">
+                                Next
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-shield-check fa-3x text-success mb-3"></i>
+                <p class="text-muted">No security alerts found. Your system is secure!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function resolveAlert(alertId) {
+    if (confirm('Are you sure you want to mark this alert as resolved?')) {
+        fetch(`/audit/alerts/${alertId}/resolve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while resolving the alert.');
+        });
+    }
+}
+</script>
+
+<style>
+.border-left-info {
+    border-left: .25rem solid #36b9cc!important;
+}
+.border-left-warning {
+    border-left: .25rem solid #f6c23e!important;
+}
+.border-left-danger {
+    border-left: .25rem solid #e74a3b!important;
+}
+.text-gray-800 {
+    color: #5a5c69!important;
+}
+.text-gray-300 {
+    color: #dddfeb!important;
+}
+</style>
+{% endblock %}

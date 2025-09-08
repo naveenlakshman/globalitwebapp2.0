@@ -1,0 +1,20 @@
+course_id,module_name,module_order,module_description,estimated_duration_hours
+1,"Computer Fundamentals",1,"Introduction to computer basics, hardware, and software concepts",12
+1,"Microsoft Windows",2,"Operating system navigation, file management, and system settings",8
+1,"Microsoft Word",3,"Document creation, formatting, mail merge, and advanced features",15
+1,"Microsoft Excel",4,"Spreadsheet creation, formulas, charts, and data analysis",18
+1,"Microsoft PowerPoint",5,"Presentation design, animations, and multimedia integration",10
+1,"Internet and Email",6,"Web browsing, email setup, online communication tools",8
+1,"Office Management",7,"File organization, productivity tools, and office automation",9
+2,"Python Basics",1,"Variables, data types, control structures, and basic syntax",20
+2,"Object Oriented Programming",2,"Classes, objects, inheritance, and advanced OOP concepts",25
+2,"Web Development Frameworks",3,"Django and Flask framework development",30
+2,"Database Integration",4,"MySQL, PostgreSQL integration with Python applications",20
+2,"Frontend Technologies",5,"HTML, CSS, JavaScript integration with Python backends",25
+2,"Project Development",6,"Full stack project development and deployment",40
+3,"Digital Marketing Fundamentals",1,"Introduction to digital marketing landscape and strategies",15
+3,"Search Engine Optimization",2,"SEO techniques, keyword research, and website optimization",18
+3,"Social Media Marketing",3,"Facebook, Instagram, LinkedIn, Twitter marketing strategies",16
+3,"Pay-Per-Click Advertising",4,"Google Ads, Facebook Ads, and PPC campaign management",14
+3,"Content Marketing",5,"Content strategy, copywriting, and content distribution",12
+3,"Analytics and Reporting",6,"Google Analytics, social media analytics, and ROI measurement",10

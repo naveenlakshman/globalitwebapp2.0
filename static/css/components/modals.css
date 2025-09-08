@@ -1,0 +1,128 @@
+/* Modals */
+.modal-content{border:none; border-radius:var(--radius-xl); box-shadow:var(--shadow-2xl)}
+.modal-header{background:var(--gradient-primary); color:#fff; border-bottom:none; border-radius:var(--radius-xl) var(--radius-xl) 0 0}
+.modal-title{font-weight:var(--font-semibold)}
+.modal-footer{background:var(--gray-50); border-top:1px solid var(--gray-200); border-radius:0 0 var(--radius-xl) var(--radius-xl)}
+
+/* Delete Lead Modal Specific Styles */
+#deleteLeadModal {
+  z-index: 1055;
+}
+
+#deleteLeadModal .modal-dialog {
+  max-width: 500px;
+  z-index: 1056;
+  position: relative;
+}
+
+#deleteLeadModal .modal-content {
+  z-index: 1057;
+  position: relative;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+#deleteLeadModal .modal-body {
+  z-index: 1058;
+  position: relative;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Form elements with proper dark mode support using CSS variables */
+#deleteLeadModal .form-control,
+#deleteLeadModal .form-select {
+  position: relative;
+  z-index: 1059;
+  pointer-events: auto;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--gray-300);
+  color: var(--text-primary);
+}
+
+#deleteLeadModal .form-control::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+#deleteLeadModal .form-control:focus,
+#deleteLeadModal .form-select:focus {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--brand-secondary);
+  box-shadow: 0 0 0 0.25rem rgba(var(--brand-secondary-rgb), 0.25);
+  outline: 0;
+  z-index: 1060;
+}
+
+#deleteLeadModal .form-check-input {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1059;
+  background-color: var(--bg-primary);
+  border-color: var(--gray-300);
+}
+
+#deleteLeadModal .form-check-label {
+  pointer-events: auto;
+  z-index: 1059;
+  color: var(--brand-danger);
+}
+
+#deleteLeadModal .form-label {
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+}
+
+#deleteLeadModal .form-text {
+  color: var(--brand-danger);
+}
+
+/* Alert styling with proper contrast */
+#deleteLeadModal .alert-warning {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--brand-warning);
+  border-left: 4px solid var(--brand-warning);
+}
+
+/* Ensure dropdown options are visible in both modes */
+#deleteLeadModal .form-select option {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  pointer-events: auto;
+}
+
+/* Text elements use design system colors */
+#deleteLeadModal h6,
+#deleteLeadModal li,
+#deleteLeadModal strong,
+#deleteLeadModal span {
+  color: var(--text-primary);
+}
+
+/* Fix any overlay issues */
+#deleteLeadModal * {
+  pointer-events: auto;
+}
+
+/* Ensure buttons work */
+#deleteLeadModal .btn {
+  pointer-events: auto;
+  z-index: 1059;
+  position: relative;
+}
+
+/* Hover states using design system colors */
+#deleteLeadModal .form-control:hover,
+#deleteLeadModal .form-select:hover {
+  border-color: var(--brand-secondary);
+}
+
+#deleteLeadModal .form-select:hover {
+  cursor: pointer;
+}
+
+#deleteLeadModal .form-check-input:hover {
+  cursor: pointer;
+}

@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}Record Payment{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Payment Form - Clean UI with Dark/Light Mode Support */
+.payment-form {
+  padding: var(--space-lg);
+}
+
+.section-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  margin-bottom: var(--space-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.section-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.section-header {
+  background: var(--gradient-primary);
+  color: var(--text-white);
+  padding: var(--space-md) var(--space-xl);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.section-body {
+  padding: var(--space-xl);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.form-label.required::after {
+  content: " *";
+  color: var(--brand-danger);
+  font-weight: var(--font-bold);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 0.2rem rgba(var(--brand-primary-rgb), 0.15);
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  border: none;
+  color: var(--text-white);
+  font-weight: var(--font-semibold);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-outline-secondary {
+  border-color: var(--gray-400);
+  color: var(--text-secondary);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--gray-400);
+  border-color: var(--gray-400);
+  color: var(--text-white);
+}
+
+.summary-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  color: var(--text-primary);
+}
+
+.amount-display {
+  font-size: 1.25rem;
+  font-weight: var(--font-bold);
+}
+
+/* Dark mode support */
+html[data-theme="dark"] .section-card {
+  background: var(--bg-secondary) !important;
+  border-color: var(--gray-200) !important;
+}
+
+html[data-theme="dark"] .section-body {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .summary-card {
+  background: var(--bg-primary) !important;
+  border-color: var(--gray-200) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .payment-form {
+    padding: var(--space-md);
+  }
+  
+  .section-header {
+    padding: var(--space-sm) var(--space-md);
+  }
+  
+  .section-body {
+    padding: var(--space-md);
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid payment-form">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-credit-card text-primary me-2"></i>
+                        Record Payment
+                    </h1>
+                    <p class="text-muted mb-0">Record payment for Invoice #{{ invoice.id }}</p>
+                </div>
+                <a href="{{ url_for('invoices.view_invoice', invoice_id=invoice.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Invoice
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="section-card">
+                        <div class="section-header">
+                            <i class="fas fa-credit-card me-2"></i>
+                            Payment Details
+                        </div>
+                        <div class="section-body">
+                            <form method="POST" id="paymentForm">
+                                <div class="row">
+                                    <!-- Payment Amount -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="payment_amount" class="form-label required">Payment Amount</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" class="form-control" name="payment_amount" id="payment_amount" 
+                                                   step="0.01" min="0.01" max="{{ "%.2f"|format(invoice.due_amount) }}" 
+                                                   value="{{ "%.2f"|format(invoice.due_amount) }}" required>
+                                        </div>
+                                        <div class="form-text">Maximum: ₹{{ "{:,.2f}".format(invoice.due_amount) }}</div>
+                                    </div>
+
+                                    <!-- Payment Method -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="payment_method" class="form-label required">Payment Method</label>
+                                        <select class="form-select" name="payment_method" id="payment_method" required onchange="toggleUTRField()">
+                                            <option value="">Select payment method...</option>
+                                            {% for method in payment_methods %}
+                                            <option value="{{ method }}">{{ method }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <!-- UTR/Reference Number -->
+                                    <div class="col-md-6 mb-3" id="utrField" style="display: none;">
+                                        <label for="utr_ref" class="form-label">UTR/Reference Number</label>
+                                        <input type="text" class="form-control" name="utr_ref" id="utr_ref" 
+                                               placeholder="Enter transaction reference">
+                                    </div>
+
+                                    <!-- Installment Selection -->
+                                    {% if pending_installments|length > 1 %}
+                                    <div class="col-md-6 mb-3">
+                                        <label for="installment_id" class="form-label">Apply to Installment</label>
+                                        <select class="form-select" name="installment_id" id="installment_id" onchange="updatePaymentAmount()">
+                                            <option value="">Apply to oldest pending</option>
+                                            {% for installment in pending_installments %}
+                                            <option value="{{ installment.id }}" data-balance="{{ installment.balance_amount }}">
+                                                Installment #{{ installment.installment_number }} - 
+                                                Balance: ₹{{ "{:,.2f}".format(installment.balance_amount) }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    {% elif pending_installments|length == 1 %}
+                                    <input type="hidden" name="installment_id" value="{{ pending_installments[0].id }}">
+                                    {% endif %}
+
+                                    <!-- Notes -->
+                                    <div class="col-12 mb-3">
+                                        <label for="notes" class="form-label">Payment Notes</label>
+                                        <textarea class="form-control" name="notes" id="notes" rows="3" 
+                                                  placeholder="Any additional notes about this payment..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="button" class="btn btn-outline-secondary me-md-2" onclick="history.back()">Cancel</button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-check-circle me-1"></i> Record Payment
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-md-4">
+                    <!-- Invoice Summary -->
+                    <div class="section-card mb-4">
+                        <div class="section-header">
+                            <i class="fas fa-receipt me-2"></i>
+                            Invoice Summary
+                        </div>
+                        <div class="section-body">
+                            <div class="summary-card">
+                            <div class="summary-card">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="fw-medium">Invoice ID:</span>
+                                    <span>INV-{{ invoice.id }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="fw-medium">Student:</span>
+                                    <span>{{ student.full_name }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="fw-medium">Total Amount:</span>
+                                    <span class="text-primary amount-display">₹{{ "{:,.2f}".format(invoice.total_amount) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="fw-medium">Paid Amount:</span>
+                                    <span class="text-success amount-display">₹{{ "{:,.2f}".format(invoice.paid_amount) }}</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold fs-5">Due Amount:</span>
+                                    <span class="text-danger amount-display fs-4">₹{{ "{:,.2f}".format(invoice.due_amount) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pending Installments -->
+                    {% if pending_installments %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-calendar-x"></i> Pending Installments</h5>
+                        </div>
+                        <div class="card-body">
+                            {% for installment in pending_installments %}
+                            <div class="border-bottom pb-2 mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold">Installment #{{ installment.installment_number }}</span>
+                                    <span class="badge {% if installment.due_date < today %}bg-danger{% else %}bg-warning{% endif %}">
+                                        {% if installment.due_date < today %}Overdue{% else %}Due{% endif %}
+                                    </span>
+                                </div>
+                                <div class="small text-muted">
+                                    Due: {{ installment.due_date|format_date_indian if installment.due_date else 'N/A' }}
+                                </div>
+                                <div class="text-danger fw-bold">
+                                    Balance: ₹{{ "{:,.2f}".format(installment.balance_amount) }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleUTRField() {
+    const paymentMethod = document.getElementById('payment_method').value;
+    const utrField = document.getElementById('utrField');
+    
+    // Show UTR field for electronic payments
+    if (['UPI', 'Net Banking', 'Bank Transfer'].includes(paymentMethod)) {
+        utrField.style.display = 'block';
+        document.getElementById('utr_ref').required = true;
+    } else {
+        utrField.style.display = 'none';
+        document.getElementById('utr_ref').required = false;
+    }
+}
+
+function updatePaymentAmount() {
+    const installmentSelect = document.getElementById('installment_id');
+    const paymentAmountField = document.getElementById('payment_amount');
+    
+    if (installmentSelect && installmentSelect.value) {
+        const selectedOption = installmentSelect.selectedOptions[0];
+        const balance = parseFloat(selectedOption.getAttribute('data-balance'));
+        paymentAmountField.value = balance.toFixed(2);
+        paymentAmountField.max = balance;
+    } else {
+        paymentAmountField.value = "{{ invoice.due_amount }}";
+        paymentAmountField.max = "{{ invoice.due_amount }}";
+    }
+}
+
+// Form validation
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    const paymentAmount = parseFloat(document.getElementById('payment_amount').value) || 0;
+    const maxAmount = parseFloat(document.getElementById('payment_amount').max) || 0;
+    
+    if (paymentAmount <= 0) {
+        e.preventDefault();
+        alert('Payment amount must be greater than 0!');
+        return false;
+    }
+    
+    if (paymentAmount > maxAmount) {
+        e.preventDefault();
+        alert('Payment amount cannot exceed the due amount!');
+        return false;
+    }
+    
+    return confirm('Are you sure you want to record this payment?');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,484 @@
+{% extends "base.html" %}
+
+{% block title %}{{ batch.name }} - Capacity Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-users-cog text-primary me-2"></i>{{ batch.name }} - Capacity Management
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-book me-1"></i>{{ batch.course_name or 'Course not specified' }} • 
+                <i class="fas fa-building me-1"></i>{{ batch.branch.branch_name if batch.branch else 'Unknown Branch' }}
+                {% if batch.timing %}
+                • <i class="fas fa-clock me-1"></i>{{ batch.timing }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#updateCapacityModal">
+                <i class="fas fa-edit me-1"></i>Update Capacity
+            </button>
+            <a href="{{ url_for('batches.batch_students', batch_id=batch.id) }}" class="btn btn-info btn-sm">
+                <i class="fas fa-users me-1"></i>Students
+            </a>
+            <a href="{{ url_for('batches.view_batch', batch_id=batch.id) }}" class="btn btn-success btn-sm">
+                <i class="fas fa-chart-bar me-1"></i>Analytics
+            </a>
+            <a href="{{ url_for('batches.list_batches') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Batches
+            </a>
+        </div>
+    </div>
+
+    <!-- Capacity Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Current Enrollment
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ current_enrollment }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Maximum Capacity
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ max_capacity }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-door-open fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-{{ 'success' if available_spots > 0 else 'danger' }} shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-{{ 'success' if available_spots > 0 else 'danger' }} text-uppercase mb-1">
+                                Available Spots
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ available_spots }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-{{ 'check-circle' if available_spots > 0 else 'exclamation-triangle' }} fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Utilization Rate
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ utilization_rate }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-pie fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Capacity Visualization -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-bar me-2"></i>Capacity Utilization
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-sm font-weight-bold">Enrollment Status</span>
+                            <span class="text-sm">{{ current_enrollment }} / {{ max_capacity }}</span>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar 
+                                {% if utilization_rate >= 90 %}bg-danger
+                                {% elif utilization_rate >= 75 %}bg-warning
+                                {% elif utilization_rate >= 50 %}bg-info
+                                {% else %}bg-success{% endif %}" 
+                                role="progressbar" 
+                                style="width: {{ utilization_rate }}%"
+                                aria-valuenow="{{ utilization_rate }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                                {{ utilization_rate }}%
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 text-sm text-muted">
+                            <span>0%</span>
+                            <span>25%</span>
+                            <span>50%</span>
+                            <span>75%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+
+                    <!-- Capacity Status -->
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded {{ 'bg-light-success' if utilization_rate < 75 else '' }}">
+                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                <h6 class="text-success mb-0">Optimal</h6>
+                                <small class="text-muted">0-75%</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded {{ 'bg-light-warning' if utilization_rate >= 75 and utilization_rate < 90 else '' }}">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                                <h6 class="text-warning mb-0">Near Full</h6>
+                                <small class="text-muted">75-89%</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded {{ 'bg-light-danger' if utilization_rate >= 90 else '' }}">
+                                <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+                                <h6 class="text-danger mb-0">At Capacity</h6>
+                                <small class="text-muted">90-100%</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendations -->
+                    <div class="mt-4">
+                        <h6 class="text-primary">Recommendations:</h6>
+                        {% if utilization_rate < 50 %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Underutilized:</strong> Consider marketing efforts or reducing capacity if demand is consistently low.
+                            </div>
+                        {% elif utilization_rate >= 50 and utilization_rate < 75 %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Optimal:</strong> Good utilization rate. Monitor for growth opportunities.
+                            </div>
+                        {% elif utilization_rate >= 75 and utilization_rate < 90 %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Near Capacity:</strong> Consider planning for additional batches or increasing capacity.
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-times-circle me-2"></i>
+                                <strong>At Capacity:</strong> Immediate action needed. Create waitlist or increase capacity.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Capacity Settings -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-cogs me-2"></i>Capacity Settings
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label class="form-label text-sm font-weight-bold">Current Settings</label>
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Maximum Capacity:</span>
+                                <strong>{{ max_capacity }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Current Enrollment:</span>
+                                <strong>{{ current_enrollment }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Available Spots:</span>
+                                <strong class="text-{{ 'success' if available_spots > 0 else 'danger' }}">
+                                    {{ available_spots }}
+                                </strong>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span>Utilization:</span>
+                                <strong class="text-{{ 'success' if utilization_rate < 75 else 'warning' if utilization_rate < 90 else 'danger' }}">
+                                    {{ utilization_rate }}%
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#updateCapacityModal">
+                            <i class="fas fa-edit me-2"></i>Update Capacity
+                        </button>
+                    </div>
+
+                    {% if utilization_rate >= 90 %}
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">⚠️ Capacity Alert</h6>
+                        <p class="mb-0">This batch is at or near capacity. Consider:</p>
+                        <ul class="mb-0 mt-2">
+                            <li>Increasing maximum capacity</li>
+                            <li>Creating a new batch</li>
+                            <li>Setting up a waitlist</li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Enrollments -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-history me-2"></i>Recent Enrollments
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if recent_enrollments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Student ID</th>
+                                <th>Admission Date</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in recent_enrollments %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-sm me-2">
+                                            <div class="avatar-initial bg-primary rounded-circle">
+                                                {{ student.full_name[0].upper() }}
+                                            </div>
+                                        </div>
+                                        <strong>{{ student.full_name }}</strong>
+                                    </div>
+                                </td>
+                                <td>{{ student.student_id }}</td>
+                                <td>
+                                    {% if student.admission_date %}
+                                        <span title="{{ student.admission_date }}">
+                                            {{ student.admission_date.strftime('%d/%m/%Y') }}
+                                        </span>
+                                    {% else %}
+                                        <small class="text-muted">Not set</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if student.mobile %}
+                                        <i class="fas fa-phone me-1"></i>{{ student.mobile }}
+                                    {% else %}
+                                        <small class="text-muted">Not provided</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">Active</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-user-plus fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-500">No Recent Enrollments</h5>
+                    <p class="text-muted">No students have been enrolled recently.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Update Capacity Modal -->
+<div class="modal fade" id="updateCapacityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-users-cog me-2"></i>Update Batch Capacity
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Current Status:</strong> {{ current_enrollment }} students enrolled out of {{ max_capacity }} capacity.
+                </div>
+                
+                <form id="updateCapacityForm">
+                    <div class="mb-3">
+                        <label for="new_capacity" class="form-label">New Maximum Capacity *</label>
+                        <input type="number" class="form-control" id="new_capacity" 
+                               value="{{ max_capacity }}" min="{{ current_enrollment }}" max="100" required>
+                        <div class="form-text">
+                            Capacity cannot be set below current enrollment ({{ current_enrollment }})
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Impact Preview</label>
+                        <div class="border rounded p-3" id="impactPreview">
+                            <div class="d-flex justify-content-between">
+                                <span>New Available Spots:</span>
+                                <strong id="newAvailableSpots">{{ available_spots }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>New Utilization Rate:</span>
+                                <strong id="newUtilizationRate">{{ utilization_rate }}%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateCapacity()">
+                    <i class="fas fa-save me-1"></i>Update Capacity
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('new_capacity').addEventListener('input', function() {
+    const newCapacity = parseInt(this.value) || {{ max_capacity }};
+    const currentEnrollment = {{ current_enrollment }};
+    
+    const newAvailableSpots = newCapacity - currentEnrollment;
+    const newUtilizationRate = Math.round((currentEnrollment / newCapacity) * 100);
+    
+    document.getElementById('newAvailableSpots').textContent = newAvailableSpots;
+    document.getElementById('newUtilizationRate').textContent = newUtilizationRate + '%';
+    
+    // Update colors based on new utilization rate
+    const utilizationElement = document.getElementById('newUtilizationRate');
+    utilizationElement.className = newUtilizationRate < 75 ? 'text-success' : 
+                                  newUtilizationRate < 90 ? 'text-warning' : 'text-danger';
+    
+    const spotsElement = document.getElementById('newAvailableSpots');
+    spotsElement.className = newAvailableSpots > 0 ? 'text-success' : 'text-danger';
+});
+
+function updateCapacity() {
+    const newCapacity = parseInt(document.getElementById('new_capacity').value);
+    const currentEnrollment = {{ current_enrollment }};
+    
+    if (newCapacity < currentEnrollment) {
+        alert(`Capacity cannot be set below current enrollment (${currentEnrollment})`);
+        return;
+    }
+    
+    fetch(`{{ url_for('batches.update_batch_capacity', batch_id=batch.id) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            max_capacity: newCapacity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('updateCapacityModal')).hide();
+            location.reload();
+        } else {
+            alert('Error updating capacity: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Error updating capacity: ' + error);
+    });
+}
+</script>
+
+<style>
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 4px solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 4px solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 4px solid #f6c23e !important;
+}
+
+.border-left-danger {
+    border-left: 4px solid #e74a3b !important;
+}
+
+.avatar {
+    width: 2rem;
+    height: 2rem;
+}
+
+.avatar-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-weight: 600;
+    color: white;
+}
+
+.bg-light-success {
+    background-color: rgba(28, 200, 138, 0.1) !important;
+}
+
+.bg-light-warning {
+    background-color: rgba(246, 194, 62, 0.1) !important;
+}
+
+.bg-light-danger {
+    background-color: rgba(231, 74, 59, 0.1) !important;
+}
+</style>
+{% endblock %}

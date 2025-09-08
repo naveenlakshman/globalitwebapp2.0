@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+
+{% block title %}Send SMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Send SMS</h2>
+                    <p class="text-muted">Send individual or bulk SMS messages</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('sms.sms_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Send SMS Form -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="smsTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="individual-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#individual" type="button" role="tab">
+                                <i class="fas fa-user"></i> Individual SMS
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="bulk-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#bulk" type="button" role="tab">
+                                <i class="fas fa-users"></i> Bulk SMS
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="card-body">
+                    <div class="tab-content" id="smsTabContent">
+                        <!-- Individual SMS Tab -->
+                        <div class="tab-pane fade show active" id="individual" role="tabpanel">
+                            <form id="individualSMSForm">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="phone_number" class="form-label">Phone Number *</label>
+                                            <input type="tel" class="form-control" id="phone_number" 
+                                                   name="phone_number" required 
+                                                   placeholder="Enter 10-digit phone number">
+                                            <div class="form-text">Enter 10-digit Indian phone number without country code</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="template_select" class="form-label">Use Template (Optional)</label>
+                                            <select class="form-select" id="template_select" name="template_id">
+                                                <option value="">Select a template...</option>
+                                                {% for template in templates %}
+                                                <option value="{{ template.id }}" data-content="{{ template.content }}">
+                                                    {{ template.name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="message" class="form-label">Message *</label>
+                                    <textarea class="form-control" id="message" name="message" rows="4" 
+                                              required maxlength="160" placeholder="Enter your message here..."></textarea>
+                                    <div class="d-flex justify-content-between">
+                                        <div class="form-text">Maximum 160 characters for single SMS</div>
+                                        <small id="charCount" class="text-muted">0/160</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary" id="sendIndividualBtn">
+                                        <i class="fas fa-paper-plane"></i> Send SMS
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Bulk SMS Tab -->
+                        <div class="tab-pane fade" id="bulk" role="tabpanel">
+                            <form id="bulkSMSForm">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="recipient_type" class="form-label">Recipients *</label>
+                                            <select class="form-select" id="recipient_type" name="recipient_type" required>
+                                                <option value="">Select recipient group...</option>
+                                                <option value="all_students">All Active Students</option>
+                                                <option value="branch_students">Students by Branch</option>
+                                                <option value="custom_list">Custom Phone List</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="bulk_template_select" class="form-label">Use Template (Optional)</label>
+                                            <select class="form-select" id="bulk_template_select" name="template_id">
+                                                <option value="">Select a template...</option>
+                                                {% for template in templates %}
+                                                <option value="{{ template.id }}" data-content="{{ template.content }}">
+                                                    {{ template.name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Branch Selection (hidden by default) -->
+                                <div class="mb-3" id="branchSelection" style="display: none;">
+                                    <label for="branch_id" class="form-label">Select Branch *</label>
+                                    <select class="form-select" id="branch_id" name="branch_id">
+                                        <option value="">Select a branch...</option>
+                                        {% for branch in branches %}
+                                        <option value="{{ branch.id }}">{{ branch.branch_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <!-- Custom Phone List (hidden by default) -->
+                                <div class="mb-3" id="customPhoneList" style="display: none;">
+                                    <label for="phone_numbers" class="form-label">Phone Numbers *</label>
+                                    <textarea class="form-control" id="phone_numbers" name="phone_numbers" 
+                                              rows="5" placeholder="Enter phone numbers, one per line&#10;9876543210&#10;9876543211&#10;9876543212"></textarea>
+                                    <div class="form-text">Enter one phone number per line (10 digits each)</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="bulk_message" class="form-label">Message *</label>
+                                    <textarea class="form-control" id="bulk_message" name="message" rows="4" 
+                                              required maxlength="160" placeholder="Enter your bulk message here..."></textarea>
+                                    <div class="d-flex justify-content-between">
+                                        <div class="form-text">Maximum 160 characters for single SMS</div>
+                                        <small id="bulkCharCount" class="text-muted">0/160</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-warning" id="sendBulkBtn">
+                                        <i class="fas fa-broadcast-tower"></i> Send Bulk SMS
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- SMS Guidelines -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">SMS Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Use 10-digit Indian phone numbers
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Maximum 160 characters per SMS
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Include institute name for branding
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Be clear and professional
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Test with individual SMS first
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Template Variables Help -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Template Variables</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small mb-2">Use these variables in your templates:</p>
+                    <ul class="list-unstyled small">
+                        <li><code>{student_name}</code> - Student's name</li>
+                        <li><code>{course_name}</code> - Course name</li>
+                        <li><code>{amount}</code> - Payment amount</li>
+                        <li><code>{due_date}</code> - Due date</li>
+                        <li><code>{branch_name}</code> - Branch name</li>
+                        <li><code>{date}</code> - Current date</li>
+                        <li><code>{time}</code> - Current time</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('sms.sms_templates') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-file-text"></i> Manage Templates
+                        </a>
+                        <a href="{{ url_for('sms.sms_logs') }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-list"></i> View SMS Logs
+                        </a>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="checkBalance()">
+                            <i class="fas fa-wallet"></i> Check Balance
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mb-0">Sending SMS...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Character counting
+document.getElementById('message').addEventListener('input', function() {
+    const count = this.value.length;
+    document.getElementById('charCount').textContent = count + '/160';
+    if (count > 160) {
+        document.getElementById('charCount').classList.add('text-danger');
+    } else {
+        document.getElementById('charCount').classList.remove('text-danger');
+    }
+});
+
+document.getElementById('bulk_message').addEventListener('input', function() {
+    const count = this.value.length;
+    document.getElementById('bulkCharCount').textContent = count + '/160';
+    if (count > 160) {
+        document.getElementById('bulkCharCount').classList.add('text-danger');
+    } else {
+        document.getElementById('bulkCharCount').classList.remove('text-danger');
+    }
+});
+
+// Template selection
+document.getElementById('template_select').addEventListener('change', function() {
+    const content = this.selectedOptions[0].dataset.content;
+    if (content) {
+        document.getElementById('message').value = content;
+        document.getElementById('message').dispatchEvent(new Event('input'));
+    }
+});
+
+document.getElementById('bulk_template_select').addEventListener('change', function() {
+    const content = this.selectedOptions[0].dataset.content;
+    if (content) {
+        document.getElementById('bulk_message').value = content;
+        document.getElementById('bulk_message').dispatchEvent(new Event('input'));
+    }
+});
+
+// Recipient type change
+document.getElementById('recipient_type').addEventListener('change', function() {
+    const branchSelection = document.getElementById('branchSelection');
+    const customPhoneList = document.getElementById('customPhoneList');
+    
+    // Hide all optional fields first
+    branchSelection.style.display = 'none';
+    customPhoneList.style.display = 'none';
+    
+    // Show relevant field based on selection
+    if (this.value === 'branch_students') {
+        branchSelection.style.display = 'block';
+        document.getElementById('branch_id').required = true;
+        document.getElementById('phone_numbers').required = false;
+    } else if (this.value === 'custom_list') {
+        customPhoneList.style.display = 'block';
+        document.getElementById('phone_numbers').required = true;
+        document.getElementById('branch_id').required = false;
+    } else {
+        document.getElementById('branch_id').required = false;
+        document.getElementById('phone_numbers').required = false;
+    }
+});
+
+// Individual SMS Form Submit
+document.getElementById('individualSMSForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    
+    loadingModal.show();
+    
+    fetch('{{ url_for("sms.send_individual_sms") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        loadingModal.hide();
+        if (data.success) {
+            showAlert('SMS sent successfully!', 'success');
+            this.reset();
+            document.getElementById('charCount').textContent = '0/160';
+        } else {
+            showAlert('Error: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        loadingModal.hide();
+        showAlert('Network error: ' + error.message, 'error');
+    });
+});
+
+// Bulk SMS Form Submit
+document.getElementById('bulkSMSForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    
+    if (!confirm('Are you sure you want to send bulk SMS? This action cannot be undone.')) {
+        return;
+    }
+    
+    loadingModal.show();
+    
+    fetch('{{ url_for("sms.send_bulk_sms_route") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        loadingModal.hide();
+        if (data.success) {
+            const results = data.results;
+            showAlert(`Bulk SMS completed: ${results.sent} sent, ${results.failed} failed`, 'info');
+            this.reset();
+            document.getElementById('bulkCharCount').textContent = '0/160';
+            document.getElementById('recipient_type').dispatchEvent(new Event('change'));
+        } else {
+            showAlert('Error: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        loadingModal.hide();
+        showAlert('Network error: ' + error.message, 'error');
+    });
+});
+
+// Check Balance Function
+function checkBalance() {
+    fetch('{{ url_for("sms.get_sms_balance") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(`Current SMS Balance: ₹${data.balance}`, 'info');
+            } else {
+                showAlert('Error fetching balance: ' + data.error, 'error');
+            }
+        })
+        .catch(error => showAlert('Network error: ' + error.message, 'error'));
+}
+
+// Alert Function
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Phone number validation
+document.getElementById('phone_number').addEventListener('input', function() {
+    let value = this.value.replace(/\D/g, ''); // Remove non-digits
+    if (value.length > 10) {
+        value = value.substring(0, 10); // Limit to 10 digits
+    }
+    this.value = value;
+});
+</script>
+{% endblock %}

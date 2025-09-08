@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+{% block title %}Expense Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary">
+                        <i class="fas fa-chart-bar me-2"></i>Expense Reports
+                    </h2>
+                    <p class="text-secondary mb-0">Analyze and export expense data</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('expenses.expense_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 fw-bold text-primary">Report Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" id="reportFilters">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                               value="{{ request.args.get('start_date', '') }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                               value="{{ request.args.get('end_date', '') }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <select class="form-select" id="category" name="category">
+                            <option value="">All Categories</option>
+                            <option value="Office Supplies" {{ 'selected' if request.args.get('category') == 'Office Supplies' else '' }}>Office Supplies</option>
+                            <option value="Travel & Transport" {{ 'selected' if request.args.get('category') == 'Travel & Transport' else '' }}>Travel & Transport</option>
+                            <option value="Marketing & Advertising" {{ 'selected' if request.args.get('category') == 'Marketing & Advertising' else '' }}>Marketing & Advertising</option>
+                            <option value="Utilities" {{ 'selected' if request.args.get('category') == 'Utilities' else '' }}>Utilities</option>
+                            <option value="Equipment & Technology" {{ 'selected' if request.args.get('category') == 'Equipment & Technology' else '' }}>Equipment & Technology</option>
+                            <option value="Professional Services" {{ 'selected' if request.args.get('category') == 'Professional Services' else '' }}>Professional Services</option>
+                            <option value="Training & Development" {{ 'selected' if request.args.get('category') == 'Training & Development' else '' }}>Training & Development</option>
+                            <option value="Meals & Entertainment" {{ 'selected' if request.args.get('category') == 'Meals & Entertainment' else '' }}>Meals & Entertainment</option>
+                            <option value="Rent & Facility" {{ 'selected' if request.args.get('category') == 'Rent & Facility' else '' }}>Rent & Facility</option>
+                            <option value="Insurance" {{ 'selected' if request.args.get('category') == 'Insurance' else '' }}>Insurance</option>
+                            <option value="Maintenance & Repairs" {{ 'selected' if request.args.get('category') == 'Maintenance & Repairs' else '' }}>Maintenance & Repairs</option>
+                            <option value="Miscellaneous" {{ 'selected' if request.args.get('category') == 'Miscellaneous' else '' }}>Miscellaneous</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="payment_status" class="form-label">Payment Status</label>
+                        <select class="form-select" id="payment_status" name="payment_status">
+                            <option value="">All Statuses</option>
+                            <option value="Paid" {{ 'selected' if request.args.get('payment_status') == 'Paid' else '' }}>Paid</option>
+                            <option value="Partially Paid" {{ 'selected' if request.args.get('payment_status') == 'Partially Paid' else '' }}>Partially Paid</option>
+                            <option value="Unpaid" {{ 'selected' if request.args.get('payment_status') == 'Unpaid' else '' }}>Unpaid</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="branch_location" class="form-label">Branch</label>
+                        <select class="form-select" id="branch_location" name="branch_location">
+                            <option value="">All Branches</option>
+                            {% for branch in available_branches %}
+                            <option value="{{ branch.id }}" 
+                                    {{ 'selected' if request.args.get('branch_location') == branch.id|string else '' }}>
+                                {{ branch.branch_name }}{% if branch.branch_code %} ({{ branch.branch_code }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="department_project" class="form-label">Department</label>
+                        <select class="form-select" id="department_project" name="department_project">
+                            <option value="">All Departments</option>
+                            <option value="Administration" {{ 'selected' if request.args.get('department_project') == 'Administration' else '' }}>Administration</option>
+                            <option value="Training" {{ 'selected' if request.args.get('department_project') == 'Training' else '' }}>Training</option>
+                            <option value="Marketing" {{ 'selected' if request.args.get('department_project') == 'Marketing' else '' }}>Marketing</option>
+                            <option value="Operations" {{ 'selected' if request.args.get('department_project') == 'Operations' else '' }}>Operations</option>
+                            <option value="Finance" {{ 'selected' if request.args.get('department_project') == 'Finance' else '' }}>Finance</option>
+                            <option value="HR" {{ 'selected' if request.args.get('department_project') == 'HR' else '' }}>HR</option>
+                            <option value="IT" {{ 'selected' if request.args.get('department_project') == 'IT' else '' }}>IT</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-filter me-1"></i>Apply Filters
+                        </button>
+                        <a href="{{ url_for('expenses.expense_reports') }}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                        <button type="button" class="btn btn-success" onclick="exportData()">
+                            <i class="fas fa-download me-1"></i>Export CSV
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">Total Expenses</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ summary.total_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">Total Amount</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">₹ {{ '{:,.2f}'.format(summary.total_amount) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">Total GST</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">₹ {{ '{:,.2f}'.format(summary.total_gst) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percent fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">Unpaid Amount</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">₹ {{ '{:,.2f}'.format(summary.unpaid_amount) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Category Breakdown Chart -->
+        <div class="col-xl-6 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">Category Breakdown</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Trend Chart -->
+        <div class="col-xl-6 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">Monthly Trend</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Data Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 fw-bold text-primary">Detailed Expense List</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="expenseTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Expense ID</th>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Vendor</th>
+                            <th>Amount</th>
+                            <th>GST</th>
+                            <th>Total</th>
+                            <th>Payment Status</th>
+                            <th>Branch</th>
+                            <th>Department</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in expenses %}
+                        <tr>
+                            <td>{{ expense.expense_id }}</td>
+                            <td>{{ expense.expense_date|format_date_indian }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ expense.expense_category }}</span>
+                            </td>
+                            <td>{{ expense.description[:50] }}{% if expense.description|length > 50 %}...{% endif %}</td>
+                            <td>{{ expense.vendor_supplier or '-' }}</td>
+                            <td>{{ expense.formatted_amount }}</td>
+                            <td>{{ expense.formatted_gst_amount }}</td>
+                            <td class="fw-bold">{{ expense.formatted_total_amount }}</td>
+                            <td>
+                                {% if expense.payment_status == 'Paid' %}
+                                    <span class="badge bg-success">{{ expense.payment_status }}</span>
+                                {% elif expense.payment_status == 'Partially Paid' %}
+                                    <span class="badge bg-warning">{{ expense.payment_status }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ expense.payment_status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ expense.branch_location or '-' }}</td>
+                            <td>{{ expense.department_project or '-' }}</td>
+                            <td>
+                                <a href="{{ url_for('expenses.view_expense', expense_id=expense.expense_id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Category breakdown chart
+const categoryData = {{ category_data|tojson }};
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+new Chart(categoryCtx, {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(categoryData),
+        datasets: [{
+            data: Object.values(categoryData),
+            backgroundColor: [
+                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e',
+                '#e74a3b', '#858796', '#5a5c69', '#6c757d',
+                '#fd7e14', '#6f42c1', '#20c997', '#ffc107'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Monthly trend chart
+const monthlyData = {{ monthly_data|tojson }};
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+        labels: Object.keys(monthlyData),
+        datasets: [{
+            label: 'Monthly Expenses',
+            data: Object.values(monthlyData),
+            borderColor: '#4e73df',
+            backgroundColor: 'rgba(78, 115, 223, 0.1)',
+            tension: 0.3
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '₹ ' + value.toLocaleString();
+                    }
+                }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'Amount: ₹ ' + context.parsed.y.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// DataTable initialization
+$(document).ready(function() {
+    $('#expenseTable').DataTable({
+        "pageLength": 25,
+        "order": [[ 1, "desc" ]],
+        "columnDefs": [
+            { "orderable": false, "targets": -1 }
+        ]
+    });
+});
+
+// Export function
+function exportData() {
+    const params = new URLSearchParams(window.location.search);
+    params.append('export', 'csv');
+    window.location.href = '{{ url_for("expenses.expense_reports") }}?' + params.toString();
+}
+</script>
+{% endblock %}
