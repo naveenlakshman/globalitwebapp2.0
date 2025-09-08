@@ -144,4 +144,4 @@ def get_config():
     return config.get(env, config['default'])
 
 # For backward compatibility, export the default config
-Config = ProductionConfig
+Config = DevelopmentConfig

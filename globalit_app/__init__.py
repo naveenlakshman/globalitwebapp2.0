@@ -138,6 +138,7 @@ def create_app():
     from routes.expense_routes import expense_bp
     from routes.course_routes import course_bp
     from routes.student_portal_routes import student_portal_bp  # NEW: Student Portal
+    from routes.import_routes import import_bp  # NEW: Import functionality
 
     app.register_blueprint(student_bp, url_prefix="/students")
     app.register_blueprint(invoice_bp, url_prefix="/invoices")
@@ -157,6 +158,7 @@ def create_app():
     app.register_blueprint(lms_bp)  # Register LMS routes
     app.register_blueprint(lms_content_management)  # Register LMS Content Management
     app.register_blueprint(student_portal_bp)  # NEW: Register Student Portal
+    app.register_blueprint(import_bp)  # NEW: Register Import routes
 
     # Add root route for intelligent redirection
     @app.route("/")

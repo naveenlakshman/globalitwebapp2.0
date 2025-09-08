@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Import History - GlobalIT LMS{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="page-header-content">
+        <h1><i class="fas fa-history"></i> Import History</h1>
+        <p>View all import operations and their results</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="{{ url_for('import.import_dashboard') }}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="import-history">
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="GET" class="filters-form">
+            <div class="filter-group">
+                <label>Import Type</label>
+                <select name="import_type" class="form-control">
+                    <option value="">All Types</option>
+                    <option value="students" {{ 'selected' if request.args.get('import_type') == 'students' }}>Students</option>
+                    <option value="invoices" {{ 'selected' if request.args.get('import_type') == 'invoices' }}>Invoices</option>
+                    <option value="installments" {{ 'selected' if request.args.get('import_type') == 'installments' }}>Installments</option>
+                    <option value="payments" {{ 'selected' if request.args.get('import_type') == 'payments' }}>Payments</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Status</label>
+                <select name="status" class="form-control">
+                    <option value="">All Status</option>
+                    <option value="completed" {{ 'selected' if request.args.get('status') == 'completed' }}>Completed</option>
+                    <option value="failed" {{ 'selected' if request.args.get('status') == 'failed' }}>Failed</option>
+                    <option value="partial" {{ 'selected' if request.args.get('status') == 'partial' }}>Partial</option>
+                    <option value="pending" {{ 'selected' if request.args.get('status') == 'pending' }}>Pending</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="{{ url_for('import.import_history') }}" class="btn btn-outline">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Import History Table -->
+    {% if imports.items %}
+    <div class="history-table">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Filename</th>
+                    <th>Records</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Imported By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for import_record in imports.items %}
+                <tr>
+                    <td>
+                        <span class="import-type {{ import_record.import_type }}">
+                            {% if import_record.import_type == 'students' %}
+                                <i class="fas fa-users"></i>
+                            {% elif import_record.import_type == 'invoices' %}
+                                <i class="fas fa-file-invoice"></i>
+                            {% elif import_record.import_type == 'installments' %}
+                                <i class="fas fa-calendar-alt"></i>
+                            {% elif import_record.import_type == 'payments' %}
+                                <i class="fas fa-credit-card"></i>
+                            {% endif %}
+                            {{ import_record.import_type.title() }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="filename">{{ import_record.filename }}</div>
+                        {% if import_record.import_notes %}
+                        <div class="notes">{{ import_record.import_notes[:50] }}...</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="record-stats">
+                            <span class="total">{{ import_record.total_records }} total</span>
+                            {% if import_record.successful_records > 0 %}
+                                <span class="success">✓{{ import_record.successful_records }}</span>
+                            {% endif %}
+                            {% if import_record.failed_records > 0 %}
+                                <span class="error">✗{{ import_record.failed_records }}</span>
+                            {% endif %}
+                            {% if import_record.skipped_records > 0 %}
+                                <span class="skipped">⊘{{ import_record.skipped_records }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge {{ import_record.import_status }}">
+                            {% if import_record.import_status == 'completed' %}
+                                <i class="fas fa-check"></i> Completed
+                            {% elif import_record.import_status == 'failed' %}
+                                <i class="fas fa-times"></i> Failed
+                            {% elif import_record.import_status == 'partial' %}
+                                <i class="fas fa-exclamation-triangle"></i> Partial
+                            {% else %}
+                                <i class="fas fa-clock"></i> Pending
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="date-info">
+                            <div>{{ import_record.created_at }}</div>
+                            {% if import_record.completed_at %}
+                            <small>Completed: {{ import_record.completed_at }}</small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>{{ import_record.imported_by }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if import_record.error_log %}
+                            <button class="btn btn-sm btn-outline" onclick="showErrors('{{ import_record.id }}')" title="View Errors">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </button>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline" onclick="showDetails('{{ import_record.id }}')" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if imports.pages > 1 %}
+    <div class="pagination-section">
+        <nav aria-label="Import history pagination">
+            <ul class="pagination">
+                {% if imports.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('import.import_history', page=imports.prev_num, **request.args) }}">Previous</a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in imports.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != imports.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('import.import_history', page=page_num, **request.args) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if imports.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('import.import_history', page=imports.next_num, **request.args) }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h3>No imports found</h3>
+        <p>No import operations match your current filters.</p>
+        <a href="{{ url_for('import.import_dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-upload"></i> Start Import
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Import Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailsContent">
+                <!-- Content loaded by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Details Modal -->
+<div class="modal fade" id="errorsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import Errors</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="errorsContent">
+                <!-- Content loaded by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.import-history {
+    padding: 20px;
+}
+
+.filters-section {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filters-form {
+    display: flex;
+    gap: 20px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    min-width: 150px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.history-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.import-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.import-type.students { background: #e3f2fd; color: #1976d2; }
+.import-type.invoices { background: #e8f5e8; color: #388e3c; }
+.import-type.installments { background: #fff3e0; color: #f57c00; }
+.import-type.payments { background: #e0f2f1; color: #00796b; }
+
+.filename {
+    font-weight: 500;
+    color: #333;
+}
+
+.notes {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+}
+
+.record-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.record-stats span {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.record-stats .total { background: #f8f9fa; color: #333; }
+.record-stats .success { background: #d4edda; color: #155724; }
+.record-stats .error { background: #f8d7da; color: #721c24; }
+.record-stats .skipped { background: #fff3cd; color: #856404; }
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-badge.completed { background: #d4edda; color: #155724; }
+.status-badge.failed { background: #f8d7da; color: #721c24; }
+.status-badge.partial { background: #fff3cd; color: #856404; }
+.status-badge.pending { background: #cce5ff; color: #004085; }
+
+.date-info {
+    font-size: 14px;
+}
+
+.date-info small {
+    color: #666;
+    display: block;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.pagination-section {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    color: #ccc;
+}
+
+.empty-state h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .filters-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        min-width: auto;
+    }
+    
+    .filter-actions {
+        justify-content: center;
+    }
+    
+    .history-table {
+        overflow-x: auto;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showDetails(importId) {
+    // Implementation for showing import details
+    $('#detailsModal').modal('show');
+}
+
+function showErrors(importId) {
+    // Implementation for showing import errors
+    $('#errorsModal').modal('show');
+}
+</script>
+{% endblock %}

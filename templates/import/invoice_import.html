@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Import Invoices - GlobalIT LMS{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="page-header-content">
+        <h1><i class="fas fa-file-invoice"></i> Import Invoices</h1>
+        <p>Upload invoice records from CSV file</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="{{ url_for('import.import_dashboard') }}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <a href="{{ url_for('import.download_template', import_type='invoices') }}" class="btn btn-outline">
+            <i class="fas fa-download"></i> Download Template
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="import-wizard">
+    <!-- Step Indicator -->
+    <div class="wizard-steps">
+        <div class="step active" id="step-1">
+            <div class="step-number">1</div>
+            <div class="step-label">Upload File</div>
+        </div>
+        <div class="step" id="step-2">
+            <div class="step-number">2</div>
+            <div class="step-label">Preview & Map</div>
+        </div>
+        <div class="step" id="step-3">
+            <div class="step-number">3</div>
+            <div class="step-label">Import</div>
+        </div>
+        <div class="step" id="step-4">
+            <div class="step-number">4</div>
+            <div class="step-label">Results</div>
+        </div>
+    </div>
+
+    <!-- Step 1: Upload File -->
+    <div class="wizard-content" id="content-1">
+        <div class="upload-section">
+            <h2>Upload Invoice Data</h2>
+            <p class="section-description">
+                Select a CSV file containing invoice information. The file should include student references, 
+                course details, amounts, and payment terms.
+            </p>
+
+            <div class="upload-area" id="upload-area">
+                <div class="upload-placeholder">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>Drop CSV file here or click to browse</h3>
+                    <p>Maximum file size: 10MB</p>
+                    <input type="file" id="file-input" accept=".csv" hidden>
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+                        Select File
+                    </button>
+                </div>
+            </div>
+
+            <!-- File Info -->
+            <div class="file-info" id="file-info" style="display: none;">
+                <div class="file-details">
+                    <i class="fas fa-file-csv"></i>
+                    <div class="file-data">
+                        <strong id="file-name"></strong>
+                        <span id="file-size"></span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="removeFile()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Required Fields Info -->
+            <div class="requirements-info">
+                <h3>Required Fields</h3>
+                <div class="required-fields">
+                    <span class="field-tag required">student_id</span>
+                    <span class="field-tag required">total_amount</span>
+                    <span class="field-tag required">enrollment_date</span>
+                </div>
+                
+                <h3>Optional Fields</h3>
+                <div class="optional-fields">
+                    <span class="field-tag optional">invoice_id</span>
+                    <span class="field-tag optional">course_id</span>
+                    <span class="field-tag optional">paid_amount</span>
+                    <span class="field-tag optional">due_amount</span>
+                    <span class="field-tag optional">discount</span>
+                    <span class="field-tag optional">invoice_date</span>
+                    <span class="field-tag optional">due_date</span>
+                    <span class="field-tag optional">payment_terms</span>
+                    <span class="field-tag optional">invoice_notes</span>
+                </div>
+            </div>
+
+            <div class="upload-actions">
+                <button type="button" class="btn btn-primary" onclick="uploadFile()" disabled id="upload-btn">
+                    <i class="fas fa-upload"></i> Upload & Preview
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other steps content (same structure as student_import.html) -->
+    <div class="wizard-content" id="content-2" style="display: none;">
+        <div class="preview-section">
+            <h2>Preview & Map Columns</h2>
+            <p class="section-description">
+                Review your invoice data and map CSV columns to database fields. 
+                The first 5 rows are shown for preview.
+            </p>
+
+            <!-- Column Mapping -->
+            <div class="column-mapping" id="column-mapping">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <!-- Data Preview -->
+            <div class="data-preview">
+                <h3>Data Preview</h3>
+                <div class="preview-table" id="preview-table">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Import Options -->
+            <div class="import-options">
+                <h3>Import Options</h3>
+                <div class="options-grid">
+                    <div class="option-group">
+                        <label>Duplicate Handling</label>
+                        <select id="duplicate-handling" class="form-control">
+                            <option value="skip">Skip duplicates</option>
+                            <option value="update">Update existing records</option>
+                            <option value="error">Show error for duplicates</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label>Import Notes</label>
+                        <textarea id="import-notes" class="form-control" rows="3" 
+                                  placeholder="Add notes about this import..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-actions">
+                <button type="button" class="btn btn-outline" onclick="goToStep(1)">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button type="button" class="btn btn-primary" onclick="startImport()">
+                    <i class="fas fa-play"></i> Start Import
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Import Progress -->
+    <div class="wizard-content" id="content-3" style="display: none;">
+        <div class="import-progress">
+            <h2>Importing Invoices</h2>
+            <p class="section-description">Please wait while we process your data...</p>
+
+            <div class="progress-indicator">
+                <div class="progress-circle">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <div class="progress-text">
+                    <h3>Processing...</h3>
+                    <p id="progress-message">Validating and importing invoice records</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Results -->
+    <div class="wizard-content" id="content-4" style="display: none;">
+        <div class="import-results">
+            <div class="results-header" id="results-header">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div class="results-summary" id="results-summary">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div class="results-errors" id="results-errors" style="display: none;">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div class="results-actions">
+                <a href="{{ url_for('import.import_dashboard') }}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <a href="{{ url_for('invoice.list_invoices') }}" class="btn btn-primary">
+                    <i class="fas fa-file-invoice"></i> View Invoices
+                </a>
+                <button type="button" class="btn btn-success" onclick="startNewImport()">
+                    <i class="fas fa-plus"></i> Import More Invoices
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loading-overlay" style="display: none;">
+    <div class="loading-content">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Processing...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/import.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/import.js') }}"></script>
+<script>
+// Initialize invoice import
+document.addEventListener('DOMContentLoaded', function() {
+    initializeImport('invoices');
+});
+</script>
+{% endblock %}

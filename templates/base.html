@@ -372,6 +372,48 @@
             </div>
           </div>
         {% endif %}
+
+        <!-- i) Data Import -->
+        {% if session.role in ['admin','regional_manager','branch_manager'] %}
+          <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleMenuSection(this)">
+              <div class="menu-section-title"><i class="fas fa-upload"></i>Data Import</div>
+              <i class="fas fa-chevron-down section-toggle"></i>
+            </div>
+            <div class="menu-items">
+              <div class="menu-item">
+                <a href="{{ url_for('import.import_dashboard') }}" class="menu-link" data-title="Import Dashboard">
+                  <i class="fas fa-tachometer-alt"></i><span>Import Dashboard</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('import.student_import') }}" class="menu-link" data-title="Import Students">
+                  <i class="fas fa-users"></i><span>Import Students</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('import.invoice_import') }}" class="menu-link" data-title="Import Invoices">
+                  <i class="fas fa-file-invoice"></i><span>Import Invoices</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('import.installment_import') }}" class="menu-link" data-title="Import Installments">
+                  <i class="fas fa-calendar-alt"></i><span>Import Installments</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('import.payment_import') }}" class="menu-link" data-title="Import Payments">
+                  <i class="fas fa-credit-card"></i><span>Import Payments</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a href="{{ url_for('import.import_history') }}" class="menu-link" data-title="Import History">
+                  <i class="fas fa-history"></i><span>Import History</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
       {% endif %}
     </div>
   </div>

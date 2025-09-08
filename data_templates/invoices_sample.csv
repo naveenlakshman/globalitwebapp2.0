@@ -1,0 +1,6 @@
+invoice_id,student_id,course_id,total_amount,paid_amount,due_amount,discount,enrollment_date,invoice_date,due_date,payment_terms,invoice_notes
+1,"ST001",1,15000,5000,10000,0,"2024-01-10","2024-01-10","2024-02-10","Net 30 days","Initial course enrollment"
+2,"ST002",1,15000,15000,0,0,"2024-01-10","2024-01-10","2024-02-10","Paid in full",""
+3,"ST003",2,25000,10000,15000,0,"2024-01-28","2024-01-28","2024-02-28","Net 30 days","Python course enrollment"
+4,"ST004",2,25000,8000,17000,0,"2024-01-30","2024-01-30","2024-03-01","Net 30 days","Installment plan"
+5,"ST005",3,18000,6000,12000,0,"2024-02-25","2024-02-25","2024-03-25","Net 30 days","Digital marketing course"
