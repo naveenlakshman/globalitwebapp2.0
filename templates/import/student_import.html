@@ -224,12 +224,23 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/import.css') }}">
 {% endblock %}
 
-{% block extra_js %}
+{% block scripts %}
+<script>
+console.log('Template JavaScript block loaded');
+console.log('Trying to load import.js...');
+</script>
 <script src="{{ url_for('static', filename='js/import.js') }}"></script>
 <script>
+console.log('After import.js should have loaded');
 // Initialize student import
 document.addEventListener('DOMContentLoaded', function() {
-    initializeImport('students');
+    console.log('DOM loaded, calling initializeImport');
+    if (typeof initializeImport === 'function') {
+        initializeImport('students');
+        console.log('✅ initializeImport called successfully');
+    } else {
+        console.error('❌ initializeImport function not found! import.js failed to load');
+    }
 });
 </script>
 {% endblock %}

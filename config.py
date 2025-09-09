@@ -15,18 +15,36 @@ class Config:
     # Database Configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///globalit_education_dev.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,
-        'pool_recycle': 3600,  # Recycle connections every hour
-        'pool_size': 5,        # Connection pool size
-        'max_overflow': 10,    # Allow extra connections
-        'pool_timeout': 30,    # Connection timeout
-        'echo': False,         # Disable SQL logging for performance
-        'connect_args': {
-            'charset': 'utf8mb4',  # MySQL charset
-            'connect_timeout': 30,
+    
+    @staticmethod
+    def get_engine_options():
+        """Get database engine options based on database type"""
+        db_uri = os.environ.get('DATABASE_URL') or 'sqlite:///globalit_education_dev.db'
+        
+        base_options = {
+            'pool_pre_ping': True,
+            'pool_recycle': 3600,  # Recycle connections every hour
+            'pool_size': 5,        # Connection pool size
+            'max_overflow': 10,    # Allow extra connections
+            'pool_timeout': 30,    # Connection timeout
+            'echo': False,         # Disable SQL logging for performance
         }
-    }
+        
+        if db_uri.startswith('mysql'):
+            # MySQL-specific configuration
+            base_options['connect_args'] = {
+                'charset': 'utf8mb4',
+                'connect_timeout': 30,
+            }
+        else:
+            # SQLite configuration
+            base_options['connect_args'] = {
+                'timeout': 30,
+            }
+        
+        return base_options
+    
+    SQLALCHEMY_ENGINE_OPTIONS = get_engine_options.__func__()
     
     # Session Configuration
     PERMANENT_SESSION_LIFETIME = timedelta(hours=24)

@@ -106,17 +106,20 @@ def upload_file():
         # Ensure upload folder exists
         ensure_upload_folder()
         
-        # Save file
+        # Read and validate CSV BEFORE saving (to avoid file pointer issues)
+        success, df, message = CSVProcessor.read_csv_file(file)
+        if not success:
+            return jsonify({'success': False, 'message': message})
+        
+        # Save file after successful CSV reading
         filename = secure_filename(file.filename)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"{import_type}_{timestamp}_{filename}"
         filepath = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(filepath)
         
-        # Read and validate CSV
-        success, df, message = CSVProcessor.read_csv_file(file)
-        if not success:
-            return jsonify({'success': False, 'message': message})
+        # Reset file pointer to beginning before saving
+        file.seek(0)
+        file.save(filepath)
         
         # Get required columns based on import type
         required_columns = get_required_columns(import_type)
