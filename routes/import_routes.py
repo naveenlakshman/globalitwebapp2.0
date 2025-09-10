@@ -436,13 +436,16 @@ def download_template(import_type):
             flash('Invalid template type', 'error')
             return redirect(url_for('import.import_dashboard'))
         
-        template_path = os.path.join('data_templates', templates[import_type])
+        # Use absolute path to avoid path resolution issues
+        app_root = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(app_root)
+        template_path = os.path.join(project_root, 'data_templates', templates[import_type])
         
         if os.path.exists(template_path):
             from flask import send_file
-            return send_file(template_path, as_attachment=True)
+            return send_file(template_path, as_attachment=True, download_name=templates[import_type])
         else:
-            flash('Template file not found', 'error')
+            flash(f'Template file not found at: {template_path}', 'error')
             return redirect(url_for('import.import_dashboard'))
             
     except Exception as e:

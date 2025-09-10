@@ -52,43 +52,56 @@ def init_database(app):
             AssignmentCreator, ContentWorkflow, FileStorage
         )
         
+        # Import the RolePermission model
+        from models.role_permission_model import RolePermission
+        
         # Create all tables
         db.create_all()
         
-        # 🔧 MIGRATION: Add 'status' column to installments if missing
+        # 🔧 MIGRATION: Add 'status' column to installments if missing (using SQLAlchemy)
         try:
-            # Check if column exists by trying to query it
-            db.session.execute(text("SELECT status FROM installments LIMIT 1"))
-            print("ℹ️ 'status' column already exists in installments table.")
-        except Exception:
-            # Column doesn't exist, add it
-            try:
-                db.session.execute(text("ALTER TABLE installments ADD COLUMN status TEXT DEFAULT 'Pending'"))
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            columns = inspector.get_columns('installments')
+            column_names = [col['name'] for col in columns]
+            
+            if 'status' not in column_names:
+                # Use database-agnostic approach for adding column
+                if 'mysql' in str(db.engine.url).lower():
+                    db.session.execute(text("ALTER TABLE installments ADD COLUMN status VARCHAR(20) DEFAULT 'Pending'"))
+                else:
+                    db.session.execute(text("ALTER TABLE installments ADD COLUMN status TEXT DEFAULT 'Pending'"))
                 db.session.commit()
                 print("✅ 'status' column added to installments table.")
-            except Exception as e:
-                print("⚠️ Error while adding status column:", e)
+            else:
+                print("ℹ️ 'status' column already exists in installments table.")
+        except Exception as e:
+            print(f"⚠️ Error while checking/adding status column: {e}")
+            db.session.rollback()
         
-        # 🔧 MIGRATION: Add invoice detail columns if missing
-        invoice_columns_to_add = [
-            ("invoice_date", "DATE"),
-            ("due_date", "DATE"), 
-            ("payment_terms", "VARCHAR(100)")
-        ]
-        
-        for column_name, column_type in invoice_columns_to_add:
-            try:
-                # Check if column exists by trying to query it
-                db.session.execute(text(f"SELECT {column_name} FROM invoices LIMIT 1"))
-                print(f"ℹ️ '{column_name}' column already exists in invoices table.")
-            except Exception:
-                # Column doesn't exist, add it
-                try:
+        # 🔧 MIGRATION: Add invoice detail columns if missing (using SQLAlchemy)
+        try:
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            columns = inspector.get_columns('invoices')
+            column_names = [col['name'] for col in columns]
+            
+            invoice_columns_to_add = [
+                ("invoice_date", "DATE"),
+                ("due_date", "DATE"), 
+                ("payment_terms", "VARCHAR(100)" if 'mysql' in str(db.engine.url).lower() else "TEXT")
+            ]
+            
+            for column_name, column_type in invoice_columns_to_add:
+                if column_name not in column_names:
                     db.session.execute(text(f"ALTER TABLE invoices ADD COLUMN {column_name} {column_type}"))
                     db.session.commit()
                     print(f"✅ '{column_name}' column added to invoices table.")
-                except Exception as e:
-                    print(f"⚠️ Error while adding {column_name} column:", e)
+                else:
+                    print(f"ℹ️ '{column_name}' column already exists in invoices table.")
+        except Exception as e:
+            print(f"⚠️ Error while checking/adding invoice columns: {e}")
+            db.session.rollback()
         
         # Create default admin user if it doesn't exist
         create_default_admin()
@@ -388,106 +401,19 @@ def create_default_staff():
 def init_role_permissions():
     """
     Initialize role permissions table and populate with default permissions
-    This runs automatically on database initialization
+    This runs automatically on database initialization using SQLAlchemy ORM
     """
     try:
-        # Create role_permissions table if it doesn't exist
-        db.session.execute(text('''
-            CREATE TABLE IF NOT EXISTS role_permissions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                role VARCHAR(50) NOT NULL,
-                module VARCHAR(50) NOT NULL,
-                permission_level VARCHAR(20) NOT NULL DEFAULT 'read',
-                can_export BOOLEAN DEFAULT 0,
-                can_modify BOOLEAN DEFAULT 0,
-                can_delete BOOLEAN DEFAULT 0,
-                can_create BOOLEAN DEFAULT 1,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(role, module)
-            )
-        '''))
+        # Import the RolePermission model
+        from models.role_permission_model import RolePermission
         
         # Check if permissions already exist
-        existing_count = db.session.execute(text("SELECT COUNT(*) FROM role_permissions")).scalar()
+        existing_count = RolePermission.query.count()
         
         if existing_count == 0:
-            # Define default role permissions
-            permissions = [
-                # Admin - Full access to everything
-                ('admin', 'finance', 'full', 1, 1, 1, 1),
-                ('admin', 'leads', 'full', 1, 1, 1, 1),
-                ('admin', 'students', 'full', 1, 1, 1, 1),
-                ('admin', 'attendance', 'full', 1, 1, 1, 1),
-                ('admin', 'courses', 'full', 1, 1, 1, 1),
-                ('admin', 'batches', 'full', 1, 1, 1, 1),
-                ('admin', 'staff', 'full', 1, 1, 1, 1),
-                ('admin', 'reports', 'full', 1, 1, 1, 1),
-                
-                # Regional Manager - Almost full access
-                ('regional_manager', 'finance', 'full', 1, 1, 1, 1),
-                ('regional_manager', 'leads', 'full', 1, 1, 1, 1),
-                ('regional_manager', 'students', 'full', 1, 1, 0, 1),
-                ('regional_manager', 'attendance', 'write', 1, 1, 0, 1),
-                ('regional_manager', 'courses', 'write', 1, 1, 0, 1),
-                ('regional_manager', 'batches', 'write', 1, 1, 0, 1),
-                ('regional_manager', 'staff', 'write', 1, 1, 0, 1),
-                ('regional_manager', 'reports', 'full', 1, 0, 0, 0),
-                
-                # Franchise - Finance and operational access
-                ('franchise', 'finance', 'write', 1, 1, 0, 1),
-                ('franchise', 'leads', 'write', 1, 1, 0, 1),
-                ('franchise', 'students', 'write', 1, 1, 0, 1),
-                ('franchise', 'attendance', 'write', 1, 1, 0, 1),
-                ('franchise', 'courses', 'read', 1, 0, 0, 0),
-                ('franchise', 'batches', 'write', 1, 1, 0, 1),
-                ('franchise', 'staff', 'read', 1, 0, 0, 0),
-                ('franchise', 'reports', 'read', 1, 0, 0, 0),
-                
-                # Branch Manager - Branch-level access
-                ('branch_manager', 'finance', 'write', 1, 1, 0, 1),
-                ('branch_manager', 'leads', 'write', 1, 1, 0, 1),
-                ('branch_manager', 'students', 'write', 1, 1, 0, 1),
-                ('branch_manager', 'attendance', 'write', 1, 1, 0, 1),
-                ('branch_manager', 'courses', 'read', 1, 0, 0, 0),
-                ('branch_manager', 'batches', 'write', 1, 1, 0, 1),
-                ('branch_manager', 'staff', 'read', 1, 0, 0, 0),
-                ('branch_manager', 'reports', 'read', 1, 0, 0, 0),
-                
-                # Staff - Limited access
-                ('staff', 'finance', 'read', 1, 0, 0, 0),
-                ('staff', 'leads', 'write', 0, 1, 0, 1),
-                ('staff', 'students', 'write', 0, 1, 0, 1),
-                ('staff', 'attendance', 'write', 0, 1, 0, 1),
-                ('staff', 'courses', 'read', 0, 0, 0, 0),
-                ('staff', 'batches', 'read', 0, 0, 0, 0),
-                ('staff', 'reports', 'read', 0, 0, 0, 0),
-                
-                # Trainer - Very limited access (attendance focused)
-                ('trainer', 'attendance', 'write', 0, 1, 0, 1),
-                ('trainer', 'students', 'read', 0, 0, 0, 0),
-                ('trainer', 'batches', 'read', 0, 0, 0, 0),
-                ('trainer', 'courses', 'read', 0, 0, 0, 0),
-            ]
-            
-            # Insert permissions
-            for role, module, level, can_export, can_modify, can_delete, can_create in permissions:
-                db.session.execute(text('''
-                    INSERT INTO role_permissions 
-                    (role, module, permission_level, can_export, can_modify, can_delete, can_create)
-                    VALUES (:role, :module, :level, :can_export, :can_modify, :can_delete, :can_create)
-                '''), {
-                    'role': role,
-                    'module': module, 
-                    'level': level,
-                    'can_export': can_export,
-                    'can_modify': can_modify,
-                    'can_delete': can_delete,
-                    'can_create': can_create
-                })
-            
-            db.session.commit()
-            print(f"✅ Role permissions system initialized with {len(permissions)} permissions")
+            # Create default role permissions using the model's method
+            RolePermission.create_default_permissions()
+            print(f"✅ Role permissions system initialized with default permissions")
         else:
             print(f"ℹ️ Role permissions already exist ({existing_count} permissions found)")
             
