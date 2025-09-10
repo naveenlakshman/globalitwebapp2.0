@@ -28,21 +28,33 @@ def optimize_database():
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
-        print("🔧 Optimizing SQLite Database...")
+        print("🔧 Optimizing Database...")
         
-        # 1. Set optimal PRAGMA settings
-        print("⚙️  Setting optimal PRAGMA configurations...")
-        optimizations = [
-            "PRAGMA journal_mode=WAL;",        # Write-Ahead Logging for better concurrency
-            "PRAGMA synchronous=NORMAL;",      # Faster writes, still safe
-            "PRAGMA cache_size=-32000;",       # 32MB cache (negative = KB)
-            "PRAGMA temp_store=MEMORY;",       # Store temp tables in memory
-            "PRAGMA mmap_size=268435456;",     # 256MB memory map
-        ]
+        # 1. Set optimal database settings (SQLite specific)
+        print("⚙️  Setting optimal database configurations...")
         
-        for pragma in optimizations:
-            cursor.execute(pragma)
-            print(f"   ✅ {pragma}")
+        # Check if this is SQLite
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' LIMIT 1;")
+        is_sqlite = True
+        try:
+            cursor.fetchone()
+        except Exception:
+            is_sqlite = False
+        
+        if is_sqlite:
+            optimizations = [
+                "PRAGMA journal_mode=WAL;",        # Write-Ahead Logging for better concurrency
+                "PRAGMA synchronous=NORMAL;",      # Faster writes, still safe
+                "PRAGMA cache_size=-32000;",       # 32MB cache (negative = KB)
+                "PRAGMA temp_store=MEMORY;",       # Store temp tables in memory
+                "PRAGMA mmap_size=268435456;",     # 256MB memory map
+            ]
+            
+            for pragma in optimizations:
+                cursor.execute(pragma)
+                print(f"   ✅ {pragma}")
+        else:
+            print("   ℹ️  Database optimization skipped (not SQLite - MySQL optimizations handled by server configuration)")
         
         # 2. Create performance indexes
         print("\n📊 Creating performance indexes...")
@@ -114,12 +126,23 @@ def optimize_database():
         cursor.execute("VACUUM;")
         print("   ✅ VACUUM completed")
         
-        cursor.execute("ANALYZE;")
-        print("   ✅ ANALYZE completed")
+        # Check if this is SQLite before running SQLite-specific commands
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' LIMIT 1;")
+        is_sqlite = True
+        try:
+            cursor.fetchone()
+        except Exception:
+            is_sqlite = False
         
-        # 4. Final optimization
-        cursor.execute("PRAGMA optimize;")
-        print("   ✅ Final optimization completed")
+        if is_sqlite:
+            cursor.execute("ANALYZE;")
+            print("   ✅ ANALYZE completed")
+            
+            # 4. Final optimization
+            cursor.execute("PRAGMA optimize;")
+            print("   ✅ Final optimization completed")
+        else:
+            print("   ℹ️  ANALYZE and PRAGMA optimize skipped (not SQLite)")
         
         # Commit all changes
         conn.commit()
@@ -161,23 +184,34 @@ def verify_optimization():
         
         print("\n🔍 Verification Results:")
         
-        # Check PRAGMA settings
-        cursor.execute("PRAGMA journal_mode;")
-        journal_mode = cursor.fetchone()[0]
-        print(f"   Journal mode: {journal_mode}")
+        # Check if this is SQLite before running SQLite-specific checks
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' LIMIT 1;")
+        is_sqlite = True
+        try:
+            cursor.fetchone()
+        except Exception:
+            is_sqlite = False
         
-        cursor.execute("PRAGMA synchronous;")
-        synchronous = cursor.fetchone()[0]
-        print(f"   Synchronous: {synchronous}")
-        
-        cursor.execute("PRAGMA cache_size;")
-        cache_size = cursor.fetchone()[0]
-        print(f"   Cache size: {cache_size}")
-        
-        # Check indexes
-        cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND sql IS NOT NULL;")
-        index_count = cursor.fetchone()[0]
-        print(f"   Total indexes: {index_count}")
+        if is_sqlite:
+            # Check PRAGMA settings
+            cursor.execute("PRAGMA journal_mode;")
+            journal_mode = cursor.fetchone()[0]
+            print(f"   Journal mode: {journal_mode}")
+            
+            cursor.execute("PRAGMA synchronous;")
+            synchronous = cursor.fetchone()[0]
+            print(f"   Synchronous: {synchronous}")
+            
+            cursor.execute("PRAGMA cache_size;")
+            cache_size = cursor.fetchone()[0]
+            print(f"   Cache size: {cache_size}")
+            
+            # Check indexes
+            cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND sql IS NOT NULL;")
+            index_count = cursor.fetchone()[0]
+            print(f"   Total indexes: {index_count}")
+        else:
+            print("   ℹ️  Database verification skipped (not SQLite - MySQL configuration handled by server)")
         
         conn.close()
         

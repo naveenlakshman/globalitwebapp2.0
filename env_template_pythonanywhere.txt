@@ -1,0 +1,54 @@
+# Environment Configuration for PythonAnywhere
+# Copy this to .env file in your project root on PythonAnywhere
+
+# Production Environment
+APP_ENV=production
+FLASK_ENV=production
+DEBUG=False
+
+# Database Configuration (Replace with your actual PythonAnywhere MySQL details)
+# Format: mysql+pymysql://username:password@host/database
+DATABASE_URL=mysql+pymysql://yourusername:yourpassword@yourusername.mysql.pythonanywhere-services.com/yourusername$globalit_lms
+
+# Security (IMPORTANT: Change this to a strong, unique secret key)
+SECRET_KEY=your-super-secret-key-change-this-in-production-12345678
+
+# Email Configuration (Optional - for password reset and notifications)
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-gmail-app-password
+
+# SMS Configuration (Optional - for SMS notifications)
+SMS_API_KEY=your-sms-api-key
+SMS_API_URL=your-sms-provider-api-url
+
+# File Upload Configuration
+MAX_CONTENT_LENGTH=16777216
+UPLOAD_FOLDER=/home/yourusername/globalitwebapp2.0/uploads
+
+# Logging Configuration
+LOG_LEVEL=INFO
+LOG_FILE=/home/yourusername/globalitwebapp2.0/logs/app.log
+
+# Session Configuration
+SESSION_PERMANENT=False
+PERMANENT_SESSION_LIFETIME=1800
+
+# Database Connection Pool (for production)
+SQLALCHEMY_ENGINE_OPTIONS_POOL_SIZE=10
+SQLALCHEMY_ENGINE_OPTIONS_POOL_RECYCLE=3600
+SQLALCHEMY_ENGINE_OPTIONS_POOL_PRE_PING=True
+
+# Security Headers
+SECURITY_HEADERS=True
+
+# Additional MySQL-specific settings
+MYSQL_CHARSET=utf8mb4
+MYSQL_SQL_MODE=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER
+
+# Application-specific settings
+ITEMS_PER_PAGE=50
+MAX_LOGIN_ATTEMPTS=5
+LOCKOUT_DURATION=900

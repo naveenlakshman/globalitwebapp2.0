@@ -248,20 +248,27 @@ def monitor_performance(func):
 
 # Database connection optimization
 def optimize_db_connection():
-    """Apply SQLite optimizations to current connection"""
+    """Apply database optimizations to current connection (SQLite only)"""
     try:
         from init_db import db
+        from flask import current_app
         
-        # Apply SQLite-specific optimizations using text() for raw SQL
-        from sqlalchemy import text
+        # Check if we're using SQLite before applying SQLite-specific optimizations
+        db_uri = current_app.config.get('SQLALCHEMY_DATABASE_URI', '')
         
-        db.session.execute(text("PRAGMA journal_mode=WAL;"))
-        db.session.execute(text("PRAGMA synchronous=NORMAL;"))
-        db.session.execute(text("PRAGMA cache_size=-32000;"))  # 32MB cache
-        db.session.execute(text("PRAGMA temp_store=MEMORY;"))
-        db.session.commit()
-        
-        current_app.logger.info("Database connection optimized")
+        if 'sqlite' in db_uri.lower():
+            # Apply SQLite-specific optimizations using text() for raw SQL
+            from sqlalchemy import text
+            
+            db.session.execute(text("PRAGMA journal_mode=WAL;"))
+            db.session.execute(text("PRAGMA synchronous=NORMAL;"))
+            db.session.execute(text("PRAGMA cache_size=-32000;"))  # 32MB cache
+            db.session.execute(text("PRAGMA temp_store=MEMORY;"))
+            db.session.commit()
+            
+            current_app.logger.info("SQLite database connection optimized")
+        else:
+            current_app.logger.info("Database optimization skipped (not SQLite - MySQL optimizations handled by server)")
         
     except Exception as e:
         current_app.logger.error(f"Database optimization error: {e}")
