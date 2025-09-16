@@ -8,6 +8,7 @@ class Student(db.Model):
     __tablename__ = 'students'
 
     student_id = db.Column(db.String(50), primary_key=True)
+    student_reg_no  = db.Column(db.String(50), nullable=False, unique=True, index=True)  # NEW
     full_name = db.Column(db.String(100), nullable=False)
     gender = db.Column(db.String(10))
     dob = db.Column(db.Date)
