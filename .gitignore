@@ -170,7 +170,7 @@ cython_debug/
 globalit_education_dev.db
 globalit_education_prod.db
 globalit_education_dev.db-shm
-globalit_education_prod.db-wal
+globalit_education_dev.db-wal
 
 # Upload directories
 uploads/
