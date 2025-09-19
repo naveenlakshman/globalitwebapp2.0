@@ -169,6 +169,8 @@ cython_debug/
 *.sqlite3
 globalit_education_dev.db
 globalit_education_prod.db
+globalit_education_dev.db-shm
+globalit_education_prod.db-wal
 
 # Upload directories
 uploads/
