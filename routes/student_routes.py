@@ -214,8 +214,10 @@ def register_student():
         return redirect(url_for("students.register_student"))
 
     # GET request - determine user's branch access from session
-    user_branch_id = session.get("user_branch_id")
+    user_branch_ids = session.get("user_branch_ids", [])
+    user_branch_id = session.get("user_branch_id")  # Keep for backward compatibility
     branch_name = session.get("branch_name")
+    all_branch_names = session.get("all_branch_names", [])
     branches = None
     batches = []
     
@@ -223,20 +225,37 @@ def register_student():
         # Corporate admin - show all branches
         branches = Branch.query.all()
     else:
-        # Franchise user - get their specific branch
-        if user_branch_id:
-            # Load only active batches for their branch
+        # Franchise user - get their branches
+        if user_branch_ids:
+            # For multi-branch franchise users, load branches and batches for all assigned branches
+            branches = Branch.query.filter(Branch.id.in_(user_branch_ids)).all()
+            batches = Batch.query.filter(
+                Batch.branch_id.in_(user_branch_ids), 
+                Batch.is_deleted == 0, 
+                Batch.status == 'Active'
+            ).all()
+        elif user_branch_id:
+            # Single branch fallback
             batches = Batch.query.filter_by(
                 branch_id=user_branch_id, 
                 is_deleted=0, 
                 status='Active'
             ).all()
 
+    # For display purposes
+    if user_branch_ids and len(user_branch_ids) > 1:
+        # Multi-branch users will see branch selection dropdown
+        display_branch_name = None
+    else:
+        # Single branch users will see auto-selected branch name
+        display_branch_name = ", ".join(all_branch_names) if all_branch_names else branch_name
+
     return render_template("students/register.html", 
                          branches=branches,
                          batches=batches,
-                         user_branch_id=user_branch_id,
-                         branch_name=branch_name)
+                         user_branch_id=user_branch_id if len(user_branch_ids) <= 1 else None,
+                         user_branch_ids=user_branch_ids,
+                         branch_name=display_branch_name)
 
 @student_bp.route("/list", methods=["GET"])
 @login_required
@@ -254,12 +273,14 @@ def list_students():
         
         # Apply role-based branch filtering
         if current_user.role == 'franchise':
-            # Franchise owners - get their branch from session first, then database
-            user_branch_id = session.get("user_branch_id")
-            if user_branch_id:
-                query = query.filter_by(branch_id=user_branch_id)
+            # Franchise owners - get ALL their assigned branches
+            user_branch_ids = session.get("user_branch_ids", [])
+            
+            if user_branch_ids:
+                # Use all assigned branch IDs for multi-branch access
+                query = query.filter(Student.branch_id.in_(user_branch_ids))
             else:
-                # Query user_branch_assignments table
+                # Fallback: Query user_branch_assignments table directly
                 user_branches = db.session.execute(
                     db.text("SELECT branch_id FROM user_branch_assignments WHERE user_id = :user_id AND is_active = 1"),
                     {"user_id": current_user_id}
@@ -269,7 +290,7 @@ def list_students():
                     branch_ids = [row[0] for row in user_branches]
                     query = query.filter(Student.branch_id.in_(branch_ids))
                 elif current_user.branch_id:
-                    # Fallback to user's direct branch_id
+                    # Final fallback to user's direct branch_id
                     query = query.filter_by(branch_id=current_user.branch_id)
                 
         elif current_user.role == 'regional_manager':
@@ -333,14 +354,14 @@ def api_get_student(student_id):
         
         # Validate access based on role
         if current_user.role == 'franchise':
-            # Check branch access using session or database
-            user_branch_id = session.get("user_branch_id")
+            # Check multi-branch access using session first, then database
+            user_branch_ids = session.get("user_branch_ids", [])
             has_access = False
             
-            if user_branch_id and student.branch_id == user_branch_id:
+            if user_branch_ids and student.branch_id in user_branch_ids:
                 has_access = True
             else:
-                # Query user_branch_assignments table
+                # Fallback: Query user_branch_assignments table
                 user_branches = db.session.execute(
                     db.text("SELECT branch_id FROM user_branch_assignments WHERE user_id = :user_id AND is_active = 1"),
                     {"user_id": current_user_id}
@@ -543,6 +564,43 @@ def edit_student(student_id):
             if dob_str:
                 student.dob = parse_date_string(dob_str)
             
+            # Handle branch change for multi-branch franchise users
+            new_branch_id = form.get("branch_id")
+            if new_branch_id and str(new_branch_id) != str(student.branch_id):
+                # Verify user has access to the new branch
+                user_can_change_branch = False
+                
+                if current_user.has_corporate_access():
+                    # Corporate users can change to any branch
+                    user_can_change_branch = True
+                elif current_user.role == 'franchise':
+                    # Check if franchise user has access to the new branch
+                    user_branch_ids = session.get("user_branch_ids", [])
+                    if user_branch_ids and int(new_branch_id) in user_branch_ids:
+                        user_can_change_branch = True
+                    else:
+                        # Fallback: Query user_branch_assignments table
+                        user_branches = db.session.execute(
+                            db.text("SELECT branch_id FROM user_branch_assignments WHERE user_id = :user_id AND is_active = 1"),
+                            {"user_id": current_user_id}
+                        ).fetchall()
+                        
+                        if user_branches:
+                            branch_ids = [row[0] for row in user_branches]
+                            user_can_change_branch = int(new_branch_id) in branch_ids
+                
+                if user_can_change_branch:
+                    # Update student's branch
+                    student.branch_id = new_branch_id
+                    # Clear batch assignment when changing branches
+                    student.batch_id = None
+                    student.course_name = None
+                    student.course_id = None
+                    flash("✅ Student branch changed. Please assign a new batch from the new branch.", "info")
+                else:
+                    flash("❌ You don't have permission to transfer students to that branch.", "error")
+                    return redirect(url_for('students.edit_student', student_id=student_id))
+            
             # Handle batch change
             new_batch_id = form.get("batch_id")
             if new_batch_id and new_batch_id != str(student.batch_id):
@@ -550,6 +608,10 @@ def edit_student(student_id):
                 if new_batch and new_batch.branch_id == student.branch_id:
                     student.batch_id = new_batch_id
                     student.course_name = new_batch.course_name
+                    # Get course_id from Course table for LMS integration
+                    course = Course.query.filter_by(course_name=new_batch.course_name).first()
+                    if course:
+                        student.course_id = course.id
                 else:
                     flash("Selected batch is not valid for this student's branch.", "error")
                     
@@ -561,7 +623,18 @@ def edit_student(student_id):
         branch = Branch.query.get(student.branch_id)
         branch_name = branch.branch_name if branch else "Unknown Branch"
         
-        # Get available active batches for the student's branch
+        # Determine available branches for multi-branch users
+        available_branches = []
+        user_branch_ids = session.get("user_branch_ids", [])
+        
+        if current_user.has_corporate_access():
+            # Corporate users can see all branches
+            available_branches = Branch.query.all()
+        elif current_user.role == 'franchise' and user_branch_ids and len(user_branch_ids) > 1:
+            # Multi-branch franchise users can see their assigned branches
+            available_branches = Branch.query.filter(Branch.id.in_(user_branch_ids)).all()
+        
+        # Get available active batches for the student's current branch
         batches = Batch.query.filter_by(
             branch_id=student.branch_id, 
             is_deleted=0, 
@@ -571,7 +644,9 @@ def edit_student(student_id):
         return render_template("students/edit.html", 
                              student=student, 
                              branch_name=branch_name,
-                             batches=batches)
+                             batches=batches,
+                             available_branches=available_branches,
+                             user_branch_ids=user_branch_ids)
         
     except Exception as e:
         flash(f'Error editing student: {str(e)}', 'error')
@@ -583,32 +658,74 @@ def api_get_batches():
     """API endpoint to get active batches for a specific branch"""
     try:
         branch_id = request.args.get('branch_id')
+        print(f"DEBUG: API called with branch_id = {branch_id}")
+        
         if not branch_id:
             return jsonify({'success': False, 'error': 'Branch ID is required'}), 400
         
         # Get current user for security checks
         current_user_id = session.get('user_id')
         current_user = User.query.get(current_user_id)
+        print(f"DEBUG: Current user ID = {current_user_id}")
+        print(f"DEBUG: Current user = {current_user.username if current_user else 'None'}")
         
         # Security check: Verify user can access this branch
         if not current_user.has_corporate_access():
-            user_branch_id = session.get("user_branch_id")
-            if str(user_branch_id) != str(branch_id):
-                return jsonify({'success': False, 'error': 'Access denied'}), 403
+            # For franchise users with multiple branches, check if branch is in their assigned branches
+            user_branch_ids = session.get("user_branch_ids")
+            print(f"DEBUG: user_branch_ids = {user_branch_ids}")
+            
+            if user_branch_ids:
+                # Multi-branch franchise user
+                if int(branch_id) not in user_branch_ids:
+                    print(f"DEBUG: Access denied - branch {branch_id} not in {user_branch_ids}")
+                    return jsonify({'success': False, 'error': 'Access denied'}), 403
+                else:
+                    print(f"DEBUG: Access granted - branch {branch_id} found in {user_branch_ids}")
+            else:
+                # Single branch user
+                user_branch_id = session.get("user_branch_id")
+                print(f"DEBUG: user_branch_id = {user_branch_id}")
+                if str(user_branch_id) != str(branch_id):
+                    print(f"DEBUG: Access denied - {user_branch_id} != {branch_id}")
+                    return jsonify({'success': False, 'error': 'Access denied'}), 403
+        else:
+            print(f"DEBUG: Corporate user - access granted")
         
         # Get only active batches for the branch
+        print(f"DEBUG: Querying batches for branch_id={branch_id}")
         batches = Batch.query.filter_by(
             branch_id=branch_id, 
             is_deleted=0, 
             status='Active'
         ).all()
         
+        print(f"DEBUG: Found {len(batches)} active batches")
+        
+        batch_list = []
+        for batch in batches:
+            try:
+                batch_dict = batch.to_dict()
+                batch_list.append(batch_dict)
+                print(f"DEBUG: Added batch {batch.name}")
+            except Exception as batch_error:
+                print(f"DEBUG: Error converting batch {batch.name} to dict: {batch_error}")
+                # Add a simplified version
+                batch_list.append({
+                    "id": batch.id,
+                    "name": batch.name,
+                    "course_name": batch.course_name or "Unknown Course"
+                })
+        
         return jsonify({
             'success': True,
-            'batches': [batch.to_dict() for batch in batches]
+            'batches': batch_list
         })
         
     except Exception as e:
+        print(f"DEBUG: Exception in api_get_batches: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e)

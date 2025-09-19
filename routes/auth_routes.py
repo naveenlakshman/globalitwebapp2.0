@@ -51,14 +51,38 @@ def login():
             session["role"] = user.role
             session["full_name"] = user.full_name
             
-            # Set branch information
-            user_branch = user.get_user_branch()
-            if user_branch:
-                session["user_branch_id"] = user_branch.id
-                session["branch_name"] = user_branch.branch_name
+            # Set branch information - handle multiple branches for franchise users
+            if user.role == 'franchise':
+                # For franchise users, get all assigned branches
+                user_branches = user.get_all_user_branches()
+                user_branch_ids = user.get_user_branch_ids()
+                
+                if user_branches:
+                    # Store all branch IDs in session
+                    session["user_branch_ids"] = user_branch_ids
+                    # For backward compatibility, also store the first branch
+                    session["user_branch_id"] = user_branch_ids[0]
+                    session["branch_name"] = user_branches[0].branch_name
+                    # Store all branch names for display
+                    session["all_branch_names"] = [branch.branch_name for branch in user_branches]
+                else:
+                    session["user_branch_id"] = None
+                    session["user_branch_ids"] = []
+                    session["branch_name"] = None
+                    session["all_branch_names"] = []
             else:
-                session["user_branch_id"] = None
-                session["branch_name"] = None
+                # For other roles, use single branch logic
+                user_branch = user.get_user_branch()
+                if user_branch:
+                    session["user_branch_id"] = user_branch.id
+                    session["user_branch_ids"] = [user_branch.id]
+                    session["branch_name"] = user_branch.branch_name
+                    session["all_branch_names"] = [user_branch.branch_name]
+                else:
+                    session["user_branch_id"] = None
+                    session["user_branch_ids"] = []
+                    session["branch_name"] = None
+                    session["all_branch_names"] = []
             
             flash(f"✅ Welcome back, {user.full_name}!", "success")
             

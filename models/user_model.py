@@ -45,6 +45,48 @@ class User(db.Model):
             
         return None
     
+    def get_all_user_branches(self):
+        """Get all branches this user is assigned to"""
+        from models.branch_model import Branch
+        from models.user_branch_assignment_model import UserBranchAssignment
+        
+        # Get all active branch assignments
+        assignments = UserBranchAssignment.query.filter_by(
+            user_id=self.id, 
+            is_active=1
+        ).all()
+        
+        if assignments:
+            branch_ids = [assignment.branch_id for assignment in assignments]
+            branches = Branch.query.filter(Branch.id.in_(branch_ids)).all()
+            return branches
+            
+        # Fallback to legacy branch_id field
+        if self.branch_id:
+            branch = Branch.query.get(self.branch_id)
+            return [branch] if branch else []
+            
+        return []
+    
+    def get_user_branch_ids(self):
+        """Get all branch IDs this user is assigned to"""
+        from models.user_branch_assignment_model import UserBranchAssignment
+        
+        # Get all active branch assignments
+        assignments = UserBranchAssignment.query.filter_by(
+            user_id=self.id, 
+            is_active=1
+        ).all()
+        
+        if assignments:
+            return [assignment.branch_id for assignment in assignments]
+            
+        # Fallback to legacy branch_id field
+        if self.branch_id:
+            return [self.branch_id]
+            
+        return []
+
     def has_corporate_access(self):
         """Check if user has corporate-level access (can see all branches)"""
         return self.role in ['corporate_admin', 'super_admin', 'admin']

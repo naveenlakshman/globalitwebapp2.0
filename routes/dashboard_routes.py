@@ -94,9 +94,10 @@ def franchise_dashboard():
     from datetime import datetime, timedelta
     import sqlalchemy as sa
     
-    # Get franchise owner's branch information
-    user_branch_id = session.get("user_branch_id")
-    branch_name = session.get("branch_name", "All Branches")
+    # Get franchise owner's branch information - handle multiple branches
+    user_branch_ids = session.get("user_branch_ids", [])
+    all_branch_names = session.get("all_branch_names", [])
+    branch_name = ", ".join(all_branch_names) if all_branch_names else "No Branches Assigned"
     attendance_range = request.args.get('attendance_range', 'week')
     
     # Calculate date ranges
@@ -108,29 +109,34 @@ def franchise_dashboard():
     else:  # month
         start_date = today - timedelta(days=30)
     
-    if user_branch_id:
-        # Show specific branch statistics
-        branch = Branch.query.get(user_branch_id)
-        total_students = Student.query.filter_by(branch_id=user_branch_id, is_deleted=0).count()
-        total_batches = Batch.query.filter_by(branch_id=user_branch_id, is_deleted=0).count()
+    if user_branch_ids:
+        # Show statistics for ALL assigned branches
+        branches = Branch.query.filter(Branch.id.in_(user_branch_ids)).all()
         
-        # Get branch-specific revenue
+        # For template compatibility, use the first branch as primary
+        primary_branch = branches[0] if branches else None
+        
+        # Calculate totals across all branches
+        total_students = Student.query.filter(Student.branch_id.in_(user_branch_ids), Student.is_deleted == 0).count()
+        total_batches = Batch.query.filter(Batch.branch_id.in_(user_branch_ids), Batch.is_deleted == 0).count()
+        
+        # Get revenue across all branches
         branch_revenue = db.session.query(db.func.sum(Invoice.paid_amount))\
             .join(Student, Invoice.student_id == Student.student_id)\
-            .filter(Student.branch_id == user_branch_id).scalar() or 0
+            .filter(Student.branch_id.in_(user_branch_ids)).scalar() or 0
         
-        # Get recent enrollments
-        recent_students = Student.query.filter_by(branch_id=user_branch_id, is_deleted=0)\
+        # Get recent enrollments across all branches
+        recent_students = Student.query.filter(Student.branch_id.in_(user_branch_ids), Student.is_deleted == 0)\
             .order_by(Student.admission_date.desc()).limit(5).all()
         
-        # Get active batches for this branch
-        active_batches = Batch.query.filter_by(
-            branch_id=user_branch_id, 
-            status='Active', 
-            is_deleted=0
+        # Get active batches across all branches
+        active_batches = Batch.query.filter(
+            Batch.branch_id.in_(user_branch_ids), 
+            Batch.status == 'Active', 
+            Batch.is_deleted == 0
         ).all()
         
-        # Calculate attendance statistics
+        # Calculate attendance statistics across all branches
         attendance_stats = {
             'today_rate': 0,
             'today_present': 0,
@@ -143,13 +149,13 @@ def franchise_dashboard():
         active_batches_attendance = []
         
         if active_batches:
-            # Today's attendance across all batches
+            # Today's attendance across all assigned branches
             today_attendance = db.session.query(
                 sa.func.count(StudentAttendance.id).label('total'),
                 sa.func.sum(sa.case((StudentAttendance.status.in_(['Present', 'Late']), 1), else_=0)).label('present'),
                 sa.func.sum(sa.case((StudentAttendance.status == 'Late', 1), else_=0)).label('late')
             ).join(Student, StudentAttendance.student_id == Student.student_id)\
-             .filter(Student.branch_id == user_branch_id, 
+             .filter(Student.branch_id.in_(user_branch_ids), 
                     StudentAttendance.date == today).first()
             
             if today_attendance and today_attendance.total:
@@ -158,20 +164,20 @@ def franchise_dashboard():
                 attendance_stats['today_late'] = today_attendance.late or 0
                 attendance_stats['today_rate'] = (attendance_stats['today_present'] / attendance_stats['today_total']) * 100
             
-            # Weekly average
+            # Weekly average across all branches
             weekly_attendance = db.session.query(
                 sa.func.count(StudentAttendance.id).label('total'),
                 sa.func.sum(sa.case((StudentAttendance.status.in_(['Present', 'Late']), 1), else_=0)).label('present')
             ).join(Student, StudentAttendance.student_id == Student.student_id)\
-             .filter(Student.branch_id == user_branch_id, 
+             .filter(Student.branch_id.in_(user_branch_ids), 
                     StudentAttendance.date >= start_date).first()
             
             if weekly_attendance and weekly_attendance.total:
                 attendance_stats['weekly_rate'] = (weekly_attendance.present / weekly_attendance.total) * 100
             
-            # At-risk students (below 65% attendance)
+            # At-risk students across all branches (below 65% attendance)
             at_risk_students = db.session.query(Student.student_id).join(StudentAttendance)\
-                .filter(Student.branch_id == user_branch_id, Student.is_deleted == 0)\
+                .filter(Student.branch_id.in_(user_branch_ids), Student.is_deleted == 0)\
                 .group_by(Student.student_id)\
                 .having(
                     (sa.func.sum(sa.case((StudentAttendance.status.in_(['Present', 'Late']), 1), else_=0)) * 100.0 / 
@@ -226,7 +232,7 @@ def franchise_dashboard():
         branch_revenue = db.session.query(db.func.sum(Invoice.paid_amount)).scalar() or 0
         recent_students = Student.query.filter_by(is_deleted=0)\
             .order_by(Student.admission_date.desc()).limit(5).all()
-        branch = None
+        primary_branch = None
         
         # Default attendance stats for multi-branch view
         attendance_stats = {
@@ -243,7 +249,7 @@ def franchise_dashboard():
     current_date = get_current_ist_formatted(include_time=False)
     
     return render_template("dashboard/franchise_dashboard.html",
-                           branch=branch,
+                           branch=primary_branch,
                            branch_name=branch_name,
                            total_students=total_students,
                            total_courses=total_courses,

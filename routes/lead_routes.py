@@ -203,7 +203,17 @@ def _scope_leads_for_user(query, user: User):
     if user.role == "regional_manager":
         branches = get_user_accessible_branches(user.id) or []
         return query.filter(Lead.branch_id.in_(branches)) if branches else query.filter(False)
-    if user.role in ["franchise", "branch_manager", "staff"]:
+    if user.role == "franchise":
+        # Handle multi-branch franchise users
+        user_branch_ids = session.get("user_branch_ids", [])
+        if user_branch_ids:
+            # Multi-branch franchise user - use all assigned branches
+            return query.filter(Lead.branch_id.in_(user_branch_ids))
+        else:
+            # Single branch fallback
+            ubid = _user_branch_id()
+            return query.filter(Lead.branch_id == ubid) if ubid else query.filter(False)
+    if user.role in ["branch_manager", "staff"]:
         ubid = _user_branch_id()
         return query.filter(Lead.branch_id == ubid) if ubid else query.filter(False)
     # Trainers should not have access to lead management - business logic violation
@@ -217,7 +227,16 @@ def _can_access_lead(user: User, lead: Lead):
     if user.role == "regional_manager":
         branches = get_user_accessible_branches(user.id) or []
         return lead.branch_id in branches
-    if user.role in ["franchise", "branch_manager", "staff"]:
+    if user.role == "franchise":
+        # Handle multi-branch franchise users
+        user_branch_ids = session.get("user_branch_ids", [])
+        if user_branch_ids:
+            # Multi-branch franchise user - check if lead branch is in assigned branches
+            return lead.branch_id in user_branch_ids
+        else:
+            # Single branch fallback
+            return lead.branch_id == _user_branch_id()
+    if user.role in ["branch_manager", "staff"]:
         return lead.branch_id == _user_branch_id()
     # Trainers should not have access to lead management
     # if user.role == "trainer":

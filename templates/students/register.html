@@ -78,8 +78,34 @@
           </div>
           
           <div class="row g-3 mb-4">
-            {% if user_branch_id %}
-              <!-- Branch is pre-determined from user login -->
+            {% if branches and branches|length > 1 %}
+              <!-- Multi-branch franchise users - show branch selection -->
+              <div class="col-md-4">
+                <label class="form-label form-label-required">Select Branch <span class="text-danger">*</span></label>
+                <select name="branch_id" class="form-select" required id="branchSelect">
+                  <option value="" disabled selected>Choose your branch</option>
+                  {% for branch in branches %}
+                  <option value="{{ branch.id }}">{{ branch.branch_name }}</option>
+                  {% endfor %}
+                </select>
+                <div class="form-help-text">Select specific branch for this student</div>
+              </div>
+              
+              <div class="col-md-4">
+                <label class="form-label form-label-required">Select Batch <span class="text-danger">*</span></label>
+                <select name="batch_id" class="form-select" required id="batchSelect" disabled>
+                  <option value="" disabled selected>First select a branch</option>
+                </select>
+                <div class="form-help-text">Available batches for selected branch</div>
+              </div>
+              
+              <div class="col-md-4">
+                <label class="form-label">Course</label>
+                <input type="text" id="courseDisplay" class="form-control" readonly placeholder="Will be auto-filled">
+              </div>
+              
+            {% elif user_branch_id %}
+              <!-- Single branch users - auto-select branch -->
               <input type="hidden" name="branch_id" value="{{ user_branch_id }}" id="hiddenBranchId">
               <div class="col-12 mb-3">
                 <div class="branch-info-alert alert">

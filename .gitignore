@@ -127,6 +127,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+web2_1/
+web2_1/
 
 # Spyder project settings
 .spyderproject
@@ -162,7 +164,7 @@ cython_debug/
 .vscode/
 
 # Flask/Application specific
-*.db
+.db
 *.sqlite
 *.sqlite3
 globalit_education_dev.db

@@ -119,10 +119,34 @@
             </div>
           </div>
           
+          <!-- Branch and Batch Selection -->
           <div class="row g-3 mb-4">
+            {% if available_branches and available_branches|length > 1 %}
+            <!-- Multi-branch user - show branch selection dropdown -->
+            <div class="col-md-6">
+              <label class="form-label"><strong>Branch</strong> <span class="text-danger">*</span></label>
+              <select name="branch_id" class="form-select" id="branchSelect" required>
+                {% for branch in available_branches %}
+                <option value="{{ branch.id }}" 
+                        {% if branch.id == student.branch_id %}selected{% endif %}>
+                  {{ branch.branch_name }}
+                </option>
+                {% endfor %}
+              </select>
+              <small class="text-muted">⚠️ Changing branch will clear the current batch assignment</small>
+            </div>
+            {% else %}
+            <!-- Single branch user - show branch name as text -->
+            <div class="col-md-6">
+              <label class="form-label"><strong>Branch</strong></label>
+              <input type="text" class="form-control" value="{{ branch_name }}" readonly>
+              <input type="hidden" name="branch_id" value="{{ student.branch_id }}">
+            </div>
+            {% endif %}
+            
             <div class="col-md-6">
               <label class="form-label"><strong>Batch</strong></label>
-              <select name="batch_id" class="form-select">
+              <select name="batch_id" class="form-select" id="batchSelect">
                 <option value="">No Batch Assigned</option>
                 {% for batch in batches %}
                 <option value="{{ batch.id }}" 
@@ -131,30 +155,7 @@
                 </option>
                 {% endfor %}
               </select>
-            </div>
-          </div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-md-6">
-              <label class="form-label"><strong>Student Status</strong> <span class="text-danger">*</span></label>
-              <select name="status" class="form-select" required>
-                <option value="Active" {% if student.status == 'Active' %}selected{% endif %}>
-                  Active - Currently enrolled and attending classes
-                </option>
-                <option value="Hold" {% if student.status == 'Hold' %}selected{% endif %}>
-                  Hold - Temporarily paused (fees pending, personal reasons, etc.)
-                </option>
-                <option value="Inactive" {% if student.status == 'Inactive' %}selected{% endif %}>
-                  Inactive - Not attending for a longer period
-                </option>
-                <option value="Dropout" {% if student.status == 'Dropout' %}selected{% endif %}>
-                  Dropout - Officially left/discontinued
-                </option>
-                <option value="Completed" {% if student.status == 'Completed' %}selected{% endif %}>
-                  Completed - Successfully finished the course
-                </option>
-              </select>
-              <small class="form-text text-muted">Current enrollment status of the student</small>
+              <small class="text-muted">Batches are filtered by selected branch</small>
             </div>
           </div>
 
@@ -204,6 +205,54 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Branch change handling for multi-branch users
+    const branchSelect = document.getElementById('branchSelect');
+    const batchSelect = document.getElementById('batchSelect');
+    
+    if (branchSelect) {
+        branchSelect.addEventListener('change', function() {
+            const branchId = this.value;
+            
+            if (branchId) {
+                // Clear current batch options
+                batchSelect.innerHTML = '<option value="">Loading batches...</option>';
+                batchSelect.disabled = true;
+                
+                // Fetch batches for selected branch
+                fetch(`/students/api/batches?branch_id=${branchId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        batchSelect.innerHTML = '<option value="">No Batch Assigned</option>';
+                        
+                        if (data.success && data.batches && data.batches.length > 0) {
+                            data.batches.forEach(batch => {
+                                const option = document.createElement('option');
+                                option.value = batch.id;
+                                option.textContent = `${batch.name} - ${batch.course_name}`;
+                                batchSelect.appendChild(option);
+                            });
+                        } else {
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = 'No batches available for this branch';
+                            option.disabled = true;
+                            batchSelect.appendChild(option);
+                        }
+                        
+                        batchSelect.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching batches:', error);
+                        batchSelect.innerHTML = '<option value="">Error loading batches</option>';
+                        batchSelect.disabled = false;
+                    });
+            } else {
+                batchSelect.innerHTML = '<option value="">No Batch Assigned</option>';
+                batchSelect.disabled = false;
+            }
+        });
+    }
+    
     // Form validation
     const form = document.getElementById('editStudentForm');
     
@@ -215,6 +264,25 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             alert('Please enter a valid mobile number (10-15 digits)');
             return false;
+        }
+        
+        // Branch change warning
+        const branchSelect = document.getElementById('branchSelect');
+        if (branchSelect) {
+            const originalBranchId = '{{ student.branch_id }}';
+            const newBranchId = branchSelect.value;
+            
+            if (originalBranchId !== newBranchId) {
+                const confirmChange = confirm(
+                    'Changing the branch will clear the current batch assignment. ' +
+                    'You will need to assign a new batch from the new branch. Continue?'
+                );
+                
+                if (!confirmChange) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
         }
     });
 });

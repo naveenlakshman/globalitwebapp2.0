@@ -90,6 +90,82 @@ class Lead(db.Model):
         """Property to get the display priority for templates"""
         return self.get_effective_priority()
 
+    @staticmethod
+    def validate_enum_field(value, valid_values, default_value, field_name="field"):
+        """
+        Validate enum field values and provide fallback for invalid values.
+        This prevents SQLAlchemy enum validation errors in SQLite.
+        
+        Args:
+            value: The value to validate
+            valid_values: List/tuple of valid enum values
+            default_value: Default value to use if invalid
+            field_name: Name of the field for logging
+            
+        Returns:
+            Valid enum value
+        """
+        if value is None or value == "":
+            return default_value
+            
+        if value in valid_values:
+            return value
+            
+        # Log the issue (optional)
+        print(f"Warning: Invalid {field_name} value '{value}'. Using default '{default_value}'")
+        return default_value
+
+    @classmethod
+    def clean_enum_values(cls):
+        """
+        Clean up any invalid enum values in the database.
+        This should be run after model updates or data migrations.
+        """
+        try:
+            # Define valid values for each enum field
+            enum_definitions = {
+                'employment_type': (["Student","Employed","Self-Employed","Unemployed","Other"], None),
+                'lead_status': (["Open","In Progress","Follow-up Scheduled","Demo Scheduled","Converted","Not Interested"], "Open"),
+                'lead_stage': (["New","Contacted","Qualified","Demo","Proposal","Negotiation","Closed Won","Closed Lost"], "New"),
+                'priority': (["Low","Medium","High","Hot"], "Medium"),
+                'lead_source': (["Walk-in","Referral","Phone","Instagram","Facebook","Google","College Visit","Tally","Other"], None),
+                'preferred_language': (["English","Hindi","Kannada","Tamil","Telugu","Marathi","Other"], "English"),
+                'decision_maker': (["Self","Parent","Employer","Other"], "Self"),
+                'mode_preference': (["Offline","Online","Hybrid"], "Offline"),
+                'join_timeline': (["Immediate","This Week","This Month","After Exams","Not Sure"], "Not Sure"),
+                'guardian_relation': (["Father","Mother","Guardian","Relative","Other"], None)  # Nullable
+            }
+            
+            updated_records = 0
+            
+            for field_name, (valid_values, default_value) in enum_definitions.items():
+                if default_value is not None:  # Skip nullable fields
+                    # Update empty strings and NULL values to default
+                    from sqlalchemy import text
+                    query = text(f"""
+                        UPDATE leads 
+                        SET {field_name} = :default_value 
+                        WHERE {field_name} = '' OR {field_name} IS NULL
+                    """)
+                    
+                    result = db.session.execute(query, {"default_value": default_value})
+                    updated_count = result.rowcount
+                    
+                    if updated_count > 0:
+                        updated_records += updated_count
+                        print(f"Fixed {updated_count} invalid {field_name} values")
+            
+            if updated_records > 0:
+                db.session.commit()
+                print(f"Successfully cleaned {updated_records} enum field values")
+            else:
+                print("No enum field cleanup needed")
+                
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during enum cleanup: {e}")
+            raise
+
     def calculate_lead_score(self):
         """Calculate lead score based on available data points"""
         score = 0
