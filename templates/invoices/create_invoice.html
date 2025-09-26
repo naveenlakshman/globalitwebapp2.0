@@ -64,7 +64,7 @@
                                                 data-name="{{ student.full_name }}" 
                                                 data-branch="{{ student.branch.branch_name if student.branch else 'Unknown' }}"
                                                 data-phone="{{ student.phone_number or '' }}">
-                                            {{ student.full_name }} (ID: {{ student.student_id }}) - {{ student.branch.branch_name if student.branch else 'Unknown Branch' }}
+                                            {{ student.full_name }} (ID: {{ student.student_reg_no }}) - {{ student.branch.branch_name if student.branch else 'Unknown Branch' }}
                                         </option>
                                         {% endfor %}
                                     </select>

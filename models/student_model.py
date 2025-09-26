@@ -131,6 +131,7 @@ class Student(db.Model):
     def to_dict(self):
         return {
             "student_id": self.student_id,
+            "student_reg_no": self.student_reg_no,  # ✅ Include registration number for display
             "full_name": self.full_name,
             "gender": self.gender,
             "dob": self.dob.strftime("%Y-%m-%d") if self.dob else None,

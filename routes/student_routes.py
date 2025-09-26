@@ -17,62 +17,32 @@ student_bp = Blueprint("students", __name__)
 UPLOAD_FOLDER = "static/uploads"
 
 def generate_student_id():
-    """Generate a sequential student ID starting with 1516170"""
-    try:
-        # Get the highest existing student ID that starts with 1516170 (as a number)
-        result = db.session.execute(
-            db.text("SELECT student_id FROM students WHERE student_id REGEXP '^1516170[0-9]*$' ORDER BY CAST(student_id AS INTEGER) DESC LIMIT 1")
-        ).fetchone()
-        
-        if result:
-            # Extract the numeric part and increment
-            last_id = int(result[0])
-            next_number = last_id + 1
-        else:
-            # Start with 1516170 if no existing IDs found
-            next_number = 1516170
-        
-        # Double-check that this ID doesn't exist (safety check)
-        while Student.query.filter_by(student_id=str(next_number)).first():
-            next_number += 1
-        
-        return str(next_number)
-        
-    except Exception as e:
-        # Fallback: query differently for SQLite compatibility
-        try:
-            print(f"First method failed: {e}, trying alternative method...")
-            # Get all student IDs that start with 1516170 and are numeric
-            results = db.session.execute(
-                db.text("SELECT student_id FROM students WHERE student_id LIKE '1516170%'")
-            ).fetchall()
-            
-            if results:
-                # Convert to integers and find the maximum
-                numeric_ids = []
-                for row in results:
-                    try:
-                        numeric_ids.append(int(row[0]))
-                    except ValueError:
-                        continue  # Skip non-numeric IDs
-                
-                if numeric_ids:
-                    next_number = max(numeric_ids) + 1
-                else:
-                    next_number = 1516170  # Start with 1516170 if no valid numeric IDs
-            else:
-                next_number = 1516170  # Start with 1516170 if no existing IDs
-            
-            # Double-check that this ID doesn't exist (safety check)
-            while Student.query.filter_by(student_id=str(next_number)).first():
-                next_number += 1
-            
-            return str(next_number)
-            
-        except Exception as e2:
-            # Final fallback to old method if everything fails
-            print(f"Error generating student ID: {e2}")
-            return "S" + str(uuid.uuid4().hex[:6]).upper()
+    """Generate a sequential student ID starting with 1"""
+    # Get the count of existing students and add 1
+    student_count = Student.query.count()
+    next_id = student_count + 1
+    
+    # Safety check: ensure this ID doesn't already exist
+    while Student.query.filter_by(student_id=str(next_id)).first():
+        next_id += 1
+    
+    return str(next_id)
+
+def generate_student_reg_no():
+    """Generate a sequential student registration number in format GIT-1, GIT-2, etc."""
+    # Get the count of existing students and add 1
+    student_count = Student.query.count()
+    next_number = student_count + 1
+    
+    # Generate the registration number
+    new_reg_no = f"GIT-{next_number}"
+    
+    # Safety check: ensure this registration number doesn't already exist
+    while Student.query.filter_by(student_reg_no=new_reg_no).first():
+        next_number += 1
+        new_reg_no = f"GIT-{next_number}"
+    
+    return new_reg_no
 
 @student_bp.route("/", methods=["GET"])
 def get_students():
@@ -110,6 +80,7 @@ def register_student():
         
         photo_file = request.files.get("photo")
         student_id = generate_student_id()
+        student_reg_no = generate_student_reg_no()
 
         # ✅ Convert DOB string to Python date
         dob_str = form.get("dob")
@@ -165,6 +136,7 @@ def register_student():
 
         student = Student(
             student_id=student_id,
+            student_reg_no=student_reg_no,  # ✅ Add the GIT- registration number
             full_name=form.get("full_name"),
             gender=form.get("gender"),
             dob=dob,  # ✅ Use converted Python date

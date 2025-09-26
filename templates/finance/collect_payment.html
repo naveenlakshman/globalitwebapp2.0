@@ -35,7 +35,7 @@
                     <!-- Pre-selected Installment -->
                     <div class="alert alert-info">
                         <h6><i class="fas fa-info-circle me-2"></i>Payment for:</h6>
-                        <strong>{{ installment.invoice.student.full_name }}</strong> ({{ installment.invoice.student.student_id }})<br>
+                        <strong>{{ installment.invoice.student.full_name }}</strong> ({{ installment.invoice.student.student_reg_no }})<br>
                         <strong>Course:</strong> {{ installment.invoice.course_name }}<br>
                         <strong>Installment:</strong> #{{ installment.installment_number }} - Due: {{ installment.due_date.strftime('%d-%m-%Y') }}<br>
                         <strong>Amount Due:</strong> ₹{{ "{:,.2f}".format(installment.balance_amount) }}

@@ -182,7 +182,7 @@
                                     <td>
                                         {% if payment.invoice and payment.invoice.student %}
                                         <strong>{{ payment.invoice.student.full_name }}</strong><br>
-                                        <small class="text-muted">{{ payment.invoice.student.student_id }}</small>
+                                        <small class="text-muted">{{ payment.invoice.student.student_reg_no }}</small>
                                         {% else %}
                                         <strong>Unknown Student</strong><br>
                                         <small class="text-muted">No student data</small>

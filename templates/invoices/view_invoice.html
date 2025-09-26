@@ -213,7 +213,7 @@ html[data-theme="dark"] .timeline-item:before {
                                             <td class="fw-bold">Student:</td>
                                             <td>
                                                 <strong>{{ student.full_name }}</strong><br>
-                                                <small class="text-muted">ID: {{ student.student_id }}</small>
+                                                <small class="text-muted">ID: {{ student.student_reg_no }}</small>
                                             </td>
                                         </tr>
                                         <tr>
@@ -342,7 +342,7 @@ html[data-theme="dark"] .timeline-item:before {
                         </div>
                         <div class="section-body">
                             <p><strong>Name:</strong> {{ student.full_name }}</p>
-                            <p><strong>ID:</strong> {{ student.student_id }}</p>
+                            <p><strong>ID:</strong> {{ student.student_reg_no }}</p>
                             <p><strong>Phone:</strong> {{ student.mobile or 'N/A' }}</p>
                             <p><strong>Email:</strong> {{ student.email or 'N/A' }}</p>
                             <a href="{{ url_for('students.view_student', student_id=student.student_id) }}" 

@@ -224,7 +224,7 @@
                                     <td>
                                         <div>
                                             <strong>{{ installment.invoice.student.full_name }}</strong><br>
-                                            <small class="text-muted">{{ installment.invoice.student.student_id }}</small>
+                                            <small class="text-muted">{{ installment.invoice.student.student_reg_no }}</small>
                                         </div>
                                     </td>
                                     <td>
@@ -295,7 +295,7 @@
                                                     <div class="col-md-6">
                                                         <h6>Student Information</h6>
                                                         <p><strong>Name:</strong> {{ installment.invoice.student.full_name }}</p>
-                                                        <p><strong>Student ID:</strong> {{ installment.invoice.student.student_id }}</p>
+                                                        <p><strong>Student ID:</strong> {{ installment.invoice.student.student_reg_no }}</p>
                                                         <p><strong>Phone:</strong> {{ installment.invoice.student.mobile }}</p>
                                                         <p><strong>Branch:</strong> {{ installment.invoice.student.branch.branch_name if installment.invoice.student.branch else 'No Branch' }}</p>
                                                     </div>

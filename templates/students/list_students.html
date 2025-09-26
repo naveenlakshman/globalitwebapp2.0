@@ -135,7 +135,7 @@
                     <table class="table table-hover" id="studentsTable">
                         <thead class="thead-light">
                             <tr>
-                                <th>Student ID</th>
+                                <th>Registration No</th>
                                 <th>Name</th>
                                 <th>Mobile</th>
                                 <th>Email</th>
@@ -151,7 +151,7 @@
                             {% for student in students %}
                             <tr>
                                 <td>
-                                    <strong class="text-primary">{{ student.student_id }}</strong>
+                                    <strong class="text-primary">{{ student.student_reg_no or 'N/A' }}</strong>
                                 </td>
                                 <td>
                                     <div class="student-name-cell">
@@ -341,7 +341,7 @@ function viewStudent(studentId) {
                 const html = '<div class="row">' +
                     '<div class="col-md-6">' +
                         '<strong>Student ID:</strong>' +
-                        '<p>' + student.student_id + '</p>' +
+                        '<p>' + student.student_reg_no + '</p>' +
                         '<strong>Full Name:</strong>' +
                         '<p>' + student.full_name + '</p>' +
                         '<strong>Guardian Name:</strong>' +
