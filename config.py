@@ -31,11 +31,40 @@ class Config:
         }
         
         if db_uri.startswith('mysql'):
-            # MySQL-specific configuration
-            base_options['connect_args'] = {
+            # MySQL-specific configuration with SSL support
+            mysql_connect_args = {
                 'charset': 'utf8mb4',
                 'connect_timeout': 30,
+                'read_timeout': 30,
+                'write_timeout': 30,
+                # SSL Configuration for Production Security
+                'ssl_disabled': os.environ.get('MYSQL_SSL_DISABLED', 'False').lower() == 'true',
+                'ssl_verify_cert': os.environ.get('MYSQL_SSL_VERIFY_CERT', 'True').lower() == 'true',
+                'ssl_verify_identity': os.environ.get('MYSQL_SSL_VERIFY_IDENTITY', 'True').lower() == 'true',
+                # Connection optimization
+                'autocommit': False,
+                'sql_mode': 'TRADITIONAL',
+                'init_command': "SET SESSION sql_mode='TRADITIONAL'",
             }
+            
+            # Add SSL certificate paths if provided
+            ssl_ca = os.environ.get('MYSQL_SSL_CA')
+            ssl_cert = os.environ.get('MYSQL_SSL_CERT')
+            ssl_key = os.environ.get('MYSQL_SSL_KEY')
+            
+            if ssl_ca:
+                mysql_connect_args['ssl_ca'] = ssl_ca
+            if ssl_cert:
+                mysql_connect_args['ssl_cert'] = ssl_cert
+            if ssl_key:
+                mysql_connect_args['ssl_key'] = ssl_key
+            
+            # For development, allow less strict SSL if explicitly set
+            if os.environ.get('FLASK_ENV', 'production').lower() == 'development':
+                mysql_connect_args['ssl_verify_cert'] = os.environ.get('MYSQL_SSL_VERIFY_CERT', 'False').lower() == 'true'
+                mysql_connect_args['ssl_verify_identity'] = os.environ.get('MYSQL_SSL_VERIFY_IDENTITY', 'False').lower() == 'true'
+            
+            base_options['connect_args'] = mysql_connect_args
         else:
             # SQLite configuration
             base_options['connect_args'] = {
@@ -74,6 +103,15 @@ class Config:
     # SMS Configuration (for future use)
     SMS_API_KEY = os.environ.get('SMS_API_KEY')
     SMS_API_URL = os.environ.get('SMS_API_URL')
+    
+    # MySQL SSL Configuration (Production Security)
+    # Environment variables for SSL setup:
+    # MYSQL_SSL_DISABLED=false          # Enable/disable SSL (default: false - SSL enabled)
+    # MYSQL_SSL_VERIFY_CERT=true        # Verify server certificate (default: true)
+    # MYSQL_SSL_VERIFY_IDENTITY=true    # Verify server identity (default: true)
+    # MYSQL_SSL_CA=/path/to/ca.pem      # Certificate Authority file
+    # MYSQL_SSL_CERT=/path/to/cert.pem  # Client certificate file
+    # MYSQL_SSL_KEY=/path/to/key.pem    # Client private key file
     
     # Application Settings
     TIMEZONE = 'Asia/Kolkata'
@@ -128,12 +166,53 @@ class ProductionConfig(Config):
     def init_app(cls, app):
         Config.init_app(app)
         
+        # Production SSL Security Validation
+        cls._validate_production_security(app)
+        
         # Log to stderr in production
         import logging
         from logging import StreamHandler
         file_handler = StreamHandler()
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
+    
+    @classmethod
+    def _validate_production_security(cls, app):
+        """Validate production security settings"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Check database URL for MySQL SSL
+        db_url = os.environ.get('DATABASE_URL', '')
+        if db_url.startswith('mysql'):
+            # Check SSL configuration
+            ssl_disabled = os.environ.get('MYSQL_SSL_DISABLED', 'False').lower() == 'true'
+            if ssl_disabled:
+                logger.warning("⚠️ WARNING: MySQL SSL is DISABLED in production! This is a security risk.")
+            else:
+                logger.info("✅ MySQL SSL encryption is enabled for production.")
+            
+            # Check SSL verification
+            ssl_verify_cert = os.environ.get('MYSQL_SSL_VERIFY_CERT', 'True').lower() == 'true'
+            ssl_verify_identity = os.environ.get('MYSQL_SSL_VERIFY_IDENTITY', 'True').lower() == 'true'
+            
+            if not ssl_verify_cert:
+                logger.warning("⚠️ WARNING: MySQL SSL certificate verification is disabled!")
+            if not ssl_verify_identity:
+                logger.warning("⚠️ WARNING: MySQL SSL identity verification is disabled!")
+            
+            if ssl_verify_cert and ssl_verify_identity:
+                logger.info("✅ MySQL SSL certificate and identity verification enabled.")
+        
+        # Check HTTPS settings
+        if not app.config.get('SESSION_COOKIE_SECURE'):
+            logger.warning("⚠️ WARNING: SESSION_COOKIE_SECURE should be True in production with HTTPS!")
+        
+        # Check secret key
+        if app.config.get('SECRET_KEY') == 'globalit-secret-key-change-in-production':
+            logger.error("❌ CRITICAL: Default SECRET_KEY detected! Change SECRET_KEY in production!")
+        
+        logger.info("🔐 Production security validation completed.")
 
 class TestingConfig(Config):
     """Testing environment configuration"""
@@ -162,4 +241,4 @@ def get_config():
     return config.get(env, config['default'])
 
 # For backward compatibility, export the default config
-Config = DevelopmentConfig
+Config = ProductionConfig

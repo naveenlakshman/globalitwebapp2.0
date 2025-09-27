@@ -200,9 +200,9 @@ function displayColumnMapping(csvColumns, suggestions, requiredColumns) {
 function getFieldOptions(type, selectedValue = '') {
     const fieldOptions = {
         students: [
-            'student_id', 'full_name', 'gender', 'dob', 'mobile', 'email', 'address',
+            'student_reg_no', 'full_name', 'gender', 'dob', 'mobile', 'email', 'address',
             'guardian_name', 'guardian_mobile', 'qualification', 'course_name', 
-            'batch_id', 'branch_id', 'lead_source', 'status', 'admission_date'
+            'batch_id', 'branch_id', 'lead_source', 'status', 'admission_date', 'admission_mode', 'referred_by'
         ],
         invoices: [
             'student_id', 'course_id', 'total_amount', 'paid_amount', 'due_amount',
@@ -215,6 +215,23 @@ function getFieldOptions(type, selectedValue = '') {
         payments: [
             'invoice_id', 'installment_id', 'amount', 'mode', 'utr_number',
             'notes', 'payment_date', 'discount_amount'
+        ],
+        batches: [
+            'id', 'name', 'course_id', 'course_name', 'branch_id', 'start_date', 'end_date',
+            'timing', 'checkin_time', 'checkout_time', 'max_capacity', 'status', 'completion_date',
+            'archived_at', 'archived_by', 'suspended_at', 'suspended_by', 'suspension_reason',
+            'suspension_notes', 'expected_resume_date', 'cancelled_at', 'cancelled_by',
+            'cancellation_reason', 'cancellation_notes', 'created_at', 'is_deleted'
+        ],
+        courses: [
+            'id', 'course_name', 'course_code', 'category', 'duration', 'duration_in_hours',
+            'duration_in_days', 'fee', 'registration_fee', 'material_fee', 'certification_fee',
+            'early_bird_discount', 'group_discount', 'description', 'course_outline',
+            'prerequisites', 'learning_outcomes', 'software_requirements', 'target_audience',
+            'career_opportunities', 'difficulty_level', 'delivery_mode', 'batch_size_min',
+            'batch_size_max', 'has_certification', 'certification_body', 'assessment_type',
+            'passing_criteria', 'typical_schedule', 'flexible_timing', 'is_featured',
+            'is_popular', 'display_order', 'course_image', 'brochure_path', 'status', 'created_by'
         ]
     };
 
@@ -334,7 +351,9 @@ function getRequiredFields(type) {
         students: ['full_name', 'mobile'],
         invoices: ['student_id', 'total_amount', 'enrollment_date'],
         installments: ['invoice_id', 'due_date', 'amount'],
-        payments: ['amount', 'mode']
+        payments: ['amount', 'mode'],
+        batches: ['name', 'course_id', 'branch_id', 'start_date'],
+        courses: ['course_name', 'duration', 'fee']
     };
     return requirements[type] || [];
 }

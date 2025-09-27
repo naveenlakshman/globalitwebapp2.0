@@ -6,7 +6,7 @@
 <div class="page-header">
     <div class="page-header-content">
         <h1><i class="fas fa-upload"></i> Data Import Dashboard</h1>
-        <p>Import students, invoices, installments and payment records</p>
+        <p>Import students, courses, batches, invoices, installments and payment records</p>
     </div>
 </div>
 {% endblock %}
@@ -120,6 +120,38 @@
                     </a>
                     <a href="{{ url_for('import.payment_import') }}" class="btn btn-primary">
                         <i class="fas fa-upload"></i> Import Payments
+                    </a>
+                </div>
+            </div>
+
+            <div class="import-card">
+                <div class="import-icon batches">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h3>Import Batches</h3>
+                <p>Upload batch records with course assignments, scheduling, and capacity information.</p>
+                <div class="import-actions">
+                    <a href="{{ url_for('import.download_template', import_type='batches') }}" class="btn btn-outline">
+                        <i class="fas fa-download"></i> Download Template
+                    </a>
+                    <a href="{{ url_for('import.batch_import') }}" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Import Batches
+                    </a>
+                </div>
+            </div>
+
+            <div class="import-card">
+                <div class="import-icon courses">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h3>Import Courses</h3>
+                <p>Upload course records with curriculum details, fees, duration, and certification information.</p>
+                <div class="import-actions">
+                    <a href="{{ url_for('import.download_template', import_type='courses') }}" class="btn btn-outline">
+                        <i class="fas fa-download"></i> Download Template
+                    </a>
+                    <a href="{{ url_for('import.course_import') }}" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Import Courses
                     </a>
                 </div>
             </div>
@@ -298,6 +330,8 @@
 .import-icon.invoices { background: #28a745; }
 .import-icon.installments { background: #ffc107; }
 .import-icon.payments { background: #17a2b8; }
+.import-icon.batches { background: #6f42c1; }
+.import-icon.courses { background: #fd7e14; }
 
 .import-card h3 {
     margin: 0 0 10px 0;
@@ -343,6 +377,8 @@
 .import-type.invoices { background: #e8f5e8; color: #388e3c; }
 .import-type.installments { background: #fff3e0; color: #f57c00; }
 .import-type.payments { background: #e0f2f1; color: #00796b; }
+.import-type.batches { background: #f3e5f5; color: #7b1fa2; }
+.import-type.courses { background: #fff3e0; color: #e65100; }
 
 .record-stats {
     display: flex;

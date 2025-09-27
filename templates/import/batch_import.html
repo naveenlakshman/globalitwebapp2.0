@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Import Students - GlobalIT LMS{% endblock %}
+{% block title %}Import Batches - GlobalIT LMS{% endblock %}
 
 {% block page_header %}
 <div class="page-header">
     <div class="page-header-content">
-        <h1><i class="fas fa-users"></i> Import Students</h1>
-        <p>Upload student records from CSV file</p>
+        <h1><i class="fas fa-layer-group"></i> Import Batches</h1>
+        <p>Upload batch records from CSV file</p>
     </div>
     <div class="page-header-actions">
         <a href="{{ url_for('import.import_dashboard') }}" class="btn btn-outline">
             <i class="fas fa-arrow-left"></i> Back to Dashboard
         </a>
-        <a href="{{ url_for('import.download_template', import_type='students') }}" class="btn btn-outline">
+        <a href="{{ url_for('import.download_template', import_type='batches') }}" class="btn btn-outline">
             <i class="fas fa-download"></i> Download Template
         </a>
     </div>
@@ -44,10 +44,10 @@
     <!-- Step 1: Upload File -->
     <div class="wizard-content" id="content-1">
         <div class="upload-section">
-            <h2>Upload Student Data</h2>
+            <h2>Upload Batch Data</h2>
             <p class="section-description">
-                Select a CSV file containing student information. The file should include student details, 
-                contact information, and enrollment data.
+                Select a CSV file containing batch information. The file should include batch details, 
+                course assignments, branch associations, and scheduling information.
             </p>
 
             <div class="upload-area" id="upload-area">
@@ -80,28 +80,28 @@
             <div class="requirements-info">
                 <h3>Required Fields</h3>
                 <div class="required-fields">
-                    <span class="field-tag required">full_name</span>
-                    <span class="field-tag required">mobile</span>
+                    <span class="field-tag required">name</span>
+                    <span class="field-tag required">course_id</span>
+                    <span class="field-tag required">branch_id</span>
+                    <span class="field-tag required">start_date</span>
                 </div>
                 
                 <h3>Optional Fields</h3>
                 <div class="optional-fields">
-                    <span class="field-tag optional">student_reg_no</span>
-                    <span class="field-tag optional">email</span>
-                    <span class="field-tag optional">gender</span>
-                    <span class="field-tag optional">dob</span>
-                    <span class="field-tag optional">address</span>
-                    <span class="field-tag optional">guardian_name</span>
-                    <span class="field-tag optional">guardian_mobile</span>
-                    <span class="field-tag optional">qualification</span>
+                    <span class="field-tag optional">id</span>
                     <span class="field-tag optional">course_name</span>
-                    <span class="field-tag optional">batch_id</span>
-                    <span class="field-tag optional">branch_id</span>
-                    <span class="field-tag optional">lead_source</span>
+                    <span class="field-tag optional">end_date</span>
+                    <span class="field-tag optional">timing</span>
+                    <span class="field-tag optional">checkin_time</span>
+                    <span class="field-tag optional">checkout_time</span>
+                    <span class="field-tag optional">max_capacity</span>
                     <span class="field-tag optional">status</span>
-                    <span class="field-tag optional">admission_date</span>
-                    <span class="field-tag optional">admission_mode</span>
-                    <span class="field-tag optional">referred_by</span>
+                    <span class="field-tag optional">completion_date</span>
+                    <span class="field-tag optional">archived_at</span>
+                    <span class="field-tag optional">suspended_at</span>
+                    <span class="field-tag optional">cancelled_at</span>
+                    <span class="field-tag optional">created_at</span>
+                    <span class="field-tag optional">is_deleted</span>
                 </div>
             </div>
 
@@ -169,7 +169,7 @@
     <!-- Step 3: Import Progress -->
     <div class="wizard-content" id="content-3" style="display: none;">
         <div class="import-progress">
-            <h2>Importing Students</h2>
+            <h2>Importing Batches</h2>
             <p class="section-description">Please wait while we process your data...</p>
 
             <div class="progress-indicator">
@@ -178,7 +178,7 @@
                 </div>
                 <div class="progress-text">
                     <h3>Processing...</h3>
-                    <p id="progress-message">Validating and importing student records</p>
+                    <p id="progress-message">Validating and importing batch records</p>
                 </div>
             </div>
         </div>
@@ -203,11 +203,11 @@
                 <a href="{{ url_for('import.import_dashboard') }}" class="btn btn-outline">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
-                <a href="{{ url_for('students.list_students') }}" class="btn btn-primary">
-                    <i class="fas fa-users"></i> View Students
+                <a href="{{ url_for('batches.list_batches') }}" class="btn btn-primary">
+                    <i class="fas fa-layer-group"></i> View Batches
                 </a>
                 <button type="button" class="btn btn-success" onclick="startNewImport()">
-                    <i class="fas fa-plus"></i> Import More Students
+                    <i class="fas fa-plus"></i> Import More Batches
                 </button>
             </div>
         </div>
@@ -235,12 +235,12 @@ console.log('Trying to load import.js...');
 <script src="{{ url_for('static', filename='js/import.js') }}"></script>
 <script>
 console.log('After import.js should have loaded');
-// Initialize student import
+// Initialize batch import
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, calling initializeImport');
     if (typeof initializeImport === 'function') {
-        initializeImport('students');
-        console.log('✅ initializeImport called successfully');
+        initializeImport('batches');
+        console.log('✅ initializeImport called successfully for batches');
     } else {
         console.error('❌ initializeImport function not found! import.js failed to load');
     }

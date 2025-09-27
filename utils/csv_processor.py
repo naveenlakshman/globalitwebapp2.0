@@ -208,22 +208,32 @@ class DataMapper:
                 elif field_type == 'date':
                     if isinstance(value, str):
                         from datetime import datetime
-                        converted_data[field] = datetime.strptime(value, '%Y-%m-%d').date()
+                        # Convert Indian format to database format
+                        converted_date = DataMapper.convert_indian_date_format(value, include_time=False)
+                        if converted_date:
+                            converted_data[field] = datetime.strptime(converted_date, '%Y-%m-%d').date()
                 elif field_type == 'datetime':
                     if isinstance(value, str):
                         from datetime import datetime
-                        # Try different datetime formats
-                        formats = ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y']
-                        for fmt in formats:
-                            try:
-                                converted_data[field] = datetime.strptime(value, fmt)
-                                break
-                            except ValueError:
-                                continue
+                        # Convert Indian format to database format
+                        converted_datetime = DataMapper.convert_indian_date_format(value, include_time=True)
+                        if converted_datetime:
+                            converted_data[field] = datetime.strptime(converted_datetime, '%Y-%m-%d %H:%M:%S')
                         else:
-                            # If no format matches, use current datetime
-                            from datetime import datetime, timezone
-                            converted_data[field] = datetime.now(timezone.utc)
+                            # Fallback to existing formats
+                            formats = ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y']
+                            parsed = False
+                            for fmt in formats:
+                                try:
+                                    converted_data[field] = datetime.strptime(value, fmt)
+                                    parsed = True
+                                    break
+                                except ValueError:
+                                    continue
+                            if not parsed:
+                                # If no format matches, use current datetime
+                                from datetime import timezone
+                                converted_data[field] = datetime.now(timezone.utc)
                 # 'string' type requires no conversion
                 
             except (ValueError, TypeError) as e:
@@ -268,3 +278,186 @@ class DataMapper:
             cleaned = cleaned[2:]
         
         return cleaned if len(cleaned) == 10 else mobile
+    
+    @staticmethod
+    def convert_indian_date_format(date_str: str, include_time: bool = False) -> str:
+        """Convert DD-MM-YYYY [HH:MM AM/PM] or DD-MM-YYYY HH:MM format to database format"""
+        if not date_str:
+            return None
+            
+        try:
+            import re
+            from datetime import datetime
+            
+            date_str = str(date_str).strip()
+            
+            if include_time:
+                # Handle DD-MM-YYYY HH:MM AM/PM format (12-hour)
+                ampm_patterns = [
+                    r'(\d{1,2})-(\d{1,2})-(\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)',
+                    r'(\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)',
+                    r'(\d{1,2})\.(\d{1,2})\.(\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)'
+                ]
+                
+                # Try 12-hour format first
+                for pattern in ampm_patterns:
+                    match = re.match(pattern, date_str, re.IGNORECASE)
+                    if match:
+                        day, month, year, hour, minute, ampm = match.groups()
+                        
+                        # Convert 12-hour to 24-hour format
+                        hour = int(hour)
+                        if ampm.upper() == 'PM' and hour != 12:
+                            hour += 12
+                        elif ampm.upper() == 'AM' and hour == 12:
+                            hour = 0
+                            
+                        # Create datetime object and format for database
+                        dt = datetime(int(year), int(month), int(day), hour, int(minute))
+                        return dt.strftime('%Y-%m-%d %H:%M:%S')
+                
+                # Handle DD-MM-YYYY HH:MM format (24-hour, no AM/PM)
+                hour24_patterns = [
+                    r'(\d{1,2})-(\d{1,2})-(\d{4})\s+(\d{1,2}):(\d{2})$',
+                    r'(\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{2})$',
+                    r'(\d{1,2})\.(\d{1,2})\.(\d{4})\s+(\d{1,2}):(\d{2})$'
+                ]
+                
+                for pattern in hour24_patterns:
+                    match = re.match(pattern, date_str)
+                    if match:
+                        day, month, year, hour, minute = match.groups()
+                        
+                        # Create datetime object and format for database
+                        dt = datetime(int(year), int(month), int(day), int(hour), int(minute))
+                        return dt.strftime('%Y-%m-%d %H:%M:%S')
+            
+            else:
+                # Handle DD-MM-YYYY format (date only)
+                patterns = [
+                    r'(\d{1,2})-(\d{1,2})-(\d{4})',
+                    r'(\d{1,2})/(\d{1,2})/(\d{4})',
+                    r'(\d{1,2})\.(\d{1,2})\.(\d{4})'
+                ]
+                
+                for pattern in patterns:
+                    match = re.match(pattern, date_str)
+                    if match:
+                        day, month, year = match.groups()
+                        # Create date object and format for database
+                        dt = datetime(int(year), int(month), int(day))
+                        return dt.strftime('%Y-%m-%d')
+            
+            # If no pattern matches, try to parse as existing format
+            return date_str
+            
+        except Exception as e:
+            print(f"Warning: Could not convert date '{date_str}': {e}")
+            return date_str
+    
+    @staticmethod
+    def convert_time_format(time_str: str) -> str:
+        """Convert time from various formats to HH:MM:SS (24-hour) format"""
+        if not time_str:
+            return None
+            
+        try:
+            import re
+            from datetime import datetime, time
+            
+            time_str = str(time_str).strip()
+            
+            # Handle 12-hour format with AM/PM
+            ampm_patterns = [
+                r'(\d{1,2}):(\d{2})\s*(AM|PM)',           # 2:00 PM
+                r'(\d{1,2}):(\d{2})(AM|PM)',              # 2:00PM (no space)
+                r'(\d{1,2})\.(\d{2})\s*(AM|PM)',          # 2.00 PM  
+                r'(\d{1,2})\.(\d{2})(AM|PM)',             # 2.00PM (no space)
+                r'(\d{1,2}):(\d{2})\s*([AP]M)',           # 2:00 P
+                r'(\d{1,2}):(\d{2})([AP]M)',              # 2:00P (no space)
+                r'(\d{1,2})\.(\d{2})\s*([AP]M)',          # 2.00 P
+                r'(\d{1,2})\.(\d{2})([AP]M)',             # 2.00P (no space)
+                r'(\d{1,2})\s*(AM|PM)',                   # 11 AM, 2 PM
+                r'(\d{1,2})(AM|PM)',                      # 11AM, 2PM (no space)
+                r'(\d{1,2})\s*([AP]M)',                   # 11 A, 2 P
+                r'(\d{1,2})([AP]M)'                       # 11A, 2P (no space)
+            ]
+            
+            for i, pattern in enumerate(ampm_patterns):
+                match = re.match(pattern, time_str, re.IGNORECASE)
+                if match:
+                    groups = match.groups()
+                    
+                    if i >= 8:  # Patterns without minutes (11 AM, 2 PM, 11AM, 2PM)
+                        hour = int(groups[0])
+                        minute = 0
+                        ampm = groups[1]
+                    else:  # Patterns with minutes (2:00 PM, 2:00PM)
+                        hour = int(groups[0])
+                        minute = int(groups[1])
+                        ampm = groups[2] if len(groups) > 2 else groups[1]
+                    
+                    # Convert 12-hour to 24-hour format
+                    if ampm.upper() in ['PM', 'P.M.', 'PM', 'P'] and hour != 12:
+                        hour += 12
+                    elif ampm.upper() in ['AM', 'A.M.', 'AM', 'A'] and hour == 12:
+                        hour = 0
+                    
+                    # Validate ranges
+                    if 0 <= hour <= 23 and 0 <= minute <= 59:
+                        # Return as time object formatted as string
+                        time_obj = time(hour, minute)
+                        return time_obj.strftime('%H:%M:%S')
+            
+            # Handle 24-hour format (HH:MM or HH:MM:SS)
+            hour24_patterns = [
+                r'^(\d{1,2}):(\d{2}):(\d{2})$',  # HH:MM:SS
+                r'^(\d{1,2}):(\d{2})$',          # HH:MM
+                r'^(\d{1,2})\.(\d{2})$'          # HH.MM
+            ]
+            
+            for i, pattern in enumerate(hour24_patterns):
+                match = re.match(pattern, time_str)
+                if match:
+                    if i == 0:  # HH:MM:SS format
+                        hour, minute, second = match.groups()
+                        second = int(second)
+                    else:  # HH:MM or HH.MM format
+                        hour, minute = match.groups()
+                        second = 0
+                    
+                    # Convert to integers
+                    hour = int(hour)
+                    minute = int(minute)
+                    
+                    # Validate ranges
+                    if 0 <= hour <= 23 and 0 <= minute <= 59 and 0 <= second <= 59:
+                        # Return as time object formatted as string
+                        time_obj = time(hour, minute, second)
+                        return time_obj.strftime('%H:%M:%S')
+            
+            return None
+            
+        except Exception as e:
+            print(f"Warning: Could not convert time '{time_str}': {e}")
+            return None
+
+    @staticmethod
+    def generate_student_reg_no(prefix: str = "GIT", existing_reg_nos: List[str] = None) -> str:
+        """Generate unique student registration number in format GIT-1, GIT-2, etc."""
+        if existing_reg_nos is None:
+            existing_reg_nos = []
+        
+        # Find the highest existing number
+        max_num = 0
+        for existing_reg_no in existing_reg_nos:
+            if existing_reg_no.startswith(f"{prefix}-"):
+                try:
+                    num = int(existing_reg_no.split('-')[1])
+                    max_num = max(max_num, num)
+                except (ValueError, IndexError):
+                    continue
+        
+        # Generate new registration number
+        new_num = max_num + 1
+        return f"{prefix}-{new_num}"  # Format: GIT-1, GIT-2, etc.

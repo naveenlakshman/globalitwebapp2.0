@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Import Students - GlobalIT LMS{% endblock %}
+{% block title %}Import Courses - GlobalIT LMS{% endblock %}
 
 {% block page_header %}
 <div class="page-header">
     <div class="page-header-content">
-        <h1><i class="fas fa-users"></i> Import Students</h1>
-        <p>Upload student records from CSV file</p>
+        <h1><i class="fas fa-book"></i> Import Courses</h1>
+        <p>Upload course records from CSV file</p>
     </div>
     <div class="page-header-actions">
         <a href="{{ url_for('import.import_dashboard') }}" class="btn btn-outline">
             <i class="fas fa-arrow-left"></i> Back to Dashboard
         </a>
-        <a href="{{ url_for('import.download_template', import_type='students') }}" class="btn btn-outline">
+        <a href="{{ url_for('import.download_template', import_type='courses') }}" class="btn btn-outline">
             <i class="fas fa-download"></i> Download Template
         </a>
     </div>
@@ -44,10 +44,10 @@
     <!-- Step 1: Upload File -->
     <div class="wizard-content" id="content-1">
         <div class="upload-section">
-            <h2>Upload Student Data</h2>
+            <h2>Upload Course Data</h2>
             <p class="section-description">
-                Select a CSV file containing student information. The file should include student details, 
-                contact information, and enrollment data.
+                Select a CSV file containing course information. The file should include course details, 
+                curriculum information, fees, duration, and certification data.
             </p>
 
             <div class="upload-area" id="upload-area">
@@ -80,28 +80,44 @@
             <div class="requirements-info">
                 <h3>Required Fields</h3>
                 <div class="required-fields">
-                    <span class="field-tag required">full_name</span>
-                    <span class="field-tag required">mobile</span>
+                    <span class="field-tag required">course_name</span>
+                    <span class="field-tag required">duration</span>
+                    <span class="field-tag required">fee</span>
                 </div>
                 
                 <h3>Optional Fields</h3>
                 <div class="optional-fields">
-                    <span class="field-tag optional">student_reg_no</span>
-                    <span class="field-tag optional">email</span>
-                    <span class="field-tag optional">gender</span>
-                    <span class="field-tag optional">dob</span>
-                    <span class="field-tag optional">address</span>
-                    <span class="field-tag optional">guardian_name</span>
-                    <span class="field-tag optional">guardian_mobile</span>
-                    <span class="field-tag optional">qualification</span>
-                    <span class="field-tag optional">course_name</span>
-                    <span class="field-tag optional">batch_id</span>
-                    <span class="field-tag optional">branch_id</span>
-                    <span class="field-tag optional">lead_source</span>
+                    <span class="field-tag optional">id</span>
+                    <span class="field-tag optional">course_code</span>
+                    <span class="field-tag optional">course_category</span>
+                    <span class="field-tag optional">course_level</span>
+                    <span class="field-tag optional">course_description</span>
+                    <span class="field-tag optional">course_objectives</span>
+                    <span class="field-tag optional">course_outcomes</span>
+                    <span class="field-tag optional">course_prerequisites</span>
+                    <span class="field-tag optional">course_syllabus</span>
+                    <span class="field-tag optional">course_materials</span>
+                    <span class="field-tag optional">course_assessment_methods</span>
+                    <span class="field-tag optional">course_delivery_mode</span>
+                    <span class="field-tag optional">course_language</span>
+                    <span class="field-tag optional">course_instructor_qualifications</span>
+                    <span class="field-tag optional">course_target_audience</span>
+                    <span class="field-tag optional">course_career_outcomes</span>
+                    <span class="field-tag optional">course_certifications</span>
+                    <span class="field-tag optional">course_partnerships</span>
+                    <span class="field-tag optional">duration_unit</span>
+                    <span class="field-tag optional">max_enrollment</span>
+                    <span class="field-tag optional">min_enrollment</span>
+                    <span class="field-tag optional">credit_hours</span>
+                    <span class="field-tag optional">difficulty_level</span>
+                    <span class="field-tag optional">tags</span>
                     <span class="field-tag optional">status</span>
-                    <span class="field-tag optional">admission_date</span>
-                    <span class="field-tag optional">admission_mode</span>
-                    <span class="field-tag optional">referred_by</span>
+                    <span class="field-tag optional">is_active</span>
+                    <span class="field-tag optional">is_featured</span>
+                    <span class="field-tag optional">is_popular</span>
+                    <span class="field-tag optional">display_order</span>
+                    <span class="field-tag optional">created_at</span>
+                    <span class="field-tag optional">updated_at</span>
                 </div>
             </div>
 
@@ -169,7 +185,7 @@
     <!-- Step 3: Import Progress -->
     <div class="wizard-content" id="content-3" style="display: none;">
         <div class="import-progress">
-            <h2>Importing Students</h2>
+            <h2>Importing Courses</h2>
             <p class="section-description">Please wait while we process your data...</p>
 
             <div class="progress-indicator">
@@ -178,7 +194,7 @@
                 </div>
                 <div class="progress-text">
                     <h3>Processing...</h3>
-                    <p id="progress-message">Validating and importing student records</p>
+                    <p id="progress-message">Validating and importing course records</p>
                 </div>
             </div>
         </div>
@@ -203,11 +219,11 @@
                 <a href="{{ url_for('import.import_dashboard') }}" class="btn btn-outline">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
-                <a href="{{ url_for('students.list_students') }}" class="btn btn-primary">
-                    <i class="fas fa-users"></i> View Students
+                <a href="{{ url_for('courses.list_courses') }}" class="btn btn-primary">
+                    <i class="fas fa-book"></i> View Courses
                 </a>
                 <button type="button" class="btn btn-success" onclick="startNewImport()">
-                    <i class="fas fa-plus"></i> Import More Students
+                    <i class="fas fa-plus"></i> Import More Courses
                 </button>
             </div>
         </div>
@@ -235,12 +251,12 @@ console.log('Trying to load import.js...');
 <script src="{{ url_for('static', filename='js/import.js') }}"></script>
 <script>
 console.log('After import.js should have loaded');
-// Initialize student import
+// Initialize course import
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, calling initializeImport');
     if (typeof initializeImport === 'function') {
-        initializeImport('students');
-        console.log('✅ initializeImport called successfully');
+        initializeImport('courses');
+        console.log('✅ initializeImport called successfully for courses');
     } else {
         console.error('❌ initializeImport function not found! import.js failed to load');
     }
