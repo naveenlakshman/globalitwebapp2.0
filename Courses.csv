@@ -1,0 +1,92 @@
+course_name,course_code,category,duration,duration_in_hours,duration_in_days,fee,registration_fee,material_fee,description,course_outline,prerequisites,learning_outcomes,target_audience,difficulty_level,delivery_mode,batch_size_min,batch_size_max,has_certification,certification_body,assessment_type,typical_schedule,is_featured,is_popular,display_order,status
+Certificate in Computer & AI Basics,CCAB-01,Digital Foundations,1 month,45,30,4500,0,0,"Kickstart your digital journey with our Certificate in Computer & AI Basics. Learn computer fundamentals, typing skills, internet usage, Google Workspace, and an introduction to AI tools like ChatGPT. This beginner-friendly course is designed for students, job seekers, and anyone new to computers. By the end of the program, you’ll confidently operate a computer, create documents, and use AI to simplify everyday tasks—essential skills for academic growth and workplace success.","Introduction to Computers & Operating System
+File & Folder Management
+Internet & Email Essentials
+Google Workspace (Docs, Sheets, Drive)
+Basic Typing & Speed Practice
+Introduction to AI Tools (ChatGPT & assistants)
+Mini Project: Creating Documents with AI Help",None,"Operate a computer confidently, create basic documents/spreadsheets, use AI assistants for daily tasks.","SSLC students, college beginners, anyone new to computers.",Beginner,Offline/Hybrid,5,16,Yes,Global IT Education,Practical assignments + quiz,"Monâ€“Sat, 2 hrs/day",No,No,1,Active
+Certificate in Office Management with AI (CCOM),CCOM-02,Digital Foundations,3 months,108,90,9500,0,0,"The CCOM course equips you with the complete skill set required for office jobs. From MS Office (Word, Excel, PowerPoint) to Google Workspace, email etiquette, and AI-powered productivity tools, you’ll gain hands-on experience to handle office operations efficiently. This 3-month program is perfect for SSLC/PUC students and freshers looking to build strong computer and professional communication skills. Stand out in today’s competitive job market with practical training and certification from Global IT Education.","Computer Fundamentals & Windows Basics
+MS Word (Letters, Reports, Formatting)
+MS Excel (Formulas, Tables, Charts)
+MS PowerPoint (Presentations & Designs)
+Google Workspace for Collaboration
+Professional Email Writing & Calendar Management
+Typing & Speed Improvement
+AI Tools for Office Productivity (ChatGPT, automation)
+Final Project: Office Task Simulation",Basic computer usage recommended,"Prepare professional docs, spreadsheets, presentations; manage office tasks with AI support.","SSLC/PUC students, job seekers, office assistants.",Beginnerâ€“Intermediate,Offline/Hybrid,5,16,Yes,Global IT Education,Capstone project + viva,"Monâ€“Sat, 2 hrs/day",Yes,Yes,2,Active
+Workplace Digital Mastery with AI,WDMAI-03,Digital Foundations,4 months,150,120,14500,0,0,"Take your productivity to the next level with the Workplace Digital Mastery with AI program. This advanced course focuses on Excel mastery, document automation, AI prompt engineering, and digital collaboration. Designed for students preparing for careers and professionals aiming to upgrade skills, this program teaches you how to work smarter, automate repetitive tasks, and deliver results faster. Become a workplace expert who can combine digital skills with AI efficiency—an unbeatable combination in the modern job world.","Advanced Excel (Formulas, Pivot Tables, Dashboards)
+Data Cleaning & Analysis with Excel/Sheets
+Document & Presentation Automation
+AI Prompt Engineering for Workplace Tasks
+Digital Collaboration Tools (Drive, Trello, Slack basics)
+Project Reporting & Documentation
+Capstone Project: Automated Business Report with AI",CCOM or equivalent skills,"Automate routine work, analyze data, create polished reports using AIâ€‘assisted techniques.","Students aiming to be jobâ€‘ready in 1â€“2 years, interns, early professionals.",Intermediate,Offline/Hybrid,5,16,Yes,Global IT Education,Practical labs + capstone,"Monâ€“Sat, 2 hrs/day",Yes,No,3,Active
+Certificate in Tally & AI Basics,CTAB-11,Finance & Accounting,2 months,60,60,6500,0,0,"The Certificate in Tally & AI Basics gives you a strong foundation in accounting and Tally Prime software. Learn to record business transactions, prepare invoices, generate reports, and understand GST basics. With added AI practice, you’ll discover how to simplify accounting tasks and improve accuracy. Perfect for commerce students and freshers, this 2-month program makes you job-ready for entry-level accounting positions. Earn an authorized Tally certification that adds real value to your resume.","Introduction to Accounting Principles
+Tally Prime Installation & Company Creation
+Ledger & Group Creation
+Voucher Entries (Sales, Purchase, Payments, Receipts)
+GST Basics & Configuration in Tally
+Report Generation (Trial Balance, P&L, Balance Sheet)
+AI Tools for Accounting Queries & Report Analysis",Basic commerce knowledge helpful,"Record transactions in Tally, generate basic reports, apply GST, and use AI for lookups.","PUC/Graduates, job seekers for accounting roles.",Beginner,Offline,5,16,Yes,Global IT Education; Tally Education Pvt Ltd (Authorized Center),Practical assessment,"Monâ€“Sat, 2 hrs/day",No,Yes,4,Active
+Diploma in Financial Accounting & AI,DFA-12,Finance & Accounting,5 months,180,150,17500,0,0,"Our Diploma in Financial Accounting & AI is a 5-month job-oriented program covering manual accounting, Tally Prime (basic to advanced), GST compliance, financial reporting, and AI-enabled productivity. This diploma is ideal for students aiming for careers in accounting, finance, and business management. You’ll not only master bookkeeping but also learn to use AI to save time, reduce errors, and deliver better reports. With industry recognition and a paid internship, this is the most popular choice for future accountants.","Manual Accounting (Journals, Ledgers, Trial Balance)
+Preparing P&L and Balance Sheet Manually
+Tally Prime – Basic to Advanced Features
+Inventory & Payroll Management
+GST, Returns & Filing in Tally
+Financial Reporting & Analysis
+AI for Financial Productivity (Excel + ChatGPT)
+Internship Project: Real-World Business Accounts",Basic computer skills,"Endâ€‘toâ€‘end bookkeeping, GST compliance, financial statements, efficiency with AI.",Commerce students and freshers targeting accounts roles.,Intermediate,Offline,5,16,Yes,Global IT Education; Tally Education Pvt Ltd (Authorized Center),Projects + exam,"Monâ€“Sat, 2 hrs/day",Yes,Yes,5,Active
+Advanced Data Analytics & AI for Finance,ADAF-13,Finance & Accounting,6 months,210,180,25000,0,0,"The Advanced Data Analytics & AI for Finance course is designed for commerce graduates and accounting professionals who want to specialize in financial analysis. Learn advanced Excel, data visualization, dashboards, forecasting, and AI-powered financial insights. This 6-month program will help you transition from a traditional accountant to a finance analyst who can handle big data and deliver business insights. Secure your career in high-demand roles such as Financial Analyst, MIS Executive, or Data-Driven Accountant.","Advanced Excel Functions & Formulas
+Power Query & Data Cleaning
+Pivot Tables & Interactive Dashboards
+Financial Modelling & Forecasting
+Business Analysis Reports (P&L, Cash Flow, Balance Sheet)
+AI Tools for Data Insights & Automation
+Final Project: Financial Dashboard with AI Insights",DFA or strong Excel + accounting basics,"Build dashboards, analyze P&L/BS/Cashflow, automate reporting with AI.",Graduates/junior accountants aiming for analyst roles.,Intermediateâ€“Advanced,Offline/Hybrid,5,16,Yes,Global IT Education,Capstone + presentation,"Monâ€“Sat, 2 hrs/day",Yes,No,6,Active
+Certificate in Python & Web Basics,CPWB-21,Programming & AI,1 month,36,30,4800,0,0,"Get started with coding through the Certificate in Python & Web Basics. In just 1 month, you’ll learn Python programming fundamentals, problem-solving, and web basics with HTML & CSS. This beginner-friendly course is ideal for students stepping into coding for the first time. By completing simple projects, you’ll gain the confidence to build scripts and basic websites. A perfect first step for those planning careers in software development, data science, or AI.","Introduction to Python & IDE Setup
+Python Basics: Variables, Data Types, Operators
+Control Structures: Loops & Conditions
+Functions & Problem-Solving
+Basics of HTML & CSS for Web Pages
+Mini Project: Python Script + Simple Web Page",Basic computer skills,Write simple Python scripts and basic webpages.,"Beginners, school/college students.",Beginner,Offline/Hybrid,5,16,Yes,Global IT Education,Assignments + mini project,"Monâ€“Sat, 2 hrs/day",No,Yes,7,Active
+Diploma in Web Application Development,DWAD-22,Programming & AI,3 months,180,90,12000,0,0,"The Diploma in Web Application Development prepares you for a career in full-stack development. Covering HTML, CSS, JavaScript, Python (Flask), SQL databases, APIs, and deployment, this 3-month hands-on program helps you build real-world projects from scratch. Learn team collaboration with Git and present your portfolio to employers. Whether you are a student or job seeker, this course equips you with the technical expertise to start as a web developer or junior programmer.","Frontend Basics: HTML, CSS, JavaScript
+Responsive Design & UI Building
+Python with Flask Framework
+Working with Databases (SQLite/SQL)
+APIs & JSON Integration
+Git & Version Control Basics
+Deployment of Web Applications
+Capstone Project: Full-Stack Web Application",CPWB or equivalent,Build and deploy fullâ€‘stack web apps with clean code.,Students preparing for internships/junior dev roles.,Intermediate,Offline/Hybrid,5,16,Yes,Global IT Education,Team capstone + code review,"Monâ€“Sat, 2 hrs/day",Yes,Yes,8,Active
+Generative AI Development Bootcamp,GAIDB-23,Programming & AI,4 months,210,120,19500,0,0,"Step into the future with our Generative AI Development Bootcamp. This 4-month advanced program teaches you to build AI-powered apps using large language models, APIs, RAG (Retrieval Augmented Generation), and AI agents. Gain practical knowledge of prompt engineering, ethical AI, and real-world deployment. Perfect for developers, final-year students, and tech enthusiasts, this bootcamp ensures you’re ahead of the curve in AI careers. Build your own AI portfolio and unlock opportunities in one of the fastest-growing industries.","Introduction to Generative AI & LLMs
+Prompt Engineering Techniques
+OpenAI/Gemini APIs for Development
+Retrieval-Augmented Generation (RAG) with Vector DBs
+Building AI Agents & Chatbots
+Testing & Evaluation of AI Systems
+Deploying AI Applications
+AI Ethics & Responsible Development
+Capstone Project: AI-Powered Application",Solid Python + web basics,"Integrate LLMs into apps, ship AI features responsibly.",Developers and advanced students.,Intermediateâ€“Advanced,Offline/Hybrid,5,16,Yes,Global IT Education,Project portfolio + viva,"Monâ€“Sat, 2 hrs/day",Yes,No,9,Active
+Spoken English Basics with AI Practice Tools,SEB-31,Communication & Soft Skills,1 month,36,30,4999,0,0,"Build confidence in everyday English conversations with our Spoken English Basics with AI Practice Tools course. In 1 month, you’ll improve pronunciation, vocabulary, and fluency through interactive classes and AI-powered speaking practice. Designed for school/PUC students and beginners, this program makes learning English fun and effective. By the end of the course, you’ll be able to introduce yourself, handle daily conversations, and express ideas with confidence.","Basics of English Grammar & Sentence Formation
+Vocabulary Building (Daily Use Words)
+Pronunciation Practice & Accent Training
+Everyday Conversations (Greetings, Introductions, Shopping, Travel)
+Listening & Speaking Practice
+AI-Powered Speaking & Pronunciation Drills
+Roleplay Activities with AI Support",None,Build confidence in basic conversations and correct pronunciation.,School/PUC students and beginners.,Beginner,Offline/Hybrid,5,16,Yes,Global IT Education,Speaking test + participation,"Monâ€“Sat, 2 hrs/day",No,Yes,10,Active
+Spoken English & Personality Development with AI,SEPD-32,Communication & Soft Skills,2 months,72,60,8999,0,0,"Transform your communication with the Spoken English & Personality Development with AI program. Over 2 months, you’ll practice fluency, improve confidence, learn professional email writing, and prepare for interviews. AI roleplay tools will help you practice real-life scenarios and sharpen your responses. This course is ideal for students and job aspirants who want to stand out in interviews and workplace communication. Learn to express yourself effectively and build a strong personal brand.","English Fluency Drills & Group Discussions
+Vocabulary Expansion for Workplace & Interviews
+Professional Email & Letter Writing
+Interview Preparation (Q&A Practice)
+Body Language & Confidence Building
+AI Roleplays for Real-Life Scenarios
+Final Presentation & Mock Interview",SEB or basic English,"Speak clearly, write professionally, and handle interviews.",College students and job aspirants.,Beginnerâ€“Intermediate,Offline/Hybrid,5,16,Yes,Global IT Education,Presentation + mock interview,"Monâ€“Sat, 2 hrs/day",Yes,Yes,11,Active
+Global Communication & Leadership Program,GCLP-33,Communication & Soft Skills,3 months,120,90,15999,0,0,"Become a confident speaker and inspiring leader with the Global Communication & Leadership Program. This 3-month advanced training covers public speaking, storytelling, presentation skills, meeting leadership, and AI-based practice tools. Designed for final-year students, young professionals, and aspiring trainers, this course empowers you to communicate ideas with clarity and lead teams effectively. Gain the confidence to speak on stage, present in front of groups, and influence with impact.","Public Speaking Techniques & Overcoming Stage Fear
+Storytelling for Impactful Communication
+Presentation Skills with Visual Tools
+Leading Meetings & Team Discussions
+Persuasion & Negotiation Skills
+Cross-Cultural Communication
+AI Coaching for Speech Practice
+Final Leadership Speech & Portfolio",SEPD or equivalent fluency,"Deliver talks, lead meetings, and present ideas with impact.","Finalâ€‘year students, team leads, aspiring trainers.",Intermediate,Offline/Hybrid,5,16,Yes,Global IT Education,Final speech + portfolio,"Monâ€“Sat, 2 hrs/day",Yes,No,12,Active
+Canva for Beginners,CANFOR,Graphic Design,1 Month,26,30,6500,0,0,,,,,,,,5,16,Yes,Global IT Education,Final speech + portfolio,"Monâ€“Sat, 2 hrs/day",Yes,Yes,13,Active
